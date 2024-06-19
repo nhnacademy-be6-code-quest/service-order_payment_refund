@@ -2,6 +2,7 @@ package com.nhnacademy.order.domain.order;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -26,5 +27,13 @@ public class OrderDetail {
 
     @NotNull
     private long productId; // fk
+
+    @Builder
+    public OrderDetail(Order order, long quantity, long productPrice, long productId){
+        this.order = order;
+        this.quantity = quantity;
+        this.productPrice = productPrice;
+        this.productId = productId;
+    }
 
 }

@@ -3,6 +3,7 @@ package com.nhnacademy.order.domain.order;
 import com.nhnacademy.order.domain.shipping.ShippingPolicy;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -46,5 +47,16 @@ public class Order {
 
     @OneToMany(mappedBy = "order")
     private List<OrderDetail> orderDetailList;
+
+    @Builder
+    public Order(ZonedDateTime orderDate, ZonedDateTime deliveryDate, OrderStatus orderStatus, long totalPrice, long clientId, ShippingPolicy shippingPolicy, long shippingFee){
+        this.orderDate = orderDate;
+        this.deliveryDate = deliveryDate;
+        this.orderStatus = orderStatus;
+        this.totalPrice = totalPrice;
+        this.clientId = clientId;
+        this.shippingPolicy = shippingPolicy;
+        this.shippingFee = shippingFee;
+    }
 
 }

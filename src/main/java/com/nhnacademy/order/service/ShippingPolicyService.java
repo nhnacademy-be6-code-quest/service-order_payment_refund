@@ -1,5 +1,5 @@
 package com.nhnacademy.order.service;
 
-public interface OrderService {
+public interface ShippingPolicyService {
 
 }

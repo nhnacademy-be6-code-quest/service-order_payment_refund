@@ -1,13 +1,12 @@
 package com.nhnacademy.order.dto.order.request.field;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-public class OrderItem {
+public class OrderDetailDto {
     private long productId;
+    private long price;
     private long quantity;
 }
