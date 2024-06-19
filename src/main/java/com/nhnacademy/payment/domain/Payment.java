@@ -17,28 +17,25 @@ import java.time.LocalDateTime;
 @Entity
 //@Table(name = "a.payment") // 테이블 이름 매핑
 public class Payment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id") // 안 해도 되지만 일단 해 봤음
     private Long paymentId;
 
-    @Setter
     @NotNull
     @Column(name = "order_id")
     private Long orderId;
 
-    @Setter
     @NotNull
     @Column(name = "pay_time")
     private LocalDateTime payTime;
 
-    @Setter
     @NotNull
     @Column(name = "client_delivery_address_id")
     private Long clientDeliveryAddressId;
 
     // ?
-    @Setter
     @NotNull
     @ManyToOne(optional = false/*, fetch = FetchType.LAZY*/)
     // optional -> PaymentMethod 엔티티가 필수적으로 존재해야 함 / fetch -> 연관된 엔티티가 실제 사용할 때만 로드할 수 있도록 조치.
@@ -46,13 +43,13 @@ public class Payment {
     @Column(name = "payment_method")
     private PaymentMethod paymentMethod;
 
-    @Setter
     @NotNull
     @Column(name = "coupon_id")
     private Long couponId;
 
     // constructor? -> payment_id 없는 버전으로 하나 만들어 두어야
-    public Payment (Long orderId, LocalDateTime payTime, Long clientDeliveryAddressId, PaymentMethod paymentMethod, Long couponId) {
+    public Payment(Long orderId, LocalDateTime payTime, Long clientDeliveryAddressId,
+        PaymentMethod paymentMethod, Long couponId) {
         this.orderId = orderId;
         this.payTime = payTime;
         this.clientDeliveryAddressId = clientDeliveryAddressId;
