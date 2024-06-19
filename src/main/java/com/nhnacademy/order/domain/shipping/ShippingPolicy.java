@@ -1,9 +1,6 @@
 package com.nhnacademy.order.domain.shipping;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -11,14 +8,18 @@ import org.hibernate.annotations.ColumnDefault;
 public class ShippingPolicy {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long shippingPolicyId;
+    @Column(name = "shipping_policy_id")
+    private long id;
 
     @ColumnDefault("")
-    private String shippingPolicyDescription;
+    @Column(name = "shipping_policy_description")
+    private String description;
 
     @NotNull
-    private int shippingFee;
+    @Column(name = "shipping_fee")
+    private int fee;
 
     @NotNull
-    private int minPurchaseAmount;
+    @Column(name = "min_purchase_amount")
+    private int lowerBound; // 최소 주문 금액
 }
