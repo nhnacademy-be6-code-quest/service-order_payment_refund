@@ -134,4 +134,53 @@
         - 성공시
             - OK 200
 
+### 결제 관련 회원 API
+- 결제하기
+    - POST   /client/order/payment
+    - 요청 DTO
+    ```java
+    public record PaymentCreateRequestPost(
+    // 1. 결제할 때 사용할 포인트
+    @NotNull
+    Long point,
+
+    // 2. 결제할 때 사용할 쿠폰
+    Long couponId,
+  
+    // 3. 결제 방식
+        @NotNull
+        Long paymentMethodId
+    ) {
+  
+    }
+    ```
+    - 응답 DTO
+    ```java
+    @Builder
+    public record PaymentResponse(
+        Long paymentId,
+        Long orderId,
+        LocalDateTime payTime,
+        Long clientDeliveryAddressId,
+        String paymentMethodName,
+        Long couponId
+    ) {
     
+        public static PaymentResponse from(Payment payment) {
+            return new PaymentResponse(
+                payment.getPaymentId(),
+                payment.getOrderId(),
+                payment.getPayTime(),
+                payment.getClientDeliveryAddressId(),
+                payment.getPaymentMethod().getPaymentMethodName(),
+                payment.getCouponId()
+            );
+        }
+    }
+    ```
+  
+### 환불 관련 회원 API
+- 주문 취소 및 환불하기
+  - POST /client/order/{orderId}/refund
+  - 요청 DTO : 미완성입니다.
+  - 응답 DTO : 미완성입니다.
