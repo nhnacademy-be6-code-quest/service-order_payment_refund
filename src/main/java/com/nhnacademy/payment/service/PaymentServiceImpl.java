@@ -3,7 +3,8 @@ package com.nhnacademy.payment.service;
 import com.nhnacademy.payment.domain.Payment;
 import com.nhnacademy.payment.dto.PaymentCreateRequestGet;
 import com.nhnacademy.payment.dto.PaymentResponse;
-import com.nhnacademy.payment.repository.PaymentJpaRepository;
+import com.nhnacademy.payment.exception.PaymentNotFoundException;
+import com.nhnacademy.payment.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,29 +17,28 @@ import org.springframework.stereotype.Service;
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
-    private PaymentJpaRepository paymentJpaRepository;
-//    private OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
 
     @Autowired
-    PaymentServiceImpl(PaymentJpaRepository paymentJpaRepository) {
-        this.paymentJpaRepository = paymentJpaRepository;
+    PaymentServiceImpl(PaymentRepository paymentRepository) {
+        this.paymentRepository = paymentRepository;
     }
 
     @Override
     public PaymentResponse findPaymentByOrderId(Long orderId) {
-//        orderRepository.findById(orderId);
         return null;
     }
 
     @Override
     public PaymentResponse findPaymentByPaymentId(Long paymentId) {
-//        paymentJpaRepository.findById(paymentId);
-        return null;
+        Payment payment = paymentRepository.findById(paymentId).orElseThrow(
+            PaymentNotFoundException::new);
+        return PaymentResponse.from(payment);
     }
 
     @Override
     public Payment savePayment(Payment payment) {
-        return null;
+        return paymentRepository.save(payment);
     }
 
     @Override
