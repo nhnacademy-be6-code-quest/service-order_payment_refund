@@ -25,7 +25,7 @@ public interface PaymentService {
     PaymentResponse findPaymentByOrderId(Long orderId);
 
     /**
-     * 결제 아이디를 받아서 결제 정보를 반환합니다. 환불을 확정할 때 사용합니다.
+     * 결제 아이디를 받아서 결제 정보를 반환합니다. 환불 창을 조회할 때 사용합니다.
      *
      * @param paymentId 주문 아이디
      * @return 결제 정보
