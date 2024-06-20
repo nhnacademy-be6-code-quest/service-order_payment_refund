@@ -1,7 +1,6 @@
 # service-order_payment_refund API
 
 </br>
-</br>
 
 ### 주문 관련 회원 api
 
@@ -54,30 +53,30 @@
   - 요청DTO
     없습니다
   - 응답DTO
-    ‼️ List<ClientAllOrderGetResponseDto> 응답됩니다 ‼️
+    ‼️ List&lt;ClientAllOrderGetResponseDto&gt; 응답됩니다 ‼️
     ``` java
       public class ClientAllOrderGetResponseDto {
-        private ZonedDateTime orderDate; // 주문날짜
-        private String address; // 배송지
-        private List<OrderedProductDto> orderedProductDtoList; // 주문한 상품정보들
-        private long totalProductPrice; // 상품 총 금액
-        private long pointUsageAmount; // 사용 포인트 금액
-        private String couponPolicyDescription; // 사용한 쿠폰 정책 이름
-        private long couponDiscountAmount; // 쿠폰 할인된 금액
-        private long shippingFee; // 배송비
-        private long totalPayAmount; // 결제된 금액 or 결제할 금액
+        private ZonedDateTime orderDate;
+        private String address;
+        private List<OrderedProductDto> orderedProductDtoList;
+        private long totalProductPrice;
+        private long pointUsageAmount;
+        private String couponPolicyDescription;
+        private long couponDiscountAmount;
+        private long shippingFee;
+        private long totalPayAmount;
     }
 
     public class OrderedProductDto {
-        private long productId; // 주문한 상품 아이디
-        private String productName; // 주문한 상품 이름
-        private String productImagePath; // 주문한 상품 이미지
-        private long productPrice; // 주문당시 상품 단품 가격
-        private long quantity; // 상품 수량
-        private OrderStatus orderStatus; // 주문 상태
-        private Long packageId; // 포장지 아이디
-        private String packageName; // 포장지 이름
-        private Long packagePrice; // 포장지 가격
+        private long productId;
+        private String productName;
+        private String productImagePath;
+        private long productPrice;
+        private long quantity;
+        private OrderStatus orderStatus;
+        private Long packageId;
+        private String packageName;
+        private Long packagePrice;
     }
     ```
   - 상태코드
@@ -92,25 +91,25 @@
   - 요청DTO
     없습니다
   - 응답DTO
-    ‼️ List<AdminAllOrdersGetResponseDto> 응답됩니다 ‼️
+    ‼️ List&lt;AdminAllOrdersGetResponseDto&gt; 응답됩니다 ‼️
     ``` java
     public class AdminAllOrdersGetResponseDto {
-        private long clientId; // 회원 아이디
-        private String clientEmail; // 회원 이메일
-        private ZonedDateTime orderDate; // 주문날짜
-        private List<OrderedProductDto> orderedProductDtoList; // 주문한 상품정보들
+        private long clientId;
+        private String clientEmail;
+        private ZonedDateTime orderDate;
+        private List<OrderedProductDto> orderedProductDtoList;
     }
     
     public class OrderedProductDto {
-        private long productId; // 주문한 상품 아이디
-        private String productName; // 주문한 상품 이름
-        private String productImagePath; // 주문한 상품 이미지
-        private long productPrice; // 주문당시 상품 단품 가격
-        private long quantity; // 상품 수량
-        private OrderStatus orderStatus; // 주문 상태
-        private Long packageId; // 포장지 아이디
-        private String packageName; // 포장지 이름
-        private Long packagePrice; // 포장지 가격
+        private long productId;
+        private String productName;
+        private String productImagePath;
+        private long productPrice;
+        private long quantity;
+        private OrderStatus orderStatus;
+        private Long packageId;
+        private String packageName;
+        private Long packagePrice;
     }
     ```
   - 상태코드
