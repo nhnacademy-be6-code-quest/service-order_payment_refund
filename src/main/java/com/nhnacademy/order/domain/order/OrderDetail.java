@@ -13,6 +13,7 @@ public class OrderDetail {
     private long orderDetailId;
 
     @ManyToOne(optional = false)
+    @JoinColumn(name = "orderId")
     private Order order;
 
     @NotNull

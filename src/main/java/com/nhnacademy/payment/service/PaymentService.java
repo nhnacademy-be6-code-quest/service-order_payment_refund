@@ -1,49 +1,56 @@
 package com.nhnacademy.payment.service;
 
+//import com.nhnacademy.order.domain.order.Order;
+import com.nhnacademy.order.domain.order.Order;
+import com.nhnacademy.order.domain.order.OrderStatus;
 import com.nhnacademy.payment.domain.Payment;
-import com.nhnacademy.payment.dto.PaymentCreateRequestGet;
-import com.nhnacademy.payment.dto.PaymentResponse;
+import com.nhnacademy.payment.domain.PaymentMethod;
+import com.nhnacademy.payment.dto.PaymentRequestDto;
+import com.nhnacademy.payment.dto.PaymentResponseDto;
+import com.nhnacademy.payment.repository.PaymentMethodRepository;
+import com.nhnacademy.payment.repository.PaymentRepository;
+import com.nhnacademy.temp.OrderRepository;
+import java.lang.Thread.Builder;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class PaymentService {
+    private final PaymentRepository paymentRepository;
+    private final PaymentMethodRepository paymentMethodRepository;
+    private final OrderRepository orderRepository;
 
-/**
- * 결제의 CRUD 작업을 수행하는 비즈니스 로직을 구현했습니다.
- * C : savePayment 메서드
- * R : findPaymentByOrderId 메서드 - 결제 정보를 read 하는 경우는 주문에서 결제 관련 정보가 필요한 경우이기에 param 을 orderId 로 뒀습니다.
- * U : 결제는 사라지지 않습니다. 환불 또는 취소 시에는 주문 테이블에서 주문 상태 속성이 변경됩니다.
- * D : 결제는 사라지지 않습니다.
- *
- * @author Virtus_Chae
- * @version 1.0
- */
-public interface PaymentService {
+    // Order Enum Type -> String, 배송 상태 -> tinyInt
+    public void savePayment(PaymentRequestDto paymentRequestDto) {
+        Order order = orderRepository.findById(paymentRequestDto.orderId()).orElse(null);
+        PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentRequestDto.paymentMethodId()).orElse(null);
+        Payment payment = Payment.builder()
+            .order(order)
+            .payTime(LocalDateTime.now())
+            .clientDeliveryAddressId(paymentRequestDto.clientDeliveryAddressId())
+            .paymentMethod(paymentMethod)
+            .couponId(paymentRequestDto.couponId())
+            .build();
 
-    /**
-     * 주문 아이디를 받아서 결제 정보를 반환합니다. 사용자가 주문 내역을 조회할 때 사용됩니다. (Order 쪽에서 사용)
-     *
-     * @param orderId 주문 아이디
-     * @return 결제 정보
-     */
-    PaymentResponse findPaymentByOrderId(Long orderId);
+        paymentRepository.save(payment);
+    }
 
-    /**
-     * 결제 아이디를 받아서 결제 정보를 반환합니다. 환불 창을 조회할 때 사용합니다.
-     *
-     * @param paymentId 주문 아이디
-     * @return 결제 정보
-     */
-    PaymentResponse findPaymentByPaymentId(Long paymentId);
+    public PaymentResponseDto findPaymentByPaymentId(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId).orElse(null);
 
-    /**
-     * 결제 정보를 저장합니다. 결제를 생성할 때 사용됩니다.
-     *
-     * @param payment 저장할 결제 정보
-     * @return 저장된 결제 정보
-     */
-    Payment savePayment(Payment payment);
-
-    /**
-     * 결제와 관련된 정보를 불러 와 사용자에게 불러 옵니다. 사용자가 가지고 있는 잔여 포인트, 적용할 쿠폰을 View 에 보여주는 데에 사용됩니다.
-     *
-     * @param paymentCreateRequestGet 결제할 때 사용자에게 보여줘야 할 정보 : 사용자의 포인트, 쿠폰 리스트
-     */
-    void tryPayment(PaymentCreateRequestGet paymentCreateRequestGet);
+        return PaymentResponseDto.builder()
+            .paymentId(payment.getPaymentId())
+            .orderId(payment.getOrder().getOrderId())
+            .payTime(payment.getPayTime())
+            .clientDeliveryAddressId(payment.getClientDeliveryAddressId())
+            .paymentMethod(payment.getPaymentMethod())
+            .couponId(payment.getCouponId())
+            .build();
+    }
 }

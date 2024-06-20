@@ -1,0 +1,10 @@
+POST localhost:8008/payment
+Content-Type: application/json
+
+{
+  "orderId": 3,
+  "payTime": "2024-06-05T15:55:08",
+  "clientDeliveryAddressId": 1,
+  "paymentMethodId": 1,
+  "couponId": 1
+}

@@ -1,0 +1,67 @@
+server:
+  port: 8008
+spring:
+  application:
+    name: order
+  datasource:
+    url: jdbc:mysql://133.186.241.167:3306/be6_codequest
+    username: be6_codequest
+    password: 2n[vFtM)vLCmAjxR
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    #hibernate setting
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        #system.out
+        show_sql: true
+        #format pretty
+        format_sql: true
+
+  #logging
+  logging:
+    level:
+      org.hibernate:
+        # sql leverl
+        sql: debug
+        # sql show sql parameter
+        type: trace
+
+#server:
+#  port: 8008
+#spring:
+#  datasource:
+#    url: jdbc:h2:mem:testdb
+#    username: sa
+#    password:
+#    driver-class-name: org.h2.Driver
+#
+#  h2:
+#    console:
+#      enabled: true
+#      path: /h2-console
+#  jpa:
+#    #hibernate setting
+#    hibernate:
+#      ddl-auto: create
+#    properties:
+#      hibernate:
+#        #system.out
+#        show_sql: true
+#        #format pretty
+#        format_sql: true
+#
+#  #logging
+#  logging:
+#    level:
+#      org.hibernate:
+#        # sql leverl
+#        sql: debug
+#        # sql show sql parameter
+#        type: trace

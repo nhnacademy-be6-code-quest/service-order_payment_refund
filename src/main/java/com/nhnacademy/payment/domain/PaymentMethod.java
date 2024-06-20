@@ -17,11 +17,9 @@ public class PaymentMethod {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "payment_method_id")
     private Long paymentMethodId;
 
     @NotNull
-    @Column(name = "payment_method_name")
     private String paymentMethodName;
 
     public PaymentMethod(String paymentMethodName) {
