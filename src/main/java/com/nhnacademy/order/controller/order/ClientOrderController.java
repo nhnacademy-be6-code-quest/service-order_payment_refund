@@ -19,7 +19,7 @@ public class ClientOrderController {
     private ClientOrderService clientOrderService;
 
     @PostMapping
-    public ResponseEntity<ClientOrderPostResponseDto> tryOrder(@RequestBody ClientOrderPostRequestDto clientOrderPostRequestDto, HttpServletRequest request){
+    public ResponseEntity<ClientOrderPostResponseDto> tryOrder(@RequestBody ClientOrderPostRequestDto clientOrderPostRequestDto){
 
 //        String headerValue = request.getHeader("id");
 //        if(Objects.isNull(headerValue)) throw new NeedToAuthenticationException();
