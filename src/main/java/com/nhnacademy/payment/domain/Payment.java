@@ -32,19 +32,15 @@ public class Payment {
     private Order order;
 
     @NotNull
-    private LocalDateTime payTime;
-
-//    @NotNull
-//    @Column(name = "pay_amount")
-//    private Long payAmount;
-
-    @NotNull
-    private Long clientDeliveryAddressId;
-
-    @NotNull
     @ManyToOne
     @JoinColumn(name = "PaymentMethodId")
     private PaymentMethod paymentMethod;
 
     private Long couponId;
+
+    @NotNull
+    private Long payAmount;
+
+    @NotNull
+    private LocalDateTime payTime;
 }
