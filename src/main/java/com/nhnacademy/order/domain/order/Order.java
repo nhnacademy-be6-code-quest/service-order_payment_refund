@@ -29,7 +29,6 @@ public class Order {
     @NotNull
     private ZonedDateTime deliveryDate;
 
-    @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
     @NotNull
@@ -44,13 +43,19 @@ public class Order {
     private ShippingPolicy shippingPolicy;
 
     @Column(name = "shipping_fee_of_order_date")
-    private long shippingFee; // 구매당시 배송비
+    private long shippingFee; // 주문당시 배송비
+
+    @Column(name = "client_delivery_address")
+    private String phoneNumber; // 주문당시 핸드폰 번호
+
+    @Column(name = "client_delivery_address")
+    private String deliveryAddress; // 받는 주소
 
     @OneToMany(mappedBy = "order")
     private List<OrderDetail> orderDetailList;
 
     @Builder
-    public Order(ZonedDateTime orderDate, ZonedDateTime deliveryDate, OrderStatus orderStatus, long totalPrice, long clientId, ShippingPolicy shippingPolicy, long shippingFee){
+    public Order(ZonedDateTime orderDate, ZonedDateTime deliveryDate, OrderStatus orderStatus, long totalPrice, long clientId, ShippingPolicy shippingPolicy, long shippingFee, String phoneNumber, String deliveryAddress){
         this.orderDate = orderDate;
         this.deliveryDate = deliveryDate;
         this.orderStatus = orderStatus;
@@ -58,6 +63,8 @@ public class Order {
         this.clientId = clientId;
         this.shippingPolicy = shippingPolicy;
         this.shippingFee = shippingFee;
+        this.phoneNumber = phoneNumber;
+        this.deliveryAddress = deliveryAddress;
     }
 
 }
