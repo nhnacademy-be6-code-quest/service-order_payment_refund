@@ -1,0 +1,9 @@
+server:
+  port: 8008
+
+spring:
+  application:
+    name: codequest_order_payment_refund
+  config:
+    activate:
+      on-profile: dev
