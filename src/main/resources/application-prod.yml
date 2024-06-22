@@ -30,4 +30,3 @@ eureka:
     fetch-registry: true
   instance:
     ip-address: true
-
