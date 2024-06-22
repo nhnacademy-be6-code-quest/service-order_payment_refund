@@ -1,7 +1,5 @@
 package com.nhnacademy.payment.service;
 
-//import com.nhnacademy.order.domain.order.Order;
-
 import com.nhnacademy.order.domain.order.Order;
 import com.nhnacademy.payment.domain.Payment;
 import com.nhnacademy.payment.domain.PaymentMethod;
