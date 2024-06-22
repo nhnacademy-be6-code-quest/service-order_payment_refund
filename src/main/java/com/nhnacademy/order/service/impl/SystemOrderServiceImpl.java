@@ -40,7 +40,7 @@ public class SystemOrderServiceImpl implements SystemOrderService {
                 .build();
         Order savedOrder = orderRepository.save(order);
 
-        // OrderDetail 생성
+        // OrderDetail 생성 및 저장
         orderPostRequestDto.getOrderDetailDtoList().forEach(orderDetailDto -> {
             OrderDetail orderDetail = OrderDetail.builder()
                     .order(savedOrder)

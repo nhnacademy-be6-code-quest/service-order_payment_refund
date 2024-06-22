@@ -4,9 +4,7 @@ import com.nhnacademy.order.domain.order.OrderStatus;
 import com.nhnacademy.order.dto.order.request.client.ClientOrderPostRequestDto;
 import com.nhnacademy.order.dto.order.response.client.ClientAllOrderGetResponseDto;
 import com.nhnacademy.order.dto.order.response.client.ClientOrderPostResponseDto;
-import com.nhnacademy.order.dto.order.response.field.OrderedProductDto;
-import com.nhnacademy.order.dto.order.response.field.PackageItemDto;
-import com.nhnacademy.order.dto.order.response.field.ProductItemDto;
+import com.nhnacademy.order.dto.order.response.field.*;
 import com.nhnacademy.order.repository.OrderRepository;
 import com.nhnacademy.order.service.ClientOrderService;
 import org.springframework.stereotype.Service;
@@ -24,25 +22,41 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     // TODO 임의로 생성한 데이터 클래스에서 AllArgs 애노테이션 삭제하기
     public ClientOrderPostResponseDto tryOrder(long clientId, ClientOrderPostRequestDto clientOrderPostRequestDto) {
 
+        // 임의의 데이터를 담는 response dto를 반환합니다.
+
         List<ProductItemDto> productItemDtoList = List.of(
                 new ProductItemDto(1, "/upload/book/이것이자바다.jpg", "이것이자바다!", 10000, 1),
                 new ProductItemDto(2, "/upload/book/이것이자바니.jpg", "이것이자바니?", 15000, 3),
                 new ProductItemDto(3, "/upload/book/NHN신입개발자되는법", "NHN신입개발자되는법", 100000, 2)
         );
+
         List<PackageItemDto> packageItemDtoList = List.of(
                 new PackageItemDto(1, "싸구려 포장지", 100),
                 new PackageItemDto(2, "고오급 포장지", 2000)
         );
+
         long shippingFee = 25000;
         long minPurchasePrice = 50000;
         String shippingPolicyName = "50000원 이상 구매시 무료배송";
+
+        List<ClientAddressDto> clientAddressDtoList = List.of(
+                new ClientAddressDto("우리집", "전라남도 순천시 삼산로 92-50", "대주피오레아파트 000동 000호", "1234"),
+                new ClientAddressDto("조선대", "광주광역시 동구 필문대로 309", "IT융합대학 별관 101호", "4321")
+        );
+
+        List<PhoneNumberDto> phoneNumberDtoList = List.of(
+                new PhoneNumberDto("내폰", "010-1234-1234"),
+                new PhoneNumberDto("업무폰", "010-4321-4321")
+        );
 
         ClientOrderPostResponseDto tmpRes = new ClientOrderPostResponseDto(
                 productItemDtoList,
                 packageItemDtoList,
                 shippingFee,
                 minPurchasePrice,
-                shippingPolicyName
+                shippingPolicyName,
+                clientAddressDtoList,
+                phoneNumberDtoList
         );
 
         return tmpRes;
