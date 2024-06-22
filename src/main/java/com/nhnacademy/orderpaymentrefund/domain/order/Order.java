@@ -43,7 +43,7 @@ public class Order {
     @Column(name = "shipping_fee_of_order_date")
     private long shippingFee; // 주문당시 배송비
 
-    @Column(name = "client_delivery_address")
+    @Column(name = "phone_number")
     private String phoneNumber; // 주문당시 핸드폰 번호
 
     @Column(name = "client_delivery_address")

@@ -11,7 +11,6 @@ public class ShippingPolicy {
     @Column(name = "shipping_policy_id")
     private long id;
 
-    @ColumnDefault("")
     @Column(name = "shipping_policy_description")
     private String description;
 
