@@ -2,7 +2,7 @@ package com.nhnacademy.orderpaymentrefund.controller.payment;
 
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.PaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentResponseDto;
-import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
+import com.nhnacademy.orderpaymentrefund.service.payment.impl.PaymentServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,16 +22,16 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class PaymentController {
 
-    private final PaymentService paymentService;
+    private final PaymentServiceImpl paymentServiceImpl;
 
     @PostMapping
     public void savePayment(@RequestBody PaymentRequestDto paymentRequestDto) {
         log.info(paymentRequestDto.toString());
-        paymentService.savePayment(paymentRequestDto); // 여기에서 에러 발생
+        paymentServiceImpl.savePayment(paymentRequestDto); // 여기에서 에러 발생
     }
 
     @GetMapping("{paymentId}")
     public PaymentResponseDto findPaymentByPaymentId(@RequestParam Long paymentId) {
-        return paymentService.findPaymentByPaymentId(paymentId);
+        return paymentServiceImpl.findPaymentByPaymentId(paymentId);
     }
 }
