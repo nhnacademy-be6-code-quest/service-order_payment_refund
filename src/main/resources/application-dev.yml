@@ -14,7 +14,9 @@ spring:
         highlight_sql: true
         use_sql_comments: true
         format_sql: true
-
+  datasource:
+    username: sa
+    password: 1234
 eureka:
   client:
     register-with-eureka: true
