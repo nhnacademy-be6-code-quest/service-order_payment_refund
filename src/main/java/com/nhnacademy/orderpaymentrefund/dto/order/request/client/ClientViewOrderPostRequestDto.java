@@ -6,7 +6,6 @@ import lombok.Getter;
 
 import java.util.List;
 
-@Getter
 @Builder
 public record ClientViewOrderPostRequestDto ( // 회원이 주문 시도했을 때 필요한 dtㅐ
      List<OrderItemDto> orderItemDtoList // 주문 목록

@@ -2,9 +2,7 @@ package com.nhnacademy.orderpaymentrefund.dto.order.response.field;
 
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import lombok.Builder;
-import lombok.Getter;
 
-@Getter
 @Builder
 public record OrderedProductDto (
     long productId, // 주문한 상품 아이디

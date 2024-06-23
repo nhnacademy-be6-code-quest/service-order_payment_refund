@@ -1,9 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.dto.order.response.field;
 
 import lombok.Builder;
-import lombok.Getter;
 
-@Getter
 @Builder
 public record ClientAddressDto (
     String addressNickname, // 주소별칭

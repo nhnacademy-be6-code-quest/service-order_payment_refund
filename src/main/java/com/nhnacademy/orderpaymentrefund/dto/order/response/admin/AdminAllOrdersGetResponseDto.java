@@ -2,12 +2,10 @@ package com.nhnacademy.orderpaymentrefund.dto.order.response.admin;
 
 import com.nhnacademy.orderpaymentrefund.dto.order.response.field.OrderedProductDto;
 import lombok.Builder;
-import lombok.Getter;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 
-@Getter
 @Builder
 // 관리자가 보는,, 회원이 주문한 주문 내역 건
 public record AdminAllOrdersGetResponseDto (

@@ -1,19 +1,16 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientViewOrderPostRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientOrderPostRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientViewOrderPostRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientAllOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientViewOrderPostResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.awt.print.Pageable;
-import java.util.List;
 
 @RestController
 @RequestMapping("/client")
@@ -27,7 +24,7 @@ public class ClientOrderController {
 
         long clientId = 1L;
 
-        ClientViewOrderPostResponseDto responseDto = clientOrderService.viewOrderPage(clientId, clientOrderPostRequestDto);
+        ClientViewOrderPostResponseDto responseDto = clientOrderService.orderView(clientId, clientOrderPostRequestDto);
 
         return ResponseEntity.ok().body(responseDto);
 
@@ -48,7 +45,7 @@ public class ClientOrderController {
 //
 //        long clientId = Integer.parseInt(request.getHeader("id"));
         long clientId = 1L;
-        Page<ClientAllOrderGetResponseDto> responseDto = clientOrderService.getOrderPage(clientId, pageable);
+        Page<ClientAllOrderGetResponseDto> responseDto = clientOrderService.getAllOrder(clientId, pageable);
 
         return ResponseEntity.ok().body(responseDto);
 

@@ -8,7 +8,6 @@ import lombok.Getter;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-@Getter
 @Builder
 public record ClientOrderPostRequestDto (
     long clientId,

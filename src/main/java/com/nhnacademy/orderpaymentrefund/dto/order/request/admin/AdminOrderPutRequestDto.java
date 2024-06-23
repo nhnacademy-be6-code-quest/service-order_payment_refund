@@ -4,7 +4,6 @@ import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import lombok.Builder;
 import lombok.Getter;
 
-@Getter
 @Builder
 public record AdminOrderPutRequestDto(// 관리자가 주문에 대해 수정할 사항들.
         OrderStatus orderStatus

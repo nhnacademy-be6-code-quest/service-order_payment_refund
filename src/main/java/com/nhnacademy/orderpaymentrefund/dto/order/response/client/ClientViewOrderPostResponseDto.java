@@ -5,11 +5,9 @@ import com.nhnacademy.orderpaymentrefund.dto.order.response.field.PackageItemDto
 import com.nhnacademy.orderpaymentrefund.dto.order.response.field.PhoneNumberDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.field.ProductItemDto;
 import lombok.Builder;
-import lombok.Getter;
 
 import java.util.List;
 
-@Getter
 @Builder
 public record ClientViewOrderPostResponseDto ( // 주문 페이지 화면에 뿌려질 데이터
 

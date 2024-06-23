@@ -8,22 +8,19 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientOrderPos
 import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientViewOrderPostRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientAllOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientViewOrderPostResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.field.*;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.field.ClientAddressDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.field.OrderedProductDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.field.PackageItemDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.field.PhoneNumberDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.field.ProductItemDto;
-import com.nhnacademy.orderpaymentrefund.repository.shipping.ShippingPolicyRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import com.nhnacademy.orderpaymentrefund.service.shipping.ShippingPolicyService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.awt.print.Pageable;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -37,7 +34,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     @Override
     // TODO 각 서비스의 api 문서가 나와야 완성 가능. 현재, 해당 프로젝트에서 끌어올 수 없는 데이터는 그냥 임의로 생성!
     // TODO 임의로 생성한 데이터 클래스에서 AllArgs 애노테이션 삭제하기
-    public ClientViewOrderPostResponseDto viewOrderPage(long clientId, ClientViewOrderPostRequestDto clientOrderPostRequestDto) {
+    public ClientViewOrderPostResponseDto orderView(long clientId, ClientViewOrderPostRequestDto clientOrderPostRequestDto) {
 
         // 우리 서비스에서 가져올 수 있는 데이터들
         ShippingPolicy shippingPolicy = shippingPolicyService.getShippingPolicy();
@@ -74,23 +71,73 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         minPurchasePrice = 50000;
         shippingPolicyName = "50000원 이상 구매시 무료배송";
 
-        ClientViewOrderPostResponseDto clientViewOrderPostResponseDto = new ClientViewOrderPostResponseDto(
-                productItemDtoList,
-                packageItemDtoList,
-                shippingFee,
-                minPurchasePrice,
-                shippingPolicyName,
-                clientAddressDtoList,
-                phoneNumberDtoList
-        );
-
+        ClientViewOrderPostResponseDto clientViewOrderPostResponseDto = ClientViewOrderPostResponseDto.builder()
+                .productItemDtoList(productItemDtoList)
+                .packageItemDtoList(packageItemDtoList)
+                .shippingFee(shippingFee)
+                .minPurchasePrice(minPurchasePrice)
+                .shippingPolicyName(shippingPolicyName)
+                .clientAddressDtoList(clientAddressDtoList)
+                .phoneNumberDtoList(phoneNumberDtoList)
+                .build();
 
         return clientViewOrderPostResponseDto;
     }
 
     @Override
-    public Page<ClientAllOrderGetResponseDto> getOrderPage(long clientId, Pageable pageable) {
+    public Page<ClientAllOrderGetResponseDto> getAllOrder(long clientId, Pageable pageable) {
 
+        Page<Order> orderPage = orderRepository.findByClientId(clientId, pageable);
+
+        List<ClientAllOrderGetResponseDto> clientAllOrderGetResponseDtoList = new ArrayList<>();
+
+        orderPage.forEach( order -> {
+
+            ZonedDateTime orderDate = order.getOrderDate();
+            String address = order.getDeliveryAddress();
+            long totalPrice = order.getTotalPrice();
+            Long pointUsageAmount = 1L; // TODO 결제 서비스에서 가져와야함.
+            String couponPolicyDescription = "??"; // TODO 쿠폰 서비스에서 가져오기
+            Long couponDiscountAmount = 1L; // TODO 쿠폰 서비스에서 가져오기
+            long shippingFee = order.getShippingFee();
+            Long totalPayAmount = 1L; // TODO 결제 서비스에서 가져오기
+            List<OrderedProductDto> orderedProductDtoList = new ArrayList<>();
+
+            orderDetailRepository.findByOrder(order).forEach(orderDetail -> {
+                OrderedProductDto orderedProductDto = OrderedProductDto.builder()
+                        .productId(orderDetail.getProductId())
+                        .productName("!!") // TODO product-service에서 가져오기
+                        .productImagePath("") // TODO product-service에서 가져오기
+                        .productPrice(orderDetail.getProductPrice())
+                        .quantity(orderDetail.getQuantity())
+                        .orderStatus(order.getOrderStatus())
+                        .packageId(1L) // TODO product-service에서 가져오기
+                        .packageName("") // TODO product-service에서 가져오기
+                        .packagePrice(1L) // TODO product-service에서 가져오기
+                        .build();
+                orderedProductDtoList.add(orderedProductDto);
+            });
+
+            clientAllOrderGetResponseDtoList.add(ClientAllOrderGetResponseDto.builder()
+                    .orderDate(orderDate)
+                    .address(address)
+                    .orderedProductDtoList(orderedProductDtoList)
+                    .totalPrice(totalPrice)
+                    .pointUsageAmount(pointUsageAmount)
+                    .couponPolicyDescription(couponPolicyDescription)
+                    .couponDiscountAmount(couponDiscountAmount)
+                    .shippingFee(shippingFee)
+                    .totalPayAmount(totalPayAmount)
+                    .build()
+            );
+
+        });
+
+        // TODO 주석풀기
+        //return new PageImpl<>(clientAllOrderGetResponseDtoList);
+
+
+        // 아래는 임의로 만든 데이터들 입니다.
 
         ZonedDateTime orderDate = ZonedDateTime.now();
         String address = "광주광역시 동구 필문대로 309";
@@ -122,16 +169,16 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                 .orderDate(orderDate)
                 .address(address)
                 .orderedProductDtoList(orderedProductDtoList)
-                .totalProductPrice(30000)
-                .pointUsageAmount(3000)
+                .totalPrice(30000)
+                .pointUsageAmount(3000L)
                 .couponPolicyDescription("1000원 할인 쿠폰")
-                .couponDiscountAmount(1000)
+                .couponDiscountAmount(1000L)
                 .shippingFee(3000)
-                .totalPayAmount(29000)
+                .totalPayAmount(29000L)
                 .build();
 
 
-        return Page.of(tmpRes);
+        return new PageImpl<>(List.of(tmpRes));
     }
 
     @Override
@@ -139,22 +186,22 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
         // order 생성 및 저장
         Order order = Order.builder()
-                .deliveryDate(clientOrderPostRequestDto.getDeliveryDate())
-                .totalPrice(clientOrderPostRequestDto.getTotalPrice())
-                .clientId(clientOrderPostRequestDto.getClientId())
-                .shippingFee(clientOrderPostRequestDto.getShippingFee())
-                .phoneNumber(clientOrderPostRequestDto.getPhoneNumber())
-                .deliveryAddress(clientOrderPostRequestDto.getDeliveryAddress())
+                .deliveryDate(clientOrderPostRequestDto.deliveryDate())
+                .totalPrice(clientOrderPostRequestDto.totalPrice())
+                .clientId(clientOrderPostRequestDto.clientId())
+                .shippingFee(clientOrderPostRequestDto.shippingFee())
+                .phoneNumber(clientOrderPostRequestDto.phoneNumber())
+                .deliveryAddress(clientOrderPostRequestDto.deliveryAddress())
                 .build();
         Order savedOrder = orderRepository.save(order);
 
         // OrderDetail 생성 및 저장
-        clientOrderPostRequestDto.getOrderDetailDtoList().forEach(orderDetailDto -> {
+        clientOrderPostRequestDto.orderDetailDtoList().forEach(orderDetailDto -> {
             OrderDetail orderDetail = OrderDetail.builder()
                     .order(savedOrder)
-                    .quantity(orderDetailDto.getQuantity())
-                    .productPrice(orderDetailDto.getPrice())
-                    .productId(orderDetailDto.getProductId())
+                    .quantity(orderDetailDto.quantity())
+                    .productPrice(orderDetailDto.price())
+                    .productId(orderDetailDto.productId())
                     .build();
             orderDetailRepository.save(orderDetail);
         });

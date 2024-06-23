@@ -4,7 +4,6 @@ import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import lombok.Builder;
 import lombok.Getter;
 
-@Getter
 @Builder
 public record ClientOrderPutRequestDto (
     OrderStatus orderStatus
