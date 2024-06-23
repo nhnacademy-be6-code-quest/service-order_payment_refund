@@ -3,6 +3,7 @@ package com.nhnacademy.orderpaymentrefund.domain.order;
 import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicy;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +13,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Order {
 

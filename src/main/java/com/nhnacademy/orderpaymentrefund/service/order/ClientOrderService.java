@@ -4,11 +4,13 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientOrderPos
 import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientViewOrderPostRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientAllOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientViewOrderPostResponseDto;
+import org.springframework.data.domain.Page;
 
+import java.awt.print.Pageable;
 import java.util.List;
 
 public interface ClientOrderService {
     ClientViewOrderPostResponseDto viewOrderPage(long clientId, ClientViewOrderPostRequestDto clientOrderPostRequestDto);
-    List<ClientAllOrderGetResponseDto> getAllOrder(long clientId);
+    Page<ClientAllOrderGetResponseDto> getAllOrder(long clientId, Pageable pageable);
     void createOrder(ClientOrderPostRequestDto clientOrderPostRequestDto);
 }

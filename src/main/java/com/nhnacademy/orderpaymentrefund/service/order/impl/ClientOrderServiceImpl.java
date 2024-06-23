@@ -3,6 +3,7 @@ package com.nhnacademy.orderpaymentrefund.service.order.impl;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
+import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicy;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientOrderPostRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientViewOrderPostRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientAllOrderGetResponseDto;
@@ -14,15 +15,20 @@ import com.nhnacademy.orderpaymentrefund.dto.order.response.field.OrderedProduct
 import com.nhnacademy.orderpaymentrefund.dto.order.response.field.PackageItemDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.field.PhoneNumberDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.field.ProductItemDto;
+import com.nhnacademy.orderpaymentrefund.repository.shipping.ShippingPolicyRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
+import com.nhnacademy.orderpaymentrefund.service.shipping.ShippingPolicyService;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class ClientOrderServiceImpl implements ClientOrderService {
 
+    private ShippingPolicyService shippingPolicyService;
     private OrderRepository orderRepository;
     private OrderDetailRepository orderDetailRepository;
 
@@ -31,8 +37,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     // TODO 임의로 생성한 데이터 클래스에서 AllArgs 애노테이션 삭제하기
     public ClientViewOrderPostResponseDto viewOrderPage(long clientId, ClientViewOrderPostRequestDto clientOrderPostRequestDto) {
 
-        // 임의의 데이터를 담는 response dto를 반환합니다.
-
+        // feinclient를 통해 가져올 데이터들
         List<ProductItemDto> productItemDtoList = List.of(
                 new ProductItemDto(1, "/upload/book/이것이자바다.jpg", "이것이자바다!", 10000, 1),
                 new ProductItemDto(2, "/upload/book/이것이자바니.jpg", "이것이자바니?", 15000, 3),
@@ -44,10 +49,6 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                 new PackageItemDto(2, "고오급 포장지", 2000)
         );
 
-        long shippingFee = 25000;
-        long minPurchasePrice = 50000;
-        String shippingPolicyName = "50000원 이상 구매시 무료배송";
-
         List<ClientAddressDto> clientAddressDtoList = List.of(
                 new ClientAddressDto("우리집", "전라남도 순천시 삼산로 92-50", "대주피오레아파트 000동 000호", "1234"),
                 new ClientAddressDto("조선대", "광주광역시 동구 필문대로 309", "IT융합대학 별관 101호", "4321")
@@ -58,7 +59,15 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                 new PhoneNumberDto("업무폰", "010-4321-4321")
         );
 
-        ClientViewOrderPostResponseDto tmpRes = new ClientViewOrderPostResponseDto(
+        // 우리 서비스에서 가져올 수 있는 데이터들
+        ShippingPolicy shippingPolicy = shippingPolicyService.getShippingPolicy();
+
+        int shippingFee = shippingPolicy.getFee();
+        int minPurchasePrice = shippingPolicy.getLowerBound();
+        String shippingPolicyName = shippingPolicy.getDescription();
+
+
+        ClientViewOrderPostResponseDto clientViewOrderPostResponseDto = new ClientViewOrderPostResponseDto(
                 productItemDtoList,
                 packageItemDtoList,
                 shippingFee,
@@ -68,7 +77,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                 phoneNumberDtoList
         );
 
-        return tmpRes;
+        return clientViewOrderPostResponseDto;
     }
 
     @Override
@@ -140,5 +149,6 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                     .build();
             orderDetailRepository.save(orderDetail);
         });
+
     }
 }

@@ -7,9 +7,11 @@ import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientViewOrd
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
+import org.hibernate.query.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.awt.print.Pageable;
 import java.util.List;
 
 @RestController
@@ -23,6 +25,7 @@ public class ClientOrderController {
     public ResponseEntity<ClientViewOrderPostResponseDto> viewOrderPage(@RequestBody ClientViewOrderPostRequestDto clientOrderPostRequestDto){
 
         long clientId = 1L;
+
         ClientViewOrderPostResponseDto responseDto = clientOrderService.viewOrderPage(clientId, clientOrderPostRequestDto);
 
         return ResponseEntity.ok().body(responseDto);
@@ -32,19 +35,21 @@ public class ClientOrderController {
     @PostMapping("/order")
     public ResponseEntity<String> createOrder(@RequestBody ClientOrderPostRequestDto clientOrderPostRequestDto){
         clientOrderService.createOrder(clientOrderPostRequestDto);
-        return ResponseEntity.ok("Order가 생성되었습니다");
+        return ResponseEntity.ok("주문이 생성되었습니다");
     }
 
 
     @GetMapping
-    public ResponseEntity<List<ClientAllOrderGetResponseDto>> getAllOrders(HttpServletRequest request){
+    public ResponseEntity<Page<ClientAllOrderGetResponseDto>> getAllOrders(HttpServletRequest request,
+                                                                           @RequestParam("size") int size,
+                                                                           @RequestParam("page") int page){
 
 //        String headerValue = request.getHeader("id");
 //        if(Objects.isNull(headerValue)) throw new NeedToAuthenticationException();
 //
 //        long clientId = Integer.parseInt(request.getHeader("id"));
         long clientId = 1L;
-        List<ClientAllOrderGetResponseDto> responseDto = clientOrderService.getAllOrder(clientId);
+        Page<ClientAllOrderGetResponseDto> responseDto = clientOrderService.getAllOrder(clientId);
 
         return ResponseEntity.ok().body(responseDto);
 
