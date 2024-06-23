@@ -7,7 +7,8 @@ import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientViewOrd
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
-import org.hibernate.query.Page;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,16 +41,14 @@ public class ClientOrderController {
 
 
     @GetMapping
-    public ResponseEntity<Page<ClientAllOrderGetResponseDto>> getAllOrders(HttpServletRequest request,
-                                                                           @RequestParam("size") int size,
-                                                                           @RequestParam("page") int page){
+    public ResponseEntity<Page<ClientAllOrderGetResponseDto>> getAllOrders(HttpServletRequest request, Pageable pageable){
 
 //        String headerValue = request.getHeader("id");
 //        if(Objects.isNull(headerValue)) throw new NeedToAuthenticationException();
 //
 //        long clientId = Integer.parseInt(request.getHeader("id"));
         long clientId = 1L;
-        Page<ClientAllOrderGetResponseDto> responseDto = clientOrderService.getAllOrder(clientId);
+        Page<ClientAllOrderGetResponseDto> responseDto = clientOrderService.getOrderPage(clientId, pageable);
 
         return ResponseEntity.ok().body(responseDto);
 

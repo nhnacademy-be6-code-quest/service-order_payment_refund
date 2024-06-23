@@ -19,8 +19,10 @@ import com.nhnacademy.orderpaymentrefund.repository.shipping.ShippingPolicyRepos
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import com.nhnacademy.orderpaymentrefund.service.shipping.ShippingPolicyService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import java.awt.print.Pageable;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -36,6 +38,14 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     // TODO 각 서비스의 api 문서가 나와야 완성 가능. 현재, 해당 프로젝트에서 끌어올 수 없는 데이터는 그냥 임의로 생성!
     // TODO 임의로 생성한 데이터 클래스에서 AllArgs 애노테이션 삭제하기
     public ClientViewOrderPostResponseDto viewOrderPage(long clientId, ClientViewOrderPostRequestDto clientOrderPostRequestDto) {
+
+        // 우리 서비스에서 가져올 수 있는 데이터들
+        ShippingPolicy shippingPolicy = shippingPolicyService.getShippingPolicy();
+
+        int shippingFee = shippingPolicy.getFee();
+        int minPurchasePrice = shippingPolicy.getLowerBound();
+        String shippingPolicyName = shippingPolicy.getDescription();
+
 
         // feinclient를 통해 가져올 데이터들
         List<ProductItemDto> productItemDtoList = List.of(
@@ -59,13 +69,10 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                 new PhoneNumberDto("업무폰", "010-4321-4321")
         );
 
-        // 우리 서비스에서 가져올 수 있는 데이터들
-        ShippingPolicy shippingPolicy = shippingPolicyService.getShippingPolicy();
-
-        int shippingFee = shippingPolicy.getFee();
-        int minPurchasePrice = shippingPolicy.getLowerBound();
-        String shippingPolicyName = shippingPolicy.getDescription();
-
+        // TODO 지우기
+        shippingFee = 25000;
+        minPurchasePrice = 50000;
+        shippingPolicyName = "50000원 이상 구매시 무료배송";
 
         ClientViewOrderPostResponseDto clientViewOrderPostResponseDto = new ClientViewOrderPostResponseDto(
                 productItemDtoList,
@@ -77,11 +84,13 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                 phoneNumberDtoList
         );
 
+
         return clientViewOrderPostResponseDto;
     }
 
     @Override
-    public List<ClientAllOrderGetResponseDto> getAllOrder(long clientId) {
+    public Page<ClientAllOrderGetResponseDto> getOrderPage(long clientId, Pageable pageable) {
+
 
         ZonedDateTime orderDate = ZonedDateTime.now();
         String address = "광주광역시 동구 필문대로 309";
@@ -122,7 +131,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                 .build();
 
 
-        return List.of(tmpRes);
+        return Page.of(tmpRes);
     }
 
     @Override

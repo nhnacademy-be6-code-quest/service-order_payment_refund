@@ -11,6 +11,6 @@ import java.util.List;
 
 public interface ClientOrderService {
     ClientViewOrderPostResponseDto viewOrderPage(long clientId, ClientViewOrderPostRequestDto clientOrderPostRequestDto);
-    Page<ClientAllOrderGetResponseDto> getAllOrder(long clientId, Pageable pageable);
+    Page<ClientAllOrderGetResponseDto> getOrderPage(long clientId, Pageable pageable);
     void createOrder(ClientOrderPostRequestDto clientOrderPostRequestDto);
 }
