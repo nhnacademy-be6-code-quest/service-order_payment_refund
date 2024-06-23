@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientOrderPostResponseDto { // 주문 페이지 화면에 뿌려질 데이터
+public class ClientViewOrderPostResponseDto { // 주문 페이지 화면에 뿌려질 데이터
 
     // 상품관련
     private List<ProductItemDto> productItemDtoList; // 사용자가 주문하려는 상품들

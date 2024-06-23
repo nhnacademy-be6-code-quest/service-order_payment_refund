@@ -1,9 +1,13 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
+import com.nhnacademy.orderpaymentrefund.domain.order.Order;
+import com.nhnacademy.orderpaymentrefund.domain.order.OrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientOrderPostRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientViewOrderPostRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientAllOrderGetResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientOrderPostResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientViewOrderPostResponseDto;
+import com.nhnacademy.orderpaymentrefund.repository.order.OrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.field.ClientAddressDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.field.OrderedProductDto;
@@ -20,11 +24,12 @@ import java.util.List;
 public class ClientOrderServiceImpl implements ClientOrderService {
 
     private OrderRepository orderRepository;
+    private OrderDetailRepository orderDetailRepository;
 
     @Override
     // TODO 각 서비스의 api 문서가 나와야 완성 가능. 현재, 해당 프로젝트에서 끌어올 수 없는 데이터는 그냥 임의로 생성!
     // TODO 임의로 생성한 데이터 클래스에서 AllArgs 애노테이션 삭제하기
-    public ClientOrderPostResponseDto tryOrder(long clientId, ClientOrderPostRequestDto clientOrderPostRequestDto) {
+    public ClientViewOrderPostResponseDto viewOrderPage(long clientId, ClientViewOrderPostRequestDto clientOrderPostRequestDto) {
 
         // 임의의 데이터를 담는 response dto를 반환합니다.
 
@@ -53,7 +58,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                 new PhoneNumberDto("업무폰", "010-4321-4321")
         );
 
-        ClientOrderPostResponseDto tmpRes = new ClientOrderPostResponseDto(
+        ClientViewOrderPostResponseDto tmpRes = new ClientViewOrderPostResponseDto(
                 productItemDtoList,
                 packageItemDtoList,
                 shippingFee,
@@ -111,4 +116,29 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         return List.of(tmpRes);
     }
 
+    @Override
+    public void createOrder(ClientOrderPostRequestDto clientOrderPostRequestDto) {
+
+        // order 생성 및 저장
+        Order order = Order.builder()
+                .deliveryDate(clientOrderPostRequestDto.getDeliveryDate())
+                .totalPrice(clientOrderPostRequestDto.getTotalPrice())
+                .clientId(clientOrderPostRequestDto.getClientId())
+                .shippingFee(clientOrderPostRequestDto.getShippingFee())
+                .phoneNumber(clientOrderPostRequestDto.getPhoneNumber())
+                .deliveryAddress(clientOrderPostRequestDto.getDeliveryAddress())
+                .build();
+        Order savedOrder = orderRepository.save(order);
+
+        // OrderDetail 생성 및 저장
+        clientOrderPostRequestDto.getOrderDetailDtoList().forEach(orderDetailDto -> {
+            OrderDetail orderDetail = OrderDetail.builder()
+                    .order(savedOrder)
+                    .quantity(orderDetailDto.getQuantity())
+                    .productPrice(orderDetailDto.getPrice())
+                    .productId(orderDetailDto.getProductId())
+                    .build();
+            orderDetailRepository.save(orderDetail);
+        });
+    }
 }

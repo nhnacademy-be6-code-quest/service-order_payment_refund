@@ -6,3 +6,10 @@ spring:
     name: codequest_order_payment_refund
   profiles:
     active: dev
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url.defaultZone: http://admin:1234@localhost:8002/eureka/
+  instance:
+    prefer-ip-address: true

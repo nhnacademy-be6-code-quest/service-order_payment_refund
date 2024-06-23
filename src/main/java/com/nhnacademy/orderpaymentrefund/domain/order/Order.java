@@ -8,12 +8,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Entity
 @NoArgsConstructor
 @Getter
-@Table(name = "orders")
 public class Order {
 
     @Id
@@ -25,20 +25,15 @@ public class Order {
     private ZonedDateTime orderDate;
 
     @NotNull
-    private ZonedDateTime deliveryDate;
+    private ZonedDateTime deliveryDate; // 배송날짜
 
-    private OrderStatus orderStatus;
+    private OrderStatus orderStatus; // 상태
 
     @NotNull
-    private long totalPrice; // 지불 금액
+    private long totalPrice; // 지불 예상 금액
 
     @NotNull
     private long clientId; // fk
-
-    @NotNull
-    @OneToOne
-    @JoinColumn(name = "shipping_policy_id", referencedColumnName = "shipping_policy_id")
-    private ShippingPolicy shippingPolicy;
 
     @Column(name = "shipping_fee_of_order_date")
     private long shippingFee; // 주문당시 배송비
@@ -53,13 +48,12 @@ public class Order {
     private List<OrderDetail> orderDetailList;
 
     @Builder
-    public Order(ZonedDateTime orderDate, ZonedDateTime deliveryDate, OrderStatus orderStatus, long totalPrice, long clientId, ShippingPolicy shippingPolicy, long shippingFee, String phoneNumber, String deliveryAddress){
-        this.orderDate = orderDate;
-        this.deliveryDate = deliveryDate;
-        this.orderStatus = orderStatus;
+    public Order(ZonedDateTime deliveryDate, long totalPrice, long clientId, long shippingFee, String phoneNumber, String deliveryAddress){
+        this.orderDate = ZonedDateTime.now();
+        this.deliveryDate = deliveryDate == null ? ZonedDateTime.now().plusDays(1) : deliveryDate;
+        this.orderStatus = OrderStatus.WAIT_PAYMENT;
         this.totalPrice = totalPrice;
         this.clientId = clientId;
-        this.shippingPolicy = shippingPolicy;
         this.shippingFee = shippingFee;
         this.phoneNumber = phoneNumber;
         this.deliveryAddress = deliveryAddress;
