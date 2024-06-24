@@ -1,16 +1,15 @@
 package com.nhnacademy.orderpaymentrefund.dto.order.response.field;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class ProductItemDto {
-    private long id;
-    private String imgPath;
-    private String name;
-    private long price;
-    private long quantity;
+@Builder
+public record ProductItemDto (
+    long id,
+    String imgPath,
+    String name,
+    long price,
+    long quantity
+)
+{
+
 }

@@ -1,0 +1,25 @@
+### Order 생성
+
+POST localhost:8008/client/order
+Content-Type: application/json
+
+{
+  "clientId": 1,
+  "orderDetailDtoList": [
+    {
+      "productId": 1,
+      "price": 1200,
+      "quantity": 2
+    },
+    {
+      "productId": 2,
+      "price": 2500,
+      "quantity": 1
+    }
+  ],
+  "deliveryDate": null,
+  "totalPrice": 3700,
+  "shippingFee": 500,
+  "phoneNumber": "010-1234-5678",
+  "deliveryAddress": "123 Main St, City, Country"
+}

@@ -1,13 +1,21 @@
 package com.nhnacademy.orderpaymentrefund.dto.order.request.client;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.field.OrderItemDto;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.field.OrderDetailDto;
+import lombok.Builder;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter
-@NoArgsConstructor
-public class ClientOrderPostRequestDto { // 회원이 주문 시도했을 때 필요한 dto
-    private List<OrderItemDto> orderItemDtoList; // 주문 목록
+@Builder
+public record ClientOrderPostRequestDto (
+    long clientId,
+    List<OrderDetailDto> orderDetailDtoList,
+    LocalDateTime deliveryDate,
+    long totalPrice,
+    int shippingFee,
+    String phoneNumber,
+    String deliveryAddress
+)
+{
+
 }

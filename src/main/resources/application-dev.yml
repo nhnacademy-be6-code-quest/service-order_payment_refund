@@ -18,11 +18,3 @@ spring:
     url: jdbc:h2:mem:testdb
     username: sa
     password: 1234
-eureka:
-  client:
-    register-with-eureka: true
-    service-url:
-      defaultZone: http://admin:1234@localhost:8008/eureka
-    fetch-registry: true
-  instance:
-    ip-address: true

@@ -19,7 +19,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(req ->
                 req.requestMatchers("/h2-console/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/client/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/client/login").permitAll())
+                    .requestMatchers(HttpMethod.GET, "/api/client/login").permitAll()
+                        .anyRequest().permitAll())
             .headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
 
         return http.build();

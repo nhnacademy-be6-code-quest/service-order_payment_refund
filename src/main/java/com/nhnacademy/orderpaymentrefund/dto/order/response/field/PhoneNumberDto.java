@@ -1,13 +1,12 @@
 package com.nhnacademy.orderpaymentrefund.dto.order.response.field;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Getter
-public class PhoneNumberDto {
-    private String alias;
-    private String phoneNumber;
+@Builder
+public record PhoneNumberDto (
+    String alias,
+    String phoneNumber
+)
+{
+
 }
