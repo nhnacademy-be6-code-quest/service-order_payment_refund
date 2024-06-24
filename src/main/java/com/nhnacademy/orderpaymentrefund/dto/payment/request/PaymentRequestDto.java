@@ -1,9 +1,11 @@
 package com.nhnacademy.orderpaymentrefund.dto.payment.request;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 
-@Data // Getter, Setter, equals & hashCode, toString, NoArgs, AllArgs ...
+@Builder
+@Getter
 public class PaymentRequestDto {
     @NotNull
     private Long orderId;                   // 주문 아이디

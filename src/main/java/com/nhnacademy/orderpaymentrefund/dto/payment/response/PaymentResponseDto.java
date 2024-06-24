@@ -5,9 +5,11 @@ import com.nhnacademy.orderpaymentrefund.domain.payment.PaymentMethod;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Data
 @Builder
+@Getter
 public class PaymentResponseDto {
     private Long paymentId;
     private Order order;
