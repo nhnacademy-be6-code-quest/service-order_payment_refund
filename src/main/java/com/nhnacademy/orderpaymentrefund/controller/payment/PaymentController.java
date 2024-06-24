@@ -18,20 +18,20 @@ import org.springframework.web.bind.annotation.RestController;
  * @version 0.0
  */
 @RestController
-@RequestMapping("/api/client/order/payment")
+@RequestMapping
 @RequiredArgsConstructor
 @Slf4j
 public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping
+    @PostMapping("/api/client/order/payment")
     public void savePayment(@RequestBody PaymentRequestDto paymentRequestDto) {
         log.info(paymentRequestDto.toString());
         paymentService.savePayment(paymentRequestDto); // 여기에서 에러 발생
     }
 
-    @GetMapping("{paymentId}")
+    @GetMapping("/api/client/order/payment/{paymentId}")
     public PaymentResponseDto findPaymentByPaymentId(@RequestParam Long paymentId) {
         return paymentService.findPaymentByPaymentId(paymentId);
     }
