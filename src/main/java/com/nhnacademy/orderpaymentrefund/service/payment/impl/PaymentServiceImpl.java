@@ -5,6 +5,7 @@ import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
 import com.nhnacademy.orderpaymentrefund.domain.payment.PaymentMethod;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.PaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentResponseDto;
+import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentMethodRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
@@ -27,8 +28,7 @@ public class PaymentServiceImpl implements PaymentService {
     public void savePayment(PaymentRequestDto paymentRequestDto) {
         Order order = orderRepository.findById(paymentRequestDto.getOrderId()).orElse(null);
 
-        // 여기에서 이상이 있는 듯 -> Payment Method 가 없어서 문제가 생긴 것으로 보임
-        PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentRequestDto.getPaymentMethodId()).orElse(null);
+        PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentRequestDto.getPaymentMethodId()).orElseThrow(() -> new PaymentNotFoundException());
         Payment payment = Payment.builder()
             .order(order)
             .paymentMethod(paymentMethod)
