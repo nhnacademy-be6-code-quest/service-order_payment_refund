@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @version 0.0
  */
 @RestController
-@RequestMapping("order/payment")
+@RequestMapping("/api/client/order/payment")
 @RequiredArgsConstructor
 @Slf4j
 public class PaymentController {
