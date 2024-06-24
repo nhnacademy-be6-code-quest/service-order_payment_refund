@@ -7,19 +7,22 @@ import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicy;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientOrderPostRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientViewOrderPostRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientAllOrderGetResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientOrderPostResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientViewOrderPostResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.field.*;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import com.nhnacademy.orderpaymentrefund.service.shipping.ShippingPolicyService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.ZonedDateTime;
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,7 +96,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
         orderPage.forEach( order -> {
 
-            ZonedDateTime orderDate = order.getOrderDate();
+            LocalDateTime orderDate = order.getOrderDate();
             String address = order.getDeliveryAddress();
             long totalPrice = order.getTotalPrice();
             Long pointUsageAmount = 1L; // TODO 결제 서비스에서 가져와야함.
@@ -139,7 +142,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
         // 아래는 임의로 만든 데이터들 입니다.
 
-        ZonedDateTime orderDate = ZonedDateTime.now();
+        LocalDateTime orderDate = LocalDateTime.now();
         String address = "광주광역시 동구 필문대로 309";
         OrderedProductDto orderedProductDto1 = OrderedProductDto.builder()
                 .productId(1)
@@ -182,7 +185,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public void createOrder(ClientOrderPostRequestDto clientOrderPostRequestDto) {
+    public ClientOrderPostResponseDto createOrder(ClientOrderPostRequestDto clientOrderPostRequestDto, HttpServletResponse httpServletResponse) {
 
         // order 생성 및 저장
         Order order = Order.builder()
@@ -206,5 +209,12 @@ public class ClientOrderServiceImpl implements ClientOrderService {
             orderDetailRepository.save(orderDetail);
         });
 
+        ClientOrderPostResponseDto responseDto = ClientOrderPostResponseDto.builder()
+                .orderId(savedOrder.getId())
+                .totalProductPrice(savedOrder.getTotalPrice())
+                .build();
+
+        return responseDto;
     }
+
 }

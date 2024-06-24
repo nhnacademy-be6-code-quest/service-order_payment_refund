@@ -5,7 +5,7 @@ spring:
   application:
     name: codequest_order_payment_refund
   profiles:
-    active: dev
+    active: heewon
 eureka:
   client:
     register-with-eureka: true

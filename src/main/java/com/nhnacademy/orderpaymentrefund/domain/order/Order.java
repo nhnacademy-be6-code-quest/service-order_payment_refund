@@ -1,6 +1,5 @@
 package com.nhnacademy.orderpaymentrefund.domain.order;
 
-import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicy;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -8,8 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -23,10 +21,10 @@ public class Order {
     private long id;
 
     @NotNull
-    private ZonedDateTime orderDate;
+    private LocalDateTime orderDate;
 
     @NotNull
-    private ZonedDateTime deliveryDate; // 배송날짜
+    private LocalDateTime deliveryDate; // 배송날짜
 
     private OrderStatus orderStatus; // 상태
 
@@ -49,9 +47,9 @@ public class Order {
     private List<OrderDetail> orderDetailList;
 
     @Builder
-    public Order(ZonedDateTime deliveryDate, long totalPrice, long clientId, long shippingFee, String phoneNumber, String deliveryAddress){
-        this.orderDate = ZonedDateTime.now();
-        this.deliveryDate = deliveryDate == null ? ZonedDateTime.now().plusDays(1) : deliveryDate;
+    public Order(LocalDateTime deliveryDate, long totalPrice, long clientId, long shippingFee, String phoneNumber, String deliveryAddress){
+        this.orderDate = LocalDateTime.now();
+        this.deliveryDate = deliveryDate == null ? orderDate.plusDays(1) : deliveryDate;
         this.orderStatus = OrderStatus.WAIT_PAYMENT;
         this.totalPrice = totalPrice;
         this.clientId = clientId;

@@ -4,6 +4,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.admin.AdminOrderPutRe
 import com.nhnacademy.orderpaymentrefund.dto.order.response.admin.AdminAllOrdersGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.AdminOrderService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,8 +19,8 @@ public class AdminOrderController {
 
     @GetMapping
     // 회원이 주문한 모든 주문건 확인하기
-    public ResponseEntity<List<AdminAllOrdersGetResponseDto>> getAllOrders(){
-        List<AdminAllOrdersGetResponseDto> adminAllOrdersGetResponseDto = adminOrderService.getAllOrders();
+    public ResponseEntity<Page<AdminAllOrdersGetResponseDto>> getAllOrders(){
+        Page<AdminAllOrdersGetResponseDto> adminAllOrdersGetResponseDto = adminOrderService.getAllOrders();
         return ResponseEntity.ok().body(adminAllOrdersGetResponseDto);
     }
 

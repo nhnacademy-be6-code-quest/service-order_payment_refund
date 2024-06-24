@@ -8,6 +8,8 @@ import com.nhnacademy.orderpaymentrefund.service.shipping.ShippingPolicyService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 public class ShippingPolicyServiceImpl implements ShippingPolicyService {
@@ -19,9 +21,9 @@ public class ShippingPolicyServiceImpl implements ShippingPolicyService {
 
         ShippingPolicy shippingPolicy = getShippingPolicy();
 
-        shippingPolicy.updatePost(adminShippingPolicyPutRequestDto.getDescription()
-                , adminShippingPolicyPutRequestDto.getFee()
-                , adminShippingPolicyPutRequestDto.getLowerBound());
+        shippingPolicy.updatePost(adminShippingPolicyPutRequestDto.description()
+                , adminShippingPolicyPutRequestDto.fee()
+                , adminShippingPolicyPutRequestDto.lowerBound());
 
         shippingPolicyRepository.save(shippingPolicy);
 
@@ -30,11 +32,11 @@ public class ShippingPolicyServiceImpl implements ShippingPolicyService {
     @Override
     public ShippingPolicy getShippingPolicy() {
 
-        ShippingPolicy shippingPolicy = shippingPolicyRepository.findAll().getFirst();
+        List<ShippingPolicy> shippingPolicy = shippingPolicyRepository.findAll();
 
-        if(shippingPolicy == null) throw new ShippingPolicyNotFoundException();
+        if(shippingPolicy.isEmpty()) throw new ShippingPolicyNotFoundException();
 
-        return shippingPolicy;
+        return shippingPolicy.getFirst();
 
     }
 }

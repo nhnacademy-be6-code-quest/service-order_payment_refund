@@ -3,13 +3,13 @@ package com.nhnacademy.orderpaymentrefund.dto.order.response.client;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.field.OrderedProductDto;
 import lombok.Builder;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
 // 회원이 주문한 주문 내역 건
 public record ClientAllOrderGetResponseDto (
-    ZonedDateTime orderDate, // 주문날짜
+    LocalDateTime orderDate, // 주문날짜
     String address, // 배송지
     List<OrderedProductDto> orderedProductDtoList, // 주문한 상품정보들
     long totalPrice, // 상품 총 금액
