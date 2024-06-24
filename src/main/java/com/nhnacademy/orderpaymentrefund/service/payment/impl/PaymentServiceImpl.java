@@ -34,7 +34,6 @@ public class PaymentServiceImpl implements PaymentService {
             .paymentMethod(paymentMethod)
             .couponId(paymentRequestDto.getCouponId())
             .payAmount(paymentRequestDto.getPayAmount())
-            .payTime(LocalDateTime.now())
             .build();
 
         paymentRepository.save(payment);
