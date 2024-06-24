@@ -1,6 +1,5 @@
 package com.nhnacademy.orderpaymentrefund.domain.payment;
 
-//import com.nhnacademy.order.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
