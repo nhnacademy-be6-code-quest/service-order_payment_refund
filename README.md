@@ -67,7 +67,7 @@
           private long shippingFee; // 배송비
           private long totalPayAmount; // 결제된 금액 or 결제할 금액
       }
-  
+   
       public class OrderedProductDto {
           private long productId; // 주문한 상품 아이디
           private String productName; // 주문한 상품 이름
