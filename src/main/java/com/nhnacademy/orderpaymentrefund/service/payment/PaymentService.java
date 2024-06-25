@@ -5,5 +5,5 @@ import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentResponseDto
 
 public interface PaymentService {
     void savePayment(PaymentRequestDto paymentRequestDto);
-    PaymentResponseDto findPaymentByPaymentId(Long paymentId);
+    PaymentResponseDto findByPaymentId(Long paymentId);
 }

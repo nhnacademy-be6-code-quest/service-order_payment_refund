@@ -10,7 +10,6 @@ import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentMethodRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
-import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,7 +39,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentResponseDto findPaymentByPaymentId(Long paymentId) {
+    public PaymentResponseDto findByPaymentId(Long paymentId) {
         Payment payment = paymentRepository.findById(paymentId).orElse(null);
 
         return PaymentResponseDto.builder()
