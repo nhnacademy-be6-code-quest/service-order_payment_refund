@@ -51,6 +51,7 @@ public class Order {
         this.orderDate = LocalDateTime.now();
         this.deliveryDate = deliveryDate == null ? orderDate.plusDays(1) : deliveryDate;
         this.orderStatus = OrderStatus.WAIT_PAYMENT;
+        //this.orderStatus = OrderStatus.DELIVERY_COMPLETE;
         this.totalPrice = totalPrice;
         this.clientId = clientId;
         this.shippingFee = shippingFee;
