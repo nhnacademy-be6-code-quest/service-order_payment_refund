@@ -48,7 +48,7 @@ public class Payment {
     private LocalDateTime payTime;
 
     @Builder
-    public Payment(Order order, PaymentMethod paymentMethod, Long couponId, Long payAmount) {
+    public Payment(Order order, PaymentMethod paymentMethod, Long couponId, Long payAmount) { // Payment.builder().order(new Order()).paymentMethod(new PaymentMethod())...
         this.order = order;
         this.paymentMethod = paymentMethod;
         this.couponId = couponId;
