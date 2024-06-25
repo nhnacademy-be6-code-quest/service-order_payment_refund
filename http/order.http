@@ -1,0 +1,4 @@
+### GET 주문상세아이디로 주문상태 조회
+GET http://localhost:8008/order-status/1
+
+
