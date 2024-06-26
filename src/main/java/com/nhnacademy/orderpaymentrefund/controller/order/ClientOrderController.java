@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -20,11 +19,12 @@ import java.net.URI;
 
 @RestController
 @AllArgsConstructor
+@RequestMapping("/api/client")
 public class ClientOrderController {
 
     private ClientOrderService clientOrderService;
 
-    @PostMapping("/client/views/order")
+    @PostMapping("/views/order")
     public ResponseEntity<ClientViewOrderPostResponseDto> viewOrder(@RequestBody ClientViewOrderPostRequestDto clientOrderPostRequestDto){
 
         long clientId = 1L;
@@ -35,7 +35,7 @@ public class ClientOrderController {
 
     }
 
-    @PostMapping("/client/order")
+    @PostMapping("/order")
     public ResponseEntity<ClientOrderPostResponseDto> createOrder(@RequestBody ClientOrderPostRequestDto clientOrderPostRequestDto, HttpServletResponse httpServletResponse){
         ClientOrderPostResponseDto responseDto = clientOrderService.createOrder(clientOrderPostRequestDto, httpServletResponse);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -45,7 +45,7 @@ public class ClientOrderController {
         return ResponseEntity.created(location).body(responseDto);
     }
 
-    @GetMapping
+    @GetMapping("/orders")
     public ResponseEntity<Page<ClientAllOrderGetResponseDto>> getAllOrders(HttpServletRequest request, Pageable pageable){
 
 //        String headerValue = request.getHeader("id");
