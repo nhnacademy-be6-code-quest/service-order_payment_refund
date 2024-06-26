@@ -9,10 +9,8 @@ import lombok.*;
  * @version 1.0
  */
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-//@Table(name = "a.payment_status") // 테이블 이름 매핑
 public class PaymentMethod {
 
     @Id

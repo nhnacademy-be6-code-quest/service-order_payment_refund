@@ -1,23 +1,28 @@
 package com.nhnacademy.orderpaymentrefund.domain.payment;
 
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
-
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * @author Virtus_Chae
  * @version 1.0
  */
-@Builder
 @AllArgsConstructor
 @Getter
-@Setter
 @Entity
 @NoArgsConstructor
-// 데이터에 박을 것
 public class Payment {
 
     @Id
@@ -26,12 +31,12 @@ public class Payment {
 
     @NotNull
     @OneToOne
-    @JoinColumn(name = "orderId")
+    @JoinColumn(name = "order_id")
     private Order order;
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "PaymentMethodId")
+    @JoinColumn(name = "payment_method_id")
     private PaymentMethod paymentMethod;
 
     private Long couponId;
@@ -41,4 +46,13 @@ public class Payment {
 
     @NotNull
     private LocalDateTime payTime;
+
+    @Builder
+    public Payment(Order order, PaymentMethod paymentMethod, Long couponId, Long payAmount) { // Payment.builder().order(new Order()).paymentMethod(new PaymentMethod())...
+        this.order = order;
+        this.paymentMethod = paymentMethod;
+        this.couponId = couponId;
+        this.payAmount = payAmount;
+        this.payTime = LocalDateTime.now();
+    }
 }
