@@ -5,6 +5,7 @@ import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
 import com.nhnacademy.orderpaymentrefund.domain.payment.PaymentMethod;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.PaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentResponseDto;
+import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentMethodRepository;
@@ -25,7 +26,7 @@ public class PaymentServiceImpl implements PaymentService {
     // Order Enum Type -> String, 배송 상태 -> tinyInt
     @Override
     public void savePayment(PaymentRequestDto paymentRequestDto) {
-        Order order = orderRepository.findById(paymentRequestDto.getOrderId()).orElse(null);
+        Order order = orderRepository.findById(paymentRequestDto.getOrderId()).orElseThrow(() -> new OrderNotFoundException());
 
         PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentRequestDto.getPaymentMethodId()).orElseThrow(() -> new PaymentNotFoundException());
         Payment payment = Payment.builder()
