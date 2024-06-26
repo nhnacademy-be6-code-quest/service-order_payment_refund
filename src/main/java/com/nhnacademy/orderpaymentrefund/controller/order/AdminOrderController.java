@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/order")
+@RequestMapping("/api/client/order")
 @AllArgsConstructor
 public class AdminOrderController {
 

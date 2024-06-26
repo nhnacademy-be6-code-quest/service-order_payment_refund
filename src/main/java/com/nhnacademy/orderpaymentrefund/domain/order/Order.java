@@ -58,4 +58,8 @@ public class Order {
         this.deliveryAddress = deliveryAddress;
     }
 
+    public void updateOrder(OrderStatus orderStatus){
+        this.orderStatus = orderStatus;
+    }
+
 }
