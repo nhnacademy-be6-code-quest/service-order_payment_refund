@@ -24,7 +24,7 @@ public class ClientOrderController {
 
     private ClientOrderService clientOrderService;
 
-    @GetMapping("/views/order")
+    @PostMapping("/views/order")
     public ResponseEntity<ClientViewOrderPostResponseDto> viewOrder(@RequestBody ClientViewOrderPostRequestDto clientOrderPostRequestDto){
 
         long clientId = 1L;

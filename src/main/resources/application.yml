@@ -3,6 +3,6 @@ server:
 
 spring:
   application:
-    name: codequest_order_payment_refund
+    name: orderPaymentRefund
   profiles:
     active: heewon
