@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -25,7 +26,7 @@ public class OrderServiceImpl implements OrderService {
         return order.getTotalPrice();
     }
 
-    @Override
+    @Override // TODO UserDetail -> OrderDetail 바꾸기
     public List<UserDetailGetResponseDto> getUserDetails(long orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException());
         return orderDetailRepository.findByOrder(order).stream().map(

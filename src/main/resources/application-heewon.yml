@@ -21,3 +21,12 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 110MB
+
+eureka:
+  client:
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://admin:1234@localhost:8002/eureka
+    fetch-registry: true
+  instance:
+    ip-address: true
