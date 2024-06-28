@@ -26,7 +26,7 @@ public class OrderServiceImpl implements OrderService {
         return order.getTotalPrice();
     }
 
-    @Override
+    @Override // TODO UserDetail -> OrderDetail 바꾸기
     public List<UserDetailGetResponseDto> getUserDetails(long orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException());
         return orderDetailRepository.findByOrder(order).stream().map(
