@@ -33,14 +33,14 @@ public class PaymentController {
     public PaymentResponseDto findByPaymentId(@PathVariable Long paymentId) {
         return paymentService.findByPaymentId(paymentId);
     }
-
-    @GetMapping("/api/client/order/{orderId}/payment")
-    public long findTotalPriceByOrderId(@PathVariable Long orderId) {
-        return orderService.getTotalPrice(orderId);
-    }
-
-    @GetMapping("/api/client/order/{orderId}/payment")
-    OrderPaymentResponseDto findOrderPaymentResponseDtoByOrderId(@PathVariable Long orderId) {
-        return paymentService.findOrderPaymentResponseDtoByOrderId(orderId);
-    }
+//    TODO: 추후 구현해야 함.
+//    @GetMapping("/api/client/order/{orderId}/payment")
+//    public long findTotalPriceByOrderId(@PathVariable Long orderId) {
+//        return orderService.getTotalPrice(orderId);
+//    }
+//
+//    @GetMapping("/api/client/order/{orderId}/payment")
+//    OrderPaymentResponseDto findOrderPaymentResponseDtoByOrderId(@PathVariable Long orderId) {
+//        return paymentService.findOrderPaymentResponseDtoByOrderId(orderId);
+//    }
 }
