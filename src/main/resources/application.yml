@@ -1,0 +1,17 @@
+server:
+  port: 8008
+
+spring:
+  application:
+    name: orderPaymentRefund
+  profiles:
+    active: prod
+
+eureka:
+  client:
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://admin:1234@localhost:8002/eureka
+    fetch-registry: true
+  instance:
+    ip-address: true
