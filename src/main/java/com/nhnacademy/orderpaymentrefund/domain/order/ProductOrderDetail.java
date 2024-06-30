@@ -26,7 +26,7 @@ public class ProductOrderDetail {
     private long productOrderDetailId;
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id", referencedColumnName = "order_id")
     private Order order;
 
     @NotNull
@@ -46,7 +46,7 @@ public class ProductOrderDetail {
      * @param order 연관된 주문. 주문 상품에 대한 주문 데이터.
      * @param productId 상품 아이디
      * @param quantity 상품 수량
-     * @param pricePerProduct 개당 상품`
+     * @param pricePerProduct 개당 상품
      **/
     @Builder
     public ProductOrderDetail(Order order, long productId, long quantity, long pricePerProduct) {

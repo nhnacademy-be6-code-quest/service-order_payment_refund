@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Order 엔티티
  * @author 박희원(bakhuiwon326)
  * @version 2.0
  **/
@@ -28,7 +27,6 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "order_id")
     private long orderId;
 
     @Nullable
@@ -43,10 +41,10 @@ public class Order {
 
     @NotNull
     @Column(unique = true)
-    private String tossOrderId;
+    private UUID tossOrderId;
 
     @NotNull
-    private LocalDateTime orderDatetime; // 주문 일시
+    private LocalDateTime orderDate; // 주문 일시
 
     @Size(max = 50)
     @NotNull
@@ -109,7 +107,7 @@ public class Order {
      * @param couponId 쿠폰 아이디. 쿠폰을 사용하지 않으면 null. 쿠폰 사용 시 not null
      * @param pointPolicyId 쿠폰 정책 아이디. 쿠폰을 사용하지 않으면 null.
      * @param tossOrderId 토스 페이먼츠 아이디(uuid). PG service (토스페이먼츠)에 넘길 주문 고유값.
-     * @param productTotalAmount 상품 총 금액. 주문한 상품들의 총 금액. (옵션 상품 포함)
+     * @param productTotalAmount 상품 총 금액. 주문한 상품들의 총 금액.
      * @param shippingFee 배송비. 주문당시 배송정책에 따른 배송비.
      * @param designatedDeliveryDate 지정 날짜. 주문자가 지정하지 않으면 null.
      * @param phoneNumber 주문자 핸드폰 번호
@@ -120,7 +118,7 @@ public class Order {
      *
      **/
     @Builder(builderMethodName = "clientOrderBuilder", builderClassName = "clientOrderBuilder")
-    public Order(long clientId, @Nullable Long couponId, long pointPolicyId, String tossOrderId, long productTotalAmount, int shippingFee, @Nullable LocalDate designatedDeliveryDate,
+    public Order(long clientId, @Nullable Long couponId, long pointPolicyId, UUID tossOrderId, long productTotalAmount, int shippingFee, @Nullable LocalDate designatedDeliveryDate,
                  String phoneNumber, String deliveryAddress, long discountAmountByCoupon, long discountAmountByPoint, long accumulatedPoint){
         this.clientId = clientId;
         this.couponId = couponId;
@@ -134,7 +132,7 @@ public class Order {
         this.discountAmountByCoupon = discountAmountByCoupon;
         this.discountAmountByPoint = discountAmountByPoint;
         this.accumulatedPoint = accumulatedPoint;
-        this.orderDatetime = LocalDateTime.now();
+        this.orderDate = LocalDateTime.now();
         this.orderStatus = OrderStatus.WAIT_PAYMENT;
         this.orderTotalAmount = this.productTotalAmount + this.shippingFee;
     }
@@ -154,15 +152,15 @@ public class Order {
      *
      **/
     @Builder(builderMethodName = "nonClientOrderBuilder", builderClassName = "nonClientOrderBuilder")
-    public Order(String tossOrderId, long productTotalAmount, int shippingFee, @Nullable LocalDate designatedDeliveryDate, String phoneNumber,
-                 String deliveryAddress, @NotNull String nonClientOrderPassword, @NotNull String nonClientOrdererName, @NotNull String nonClientOrdererEmail){
+    public Order(UUID tossOrderId, long productTotalAmount, int shippingFee, @Nullable LocalDate designatedDeliveryDate, String phoneNumber,
+                 String deliveryAddress, @Nullable String nonClientOrderPassword, @Nullable String nonClientOrdererName, @Nullable String nonClientOrdererEmail){
         this.tossOrderId = tossOrderId;
         this.productTotalAmount = productTotalAmount;
         this.shippingFee = shippingFee;
         this.designatedDeliveryDate = designatedDeliveryDate;
         this.phoneNumber = phoneNumber;
         this.deliveryAddress = deliveryAddress;
-        this.orderDatetime = LocalDateTime.now();
+        this.orderDate = LocalDateTime.now();
         this.orderStatus = OrderStatus.WAIT_PAYMENT;
         this.orderTotalAmount = this.productTotalAmount + this.shippingFee;
         this.deliveryAddress = deliveryAddress;
