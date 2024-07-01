@@ -27,7 +27,7 @@ public class Payment {
 
     @NotNull
     @OneToOne
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id"/*, unique = true*/) // Unique 처리에 대해 생각해 보기
     private Order order;
 
     @NotNull
