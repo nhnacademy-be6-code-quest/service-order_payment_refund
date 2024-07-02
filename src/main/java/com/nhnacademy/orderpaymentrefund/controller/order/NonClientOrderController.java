@@ -7,6 +7,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderId
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.NonClientOrderService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +21,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/non-client/orders")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class NonClientOrderController {
 
-    private NonClientOrderService nonClientOrderService;
+    private final NonClientOrderService nonClientOrderService;
 
     @PostMapping
     public ResponseEntity<String> createNonClientOrder(@RequestBody CreateNonClientOrderRequestDto createNonClientOrderRequestDto){

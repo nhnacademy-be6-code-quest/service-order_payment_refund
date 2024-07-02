@@ -2,7 +2,9 @@ package com.nhnacademy.orderpaymentrefund.attributeConverter;
 
 import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicyType;
 import jakarta.persistence.AttributeConverter;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ShippingPolicyTypeAttributeConverter implements AttributeConverter<ShippingPolicyType, Integer> {
     @Override
     public Integer convertToDatabaseColumn(ShippingPolicyType shippingPolicyType) {

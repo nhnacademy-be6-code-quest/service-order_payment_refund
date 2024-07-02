@@ -21,6 +21,7 @@ import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOpti
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.NonClientOrderService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,16 +32,16 @@ import java.util.List;
 
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class NonClientOrderServiceImpl implements NonClientOrderService {
 
-    private OrderRepository orderRepository;
-    private ProductOrderDetailRepository productOrderDetailRepository;
-    private ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
+    private final OrderRepository orderRepository;
+    private final ProductOrderDetailRepository productOrderDetailRepository;
+    private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
     // converter
-    private NonClientOrderConverterImpl nonClientOrderConverter;
-    private ProductOrderDetailConverterImpl productOrderDetailConverter;
-    private ProductOrderDetailOptionConverter productOrderDetailOptionConverter;
+    private final NonClientOrderConverterImpl nonClientOrderConverter;
+    private final ProductOrderDetailConverterImpl productOrderDetailConverter;
+    private final ProductOrderDetailOptionConverter productOrderDetailOptionConverter;
 
     @Override
     public URI tryCreateOrder(CreateNonClientOrderRequestDto requestDto) {

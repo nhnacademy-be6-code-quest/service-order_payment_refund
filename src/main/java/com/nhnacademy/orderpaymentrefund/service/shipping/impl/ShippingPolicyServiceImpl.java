@@ -6,15 +6,16 @@ import com.nhnacademy.orderpaymentrefund.exception.ShippingPolicyNotFoundExcepti
 import com.nhnacademy.orderpaymentrefund.repository.shipping.ShippingPolicyRepository;
 import com.nhnacademy.orderpaymentrefund.service.shipping.ShippingPolicyService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ShippingPolicyServiceImpl implements ShippingPolicyService {
 
-    private ShippingPolicyRepository shippingPolicyRepository;
+    private final ShippingPolicyRepository shippingPolicyRepository;
 
     @Override
     public void updateShippingPolicy(AdminShippingPolicyPutRequestDto adminShippingPolicyPutRequestDto) {

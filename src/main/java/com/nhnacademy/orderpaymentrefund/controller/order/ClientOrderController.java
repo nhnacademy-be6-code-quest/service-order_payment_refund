@@ -4,6 +4,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequ
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +14,10 @@ import java.net.http.HttpHeaders;
 
 @RestController
 @RequestMapping("/api/client/orders")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ClientOrderController {
 
-    private ClientOrderService clientOrderService;
+    private final ClientOrderService clientOrderService;
 
     @PostMapping
     public ResponseEntity<String> createOrder(@RequestHeader HttpHeaders headers, @RequestBody CreateClientOrderRequestDto createClientOrderRequestDto){
