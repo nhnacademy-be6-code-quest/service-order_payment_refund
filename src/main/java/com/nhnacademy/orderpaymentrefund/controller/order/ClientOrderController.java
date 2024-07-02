@@ -1,62 +1,36 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientOrderPostRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientViewOrderPostRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientAllOrderGetResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientOrderPostResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientViewOrderPostResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderDetailResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
+import java.net.http.HttpHeaders;
+import java.util.List;
 
 @RestController
+@RequestMapping("/api/client/orders")
 @AllArgsConstructor
-@RequestMapping("/api/client")
 public class ClientOrderController {
 
     private ClientOrderService clientOrderService;
 
-    @PostMapping("/views/order")
-    public ResponseEntity<ClientViewOrderPostResponseDto> viewOrder(@RequestBody ClientViewOrderPostRequestDto clientOrderPostRequestDto){
-
-        long clientId = 1L;
-
-        ClientViewOrderPostResponseDto responseDto = clientOrderService.orderView(clientId, clientOrderPostRequestDto);
-
-        return ResponseEntity.ok().body(responseDto);
-
+    @PostMapping
+    public ResponseEntity<String> createOrder(@RequestHeader HttpHeaders headers, @RequestBody CreateClientOrderRequestDto createClientOrderRequestDto){
+        return ResponseEntity.created(clientOrderService.tryCreateOrder(headers, createClientOrderRequestDto)).body("주문이 완료되었습니다");
     }
 
-    @PostMapping("/order")
-    public ResponseEntity<ClientOrderPostResponseDto> createOrder(@RequestBody ClientOrderPostRequestDto clientOrderPostRequestDto, HttpServletResponse httpServletResponse){
-        ClientOrderPostResponseDto responseDto = clientOrderService.createOrder(clientOrderPostRequestDto, httpServletResponse);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{orderId}")
-                .buildAndExpand(responseDto.orderId())
-                .toUri();
-        return ResponseEntity.created(location).body(responseDto);
+    @GetMapping
+    public ResponseEntity<List<FindClientOrderResponseDto>> findClientOrderList(@RequestHeader HttpHeaders headers){
+        return ResponseEntity.ok(clientOrderService.findClientOrderList(headers));
     }
 
-    @GetMapping("/orders")
-    public ResponseEntity<Page<ClientAllOrderGetResponseDto>> getAllOrders(HttpServletRequest request, Pageable pageable){
-
-//        String headerValue = request.getHeader("id");
-//        if(Objects.isNull(headerValue)) throw new NeedToAuthenticationException();
-//
-//        long clientId = Integer.parseInt(request.getHeader("id"));
-        long clientId = 1L;
-        Page<ClientAllOrderGetResponseDto> responseDto = clientOrderService.getAllOrder(clientId, pageable);
-
-        return ResponseEntity.ok().body(responseDto);
-
+    @GetMapping("/{orderId}")
+    public ResponseEntity<FindClientOrderDetailResponseDto> findClientOrderDetail(@RequestHeader HttpHeaders headers, @PathVariable(name = "orderId") long orderId){
+        return ResponseEntity.ok(clientOrderService.findClientOrderDetail(orderId));
     }
 
 }

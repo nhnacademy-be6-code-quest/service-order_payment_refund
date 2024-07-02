@@ -27,7 +27,7 @@ public class ProductOrderDetailOption {
     private long productId;
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumn(name = "product_order_detail_id", referencedColumnName = "product_order_detail_id")
+    @JoinColumn(name = "product_order_detail_id")
     private ProductOrderDetail productOrderDetail;
 
     @NotNull
