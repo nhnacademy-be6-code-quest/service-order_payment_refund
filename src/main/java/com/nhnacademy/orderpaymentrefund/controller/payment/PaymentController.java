@@ -22,8 +22,8 @@ public class PaymentController {
 
     @PostMapping("/api/client/order/{orderId}/payment")
     public void savePayment(@PathVariable long orderId,
-        @RequestBody PaymentRequestDto paymentRequestDto) {
-        paymentService.savePayment(orderId, paymentRequestDto);
+        @RequestBody PaymentResponseDto paymentResponseDto) {
+        paymentService.savePayment(orderId, paymentResponseDto);
     }
 
     @GetMapping("/api/client/order/payment/{paymentId}")
