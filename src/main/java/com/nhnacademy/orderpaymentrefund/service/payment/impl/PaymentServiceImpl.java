@@ -11,7 +11,6 @@ import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentMethodRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
-import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
-    private final OrderService orderService;
     private final PaymentRepository paymentRepository;
     private final PaymentMethodRepository paymentMethodRepository;
     private final OrderRepository orderRepository;
@@ -69,7 +67,6 @@ public class PaymentServiceImpl implements PaymentService {
             .orElseThrow(() -> new OrderNotFoundException());
 
         return OrderPaymentResponseDto.builder()
-            .totalPrice(order.getTotalPrice())
 //            .productOrderDetailResponseDtoList(
 //                orderService.findOrderDetailByOrderId(order.getId())
 //            )
