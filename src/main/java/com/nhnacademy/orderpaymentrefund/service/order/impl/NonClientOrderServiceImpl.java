@@ -39,7 +39,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
     @Override
     public void postprocessing() {
-
+        // TODO 비회원일때 쿠키 초기화.
     }
 
     @Override

@@ -9,6 +9,8 @@ import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import com.nhnacademy.orderpaymentrefund.service.order.CommonOrderService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -41,7 +43,6 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     @Override
     public void postprocessing() {
-
     }
 
     @Override
@@ -79,8 +80,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public List<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers) {
-        return List.of();
+    public Page<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers, Pageable pageable) {
+     return null;
     }
 
     @Override

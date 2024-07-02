@@ -4,6 +4,8 @@ import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.net.URI;
 import java.net.http.HttpHeaders;
@@ -14,6 +16,6 @@ public interface ClientOrderService {
     void preprocessing();
     void postprocessing();
     void createOrder(long clientId, CreateClientOrderRequestDto requestDto);
-    List<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers);
+    Page<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers, Pageable pageable);
     FindClientOrderDetailResponseDto findClientOrderDetail(long orderId);
 }
