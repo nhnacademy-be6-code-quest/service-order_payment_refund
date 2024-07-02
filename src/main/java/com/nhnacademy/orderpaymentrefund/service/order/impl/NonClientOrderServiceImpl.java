@@ -1,13 +1,19 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
+import com.nhnacademy.orderpaymentrefund.converter.impl.NonClientOrderConverter;
+import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverter;
+import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
+import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
+import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateNonClientOrderRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPasswordRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
-import com.nhnacademy.orderpaymentrefund.service.order.CommonOrderService;
+import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
+import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.NonClientOrderService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +28,12 @@ import java.util.UUID;
 public class NonClientOrderServiceImpl implements NonClientOrderService {
 
     private OrderRepository orderRepository;
-    private CommonOrderService commonOrderService;
+    private ProductOrderDetailRepository productOrderDetailRepository;
+    private ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
+    // convreter
+    private NonClientOrderConverter nonClientOrderConverter;
+    private ProductOrderDetailConverter productOrderDetailConverter;
+    private ProductOrderDetailOptionConverter productOrderDetailOptionConverter;
 
     @Override
     public URI tryCreateOrder(CreateNonClientOrderRequestDto requestDto) {
@@ -45,30 +56,18 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     @Override
     public void createOrder(CreateNonClientOrderRequestDto requestDto) {
 
-        // 배송 주소
-        StringBuilder address = new StringBuilder();
-        address.append(requestDto.nonClientOrdererInfoDto().zipCode());
-        address.append(", ");
-        address.append(requestDto.nonClientOrdererInfoDto().address());
-        address.append(", ");
-        address.append(requestDto.nonClientOrdererInfoDto().detailAddress());
+        // Order 생성
+        Order order = nonClientOrderConverter.dtoToEntity(requestDto);
+        orderRepository.save(order);
 
-        // 비회원 Order 생성
-        Order order = Order.nonClientOrderBuilder()
-                .tossOrderId(UUID.randomUUID().toString())
-                .productTotalAmount(requestDto.nonClientOrderPriceInfoDto().productTotalAmount())
-                .shippingFee(requestDto.nonClientOrderPriceInfoDto().shippingFee())
-                .designatedDeliveryDate(requestDto.designatedDeliveryDate())
-                .phoneNumber(requestDto.nonClientOrdererInfoDto().phoneNumber())
-                .deliveryAddress(address.toString())
-                .nonClientOrderPassword(requestDto.nonClientOrdererInfoDto().nonClientOrderPassword())
-                .nonClientOrdererName(requestDto.nonClientOrdererInfoDto().nonClientOrdererName())
-                .nonClientOrdererEmail(requestDto.nonClientOrdererInfoDto().nonClientOrdererEmail())
-                .build();
-
-        // OrderProductDetail 생성 + OrderProductDetailOption 생성
-        requestDto.orderedProductAndOptionProductPairDtoList().forEach((productAndOptionProductPair) -> {
-            commonOrderService.createOrderProductDetailAndOption(order, productAndOptionProductPair);
+        // OrderProductDetail + OrderProductDetailOption 생성 및 저장
+        requestDto.orderedProductAndOptionProductPairDtoList().forEach((pair) -> {
+            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(pair.productOrderDetailDto(), order);
+            productOrderDetailRepository.save(productOrderDetail);
+            pair.productOrderDetailOptionDtoList().forEach((optionDto) -> {
+                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(optionDto, productOrderDetail);
+                productOrderDetailOptionRepository.save(productOrderDetailOption);
+            });
         });
 
     }
