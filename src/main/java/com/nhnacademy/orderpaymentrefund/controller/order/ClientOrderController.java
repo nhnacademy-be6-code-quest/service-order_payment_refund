@@ -1,7 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import lombok.AllArgsConstructor;
@@ -11,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.http.HttpHeaders;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/client/orders")
@@ -28,11 +26,6 @@ public class ClientOrderController {
     @GetMapping
     public ResponseEntity<Page<FindClientOrderResponseDto>> findClientOrderList(@RequestHeader HttpHeaders headers, Pageable pageable){
         return ResponseEntity.ok(clientOrderService.findClientOrderList(headers, pageable));
-    }
-
-    @GetMapping("/{orderId}")
-    public ResponseEntity<FindClientOrderDetailResponseDto> findClientOrderDetail(@RequestHeader HttpHeaders headers, @PathVariable(name = "orderId") long orderId){
-        return ResponseEntity.ok(clientOrderService.findClientOrderDetail(orderId));
     }
 
 }

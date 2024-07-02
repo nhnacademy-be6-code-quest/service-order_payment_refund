@@ -1,13 +1,16 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
-import com.nhnacademy.orderpaymentrefund.converter.impl.ClientOrderConverter;
-import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverter;
+import com.nhnacademy.orderpaymentrefund.converter.impl.ClientOrderConverterImpl;
+import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverterImpl;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
+import com.nhnacademy.orderpaymentrefund.dto.order.field.ClientOrderPriceInfoDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOptionProductPairDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailOptionDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
@@ -21,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.net.http.HttpHeaders;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -32,8 +36,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     private OrderRepository orderRepository;
 
     // converter
-    private ClientOrderConverter clientOrderConverter;
-    private ProductOrderDetailConverter productOrderDetailConverter;
+    private ClientOrderConverterImpl clientOrderConverter;
+    private ProductOrderDetailConverterImpl productOrderDetailConverter;
     private ProductOrderDetailOptionConverter productOrderDetailOptionConverter;
 
     @Override
@@ -47,12 +51,12 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     @Override
     public void preprocessing() {
-
+        // TODO 구현
     }
 
     @Override
     public void postprocessing() {
-
+        // TODO 구현
     }
 
     @Override
@@ -77,12 +81,37 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     @Override
     public Page<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers, Pageable pageable) {
 
-        return null;
-    }
+        long clientId = 1L;
 
-    @Override
-    public FindClientOrderDetailResponseDto findClientOrderDetail(long orderId) {
-        return null;
+        return orderRepository.findByClientId(clientId, pageable).map((order) -> {
+
+            List<OrderedProductAndOptionProductPairDto> orderedProductAndOptionProductPairDtoList = order.getProductOrderDetailList().stream().map((productOrderDetail) -> {
+
+                ProductOrderDetailDto productOrderDetailDto = productOrderDetailConverter.entityToDto(productOrderDetail);
+
+                List<ProductOrderDetailOptionDto> productOrderDetailOptionDtoList = productOrderDetail.getProductOrderDetailOptionList().stream().map((option) -> {
+                    return productOrderDetailOptionConverter.entityToDto(option);
+                }).toList();
+
+
+                return OrderedProductAndOptionProductPairDto.builder()
+                        .productOrderDetailDto(productOrderDetailDto)
+                        .productOrderDetailOptionDtoList(productOrderDetailOptionDtoList)
+                        .build();
+
+            }).toList();
+
+            ClientOrderPriceInfoDto clientOrderPriceInfoDto = ClientOrderPriceInfoDto.builder()
+                    .shippingFee(order.getShippingFee())
+                    .productTotalAmount(order.getProductTotalAmount())
+                    .payAmount(100000) // TOO payment에서 지불금액 가져오기
+                    .couponDiscountAmount(order.getDiscountAmountByCoupon())
+                    .usedPointDiscountAmount(order.getDiscountAmountByPoint())
+                    .build();
+
+            return clientOrderConverter.entityToDto(order, "결제수단", clientOrderPriceInfoDto, orderedProductAndOptionProductPairDtoList);
+        });
+
     }
 
 }

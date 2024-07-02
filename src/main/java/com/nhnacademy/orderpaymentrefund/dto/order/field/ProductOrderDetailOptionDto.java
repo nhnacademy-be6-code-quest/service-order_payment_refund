@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record ProductOrderDetailOptionDto(
-        long optionProductId,
+        long productId,
         String optionProductName,
         long optionProductSinglePrice,
         long quantity

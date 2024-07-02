@@ -3,6 +3,7 @@ package com.nhnacademy.orderpaymentrefund.dto.order.request;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.NonClientOrderPriceInfoDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.NonClientOrdererInfoDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOptionProductPairDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.type.NonClientRelatedDto;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -41,5 +42,5 @@ public record CreateNonClientOrderRequestDto(
         LocalDate designatedDeliveryDate,
         int paymentMethod
 
-){
+) implements NonClientRelatedDto {
 }
