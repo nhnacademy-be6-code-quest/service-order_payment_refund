@@ -38,6 +38,7 @@ public class ProductOrderDetailOption {
     private long optionProductPrice;
 
     @NotNull
+    @Column(name = "option_product_quantity")
     private long quantity;
 
     /**

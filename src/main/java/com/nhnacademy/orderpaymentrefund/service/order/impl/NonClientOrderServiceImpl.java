@@ -115,9 +115,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     @Override
     public Page<FindNonClientOrderIdInfoResponseDto> findNonClientOrderId(FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, Pageable pageable) {
 
-        return orderRepository.findAllByNonClientOrdererEmailAndPhoneNumberAndNonClientOrdererName(findNonClientOrderIdRequestDto.email(),
-                findNonClientOrderIdRequestDto.phoneNumber(),
-                findNonClientOrderIdRequestDto.ordererName(), pageable).map((order) ->
+        return orderRepository.findNonClientOrderIdList(findNonClientOrderIdRequestDto, pageable).map((order) ->
             FindNonClientOrderIdInfoResponseDto.builder()
                     .orderDateTime(order.getOrderDatetime())
                     .orderId(order.getOrderId())
