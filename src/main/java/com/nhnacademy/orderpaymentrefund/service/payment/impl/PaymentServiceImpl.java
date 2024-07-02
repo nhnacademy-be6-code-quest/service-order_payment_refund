@@ -23,16 +23,17 @@ public class PaymentServiceImpl implements PaymentService {
 
     // Order Enum Type -> String, 배송 상태 -> tinyInt
     @Override
-    public void savePayment(PaymentRequestDto paymentRequestDto, long orderId) {
+    public void savePayment(long orderId, PaymentRequestDto paymentRequestDto) {
+
 
         Payment payment = Payment.builder()
             .order(
                 orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException()))
+            .payAmount(paymentRequestDto.getAmount())
             .payTime(LocalDateTime.now())
             .paymentMethodName("CARD")
             .tossPaymentKey(paymentRequestDto.getPaymentKey())
             .build();
-
         paymentRepository.save(payment);
     }
 

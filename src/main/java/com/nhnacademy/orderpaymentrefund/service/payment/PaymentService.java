@@ -6,7 +6,7 @@ import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentResponseDto
 import org.springframework.web.bind.annotation.PathVariable;
 
 public interface PaymentService {
-    void savePayment(PaymentRequestDto paymentRequestDto, long orderId);
+    void savePayment(long orderId, PaymentRequestDto paymentRequestDto);
     PaymentResponseDto findByPaymentId(Long paymentId);
     OrderPaymentResponseDto findOrderPaymentResponseDtoByOrderId(@PathVariable Long orderId);
 }

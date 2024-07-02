@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
@@ -50,5 +51,7 @@ public class Payment {
         this.payTime = payTime;
         this.paymentMethodName = paymentMethodName;
         this.tossPaymentKey = tossPaymentKey;
+
+        UUID.randomUUID();
     }
 }
