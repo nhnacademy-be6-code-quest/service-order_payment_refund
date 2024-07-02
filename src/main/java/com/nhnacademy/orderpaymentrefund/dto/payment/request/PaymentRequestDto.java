@@ -8,11 +8,11 @@ import lombok.Getter;
 @Getter
 public class PaymentRequestDto {
     @NotNull
-    private Long orderId;                   // 주문 아이디
+    long amount;
 
-    private Long paymentMethodId;           // 결제 수단의 아이디
+    @NotNull
+    String orderId;
 
-    private Long couponId;                  // 이번 결제에서 사용할 쿠폰의 아이디
-
-    private Long payAmount;                 // 최종 결제한 금액
+    @NotNull
+    String paymentKey;
 }

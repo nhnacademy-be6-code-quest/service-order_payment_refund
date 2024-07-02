@@ -11,7 +11,9 @@ import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentMethodRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
+import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,23 +26,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final PaymentMethodRepository paymentMethodRepository;
     private final OrderRepository orderRepository;
 
     // Order Enum Type -> String, 배송 상태 -> tinyInt
     @Override
-    public void savePayment(PaymentRequestDto paymentRequestDto) {
-        Order order = orderRepository.findById(paymentRequestDto.getOrderId())
-            .orElseThrow(() -> new OrderNotFoundException());
+    public void savePayment(PaymentRequestDto paymentRequestDto, long orderId) {
 
-        PaymentMethod paymentMethod = paymentMethodRepository.findById(
-                paymentRequestDto.getPaymentMethodId())
-            .orElseThrow(() -> new PaymentNotFoundException());
         Payment payment = Payment.builder()
-            .order(order)
-            .paymentMethod(paymentMethod)
-            .couponId(paymentRequestDto.getCouponId())
-            .payAmount(paymentRequestDto.getPayAmount())
+            .order(orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException()))
+            .payTime(LocalDateTime.now())
+            .paymentMethodName("CARD")
+            .tossPaymentKey(paymentRequestDto.getPaymentKey())
             .build();
 
         paymentRepository.save(payment);
@@ -48,29 +44,11 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentResponseDto findByPaymentId(Long paymentId) {
-        Payment payment = paymentRepository.findById(paymentId).orElse(null);
-
-        return PaymentResponseDto.builder()
-            .paymentId(payment.getPaymentId())
-            .order(payment.getOrder())
-            .paymentMethod(payment.getPaymentMethod())
-            .couponId(payment.getCouponId())
-            .payAmount(payment.getPayAmount())
-            .payTime(payment.getPayTime())
-            .build();
+        return null;
     }
 
     @Override
-    public OrderPaymentResponseDto findOrderPaymentResponseDtoByOrderId(
-        @PathVariable Long orderId) {
-        Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new OrderNotFoundException());
-
-        return OrderPaymentResponseDto.builder()
-//            .productOrderDetailResponseDtoList(
-//                orderService.findOrderDetailByOrderId(order.getId())
-//            )
-            // TODO : 추가적으로 구현해 주어야 함.
-            .build();
+    public OrderPaymentResponseDto findOrderPaymentResponseDtoByOrderId(Long orderId) {
+        return null;
     }
 }
