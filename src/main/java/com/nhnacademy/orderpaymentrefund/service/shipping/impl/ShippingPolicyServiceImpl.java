@@ -21,7 +21,7 @@ public class ShippingPolicyServiceImpl implements ShippingPolicyService {
 
         ShippingPolicy shippingPolicy = getShippingPolicy();
 
-        shippingPolicy.updatePost(adminShippingPolicyPutRequestDto.description()
+        shippingPolicy.updateShippingPolicy(adminShippingPolicyPutRequestDto.description()
                 , adminShippingPolicyPutRequestDto.fee()
                 , adminShippingPolicyPutRequestDto.lowerBound());
 

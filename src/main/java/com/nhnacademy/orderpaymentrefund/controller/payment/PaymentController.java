@@ -3,7 +3,6 @@ package com.nhnacademy.orderpaymentrefund.controller.payment;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.PaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.OrderPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentResponseDto;
-import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final OrderService orderService;
 
     @PostMapping("/api/client/order/{orderId}/payment")
     public void savePayment(@RequestBody PaymentRequestDto paymentRequestDto) {

@@ -1,27 +1,25 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.admin.AdminOrderPutRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.admin.AdminAllOrdersGetResponseDto;
+import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
+import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
+import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
+import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.AdminOrderService;
-import org.springframework.data.domain.Page;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
+@AllArgsConstructor
 public class AdminOrderServiceImpl implements AdminOrderService {
 
     private OrderRepository orderRepository;
+    private ProductOrderDetailRepository productOrderDetailRepository;
+    private ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
 
     @Override
-    public Page<AdminAllOrdersGetResponseDto> getAllOrders() {
-        return null;
-    }
-
-    @Override
-    public void updateOrder(long orderId, AdminOrderPutRequestDto adminOrderPutRequestDto) {
-
+    public void changeOrderStatus(long orderId, OrderStatus orderStatus) {
+        orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new).updateOrderStatus(orderStatus);
     }
 
 }
