@@ -27,10 +27,11 @@ public class RefundAndCancel {
 
     @NotNull
     @ManyToOne
+    @JoinColumn(name = "refund_and_cancel_policy_id")
     private RefundAndCancelPolicy refundAndCancelPolicy;
 
     @NotNull
-    private LocalDateTime refundAndCancelDateTime;
+    private LocalDateTime refundAndCancelDatetime;
 
     private String refundAndCancelDetailReason;
 }

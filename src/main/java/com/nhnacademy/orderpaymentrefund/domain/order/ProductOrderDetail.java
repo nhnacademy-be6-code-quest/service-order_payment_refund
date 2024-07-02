@@ -20,7 +20,7 @@ public class ProductOrderDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "prduct_order_detail_id")
+    @Column(name = "product_order_detail_id")
     private long productOrderDetailId;
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
