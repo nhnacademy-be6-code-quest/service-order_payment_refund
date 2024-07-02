@@ -5,7 +5,7 @@ spring:
   application:
     name: orderPaymentRefund
   profiles:
-    active: prod
+    active: heewon
 
 eureka:
   client:
