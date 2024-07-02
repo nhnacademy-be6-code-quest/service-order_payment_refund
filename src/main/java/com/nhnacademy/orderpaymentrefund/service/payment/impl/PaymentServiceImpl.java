@@ -25,7 +25,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public void savePayment(long orderId, PaymentRequestDto paymentRequestDto) {
 
-
         Payment payment = Payment.builder()
             .order(
                 orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException()))
