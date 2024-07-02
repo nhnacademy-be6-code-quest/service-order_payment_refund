@@ -51,7 +51,5 @@ public class Payment {
         this.payTime = payTime;
         this.paymentMethodName = paymentMethodName;
         this.tossPaymentKey = tossPaymentKey;
-
-        UUID.randomUUID();
     }
 }
