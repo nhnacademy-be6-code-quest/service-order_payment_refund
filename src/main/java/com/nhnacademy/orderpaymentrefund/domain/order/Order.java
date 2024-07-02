@@ -27,6 +27,7 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_id")
     private long orderId;
 
     @Nullable
@@ -44,7 +45,7 @@ public class Order {
     private UUID tossOrderId;
 
     @NotNull
-    private LocalDateTime orderDate; // 주문 일시
+    private LocalDateTime orderDatetime; // 주문 일시
 
     @Size(max = 50)
     @NotNull
@@ -132,7 +133,7 @@ public class Order {
         this.discountAmountByCoupon = discountAmountByCoupon;
         this.discountAmountByPoint = discountAmountByPoint;
         this.accumulatedPoint = accumulatedPoint;
-        this.orderDate = LocalDateTime.now();
+        this.orderDatetime = LocalDateTime.now();
         this.orderStatus = OrderStatus.WAIT_PAYMENT;
         this.orderTotalAmount = this.productTotalAmount + this.shippingFee;
     }
@@ -160,7 +161,7 @@ public class Order {
         this.designatedDeliveryDate = designatedDeliveryDate;
         this.phoneNumber = phoneNumber;
         this.deliveryAddress = deliveryAddress;
-        this.orderDate = LocalDateTime.now();
+        this.orderDatetime = LocalDateTime.now();
         this.orderStatus = OrderStatus.WAIT_PAYMENT;
         this.orderTotalAmount = this.productTotalAmount + this.shippingFee;
         this.deliveryAddress = deliveryAddress;
