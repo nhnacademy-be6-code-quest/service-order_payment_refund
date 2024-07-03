@@ -1,9 +1,8 @@
 package com.nhnacademy.orderpaymentrefund.service.payment.impl;
 
 import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
-import com.nhnacademy.orderpaymentrefund.dto.payment.request.PaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.OrderPaymentResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
@@ -23,21 +22,21 @@ public class PaymentServiceImpl implements PaymentService {
 
     // Order Enum Type -> String, 배송 상태 -> tinyInt
     @Override
-    public void savePayment(long orderId, PaymentResponseDto paymentResponseDto) {
+    public void savePayment(long orderId, TossPaymentsResponseDto tossPaymentsResponseDto) {
 
         Payment payment = Payment.builder()
             .order(
                 orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException()))
-            .payAmount(paymentResponseDto.getPayAmount())
+            .payAmount(tossPaymentsResponseDto.getTotalAmount())
             .payTime(LocalDateTime.now())
             .paymentMethodName("CARD")
-            .tossPaymentKey(paymentResponseDto.getTossPaymentKey())
+            .tossPaymentKey(tossPaymentsResponseDto.getPaymentKey())
             .build();
         paymentRepository.save(payment);
     }
 
     @Override
-    public PaymentResponseDto findByPaymentId(Long paymentId) {
+    public TossPaymentsResponseDto findByPaymentId(Long paymentId) {
         return null;
     }
 
