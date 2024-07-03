@@ -7,7 +7,6 @@ import lombok.Getter;
 @Builder
 @Getter
 public class PaymentRequestDto {
-    @NotNull
     long amount;
 
     @NotNull

@@ -19,10 +19,8 @@ import lombok.NoArgsConstructor;
 @Getter
 public class PaymentResponseDto {
 
-    @NotNull
     long orderId;
 
-    @NotNull
     long payAmount;
 
     @NotNull
