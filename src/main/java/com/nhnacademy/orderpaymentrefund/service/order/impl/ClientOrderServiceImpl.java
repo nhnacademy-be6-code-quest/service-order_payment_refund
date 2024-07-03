@@ -46,6 +46,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         long clientId = 1L;
         preprocessing();
         createOrder(clientId, createClientOrderRequestDto);
+        //tryPay();
         postprocessing();
         return null;
     }
@@ -53,11 +54,24 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     @Override
     public void preprocessing() {
         // TODO 구현
+        /*
+        * 1. 재고확인(메인 상품 + 옵션 상품) 물량 확보하기.
+        * 2. 포인트 사용 가능 여부 체크
+        * 3. 쿠폰 유효성 체크
+        * 4. 적립금 유효성 체크
+        * */
     }
 
     @Override
     public void postprocessing() {
         // TODO 구현
+        /*
+         * 1. 재고 감소
+         * 2. 포인트 감소
+         * 3. 주문, 결제데이터 저장 (?)
+         * 4. 적립금 부여
+         * 5. 쿠폰 사용 처리
+         * */
     }
 
     @Override
@@ -93,7 +107,6 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                 List<ProductOrderDetailOptionDto> productOrderDetailOptionDtoList = productOrderDetail.getProductOrderDetailOptionList().stream().map((option) -> {
                     return productOrderDetailOptionConverter.entityToDto(option);
                 }).toList();
-
 
                 return OrderedProductAndOptionProductPairDto.builder()
                         .productOrderDetailDto(productOrderDetailDto)

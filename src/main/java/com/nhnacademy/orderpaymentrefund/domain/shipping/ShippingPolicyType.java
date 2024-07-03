@@ -24,6 +24,9 @@ public enum ShippingPolicyType {
 
     @JsonCreator
     public static ShippingPolicyType of(String kor){
+        if ((kor.startsWith("'") && kor.endsWith("'")) || (kor.startsWith("\"") && kor.endsWith("\""))) {
+            kor = kor.substring(1, kor.length() - 1);
+        }
         for (ShippingPolicyType shippingPolicyType : ShippingPolicyType.values()) {
             if (shippingPolicyType.kor.equals(kor)) {
                 return shippingPolicyType;
