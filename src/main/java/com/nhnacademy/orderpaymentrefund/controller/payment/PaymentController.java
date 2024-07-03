@@ -1,7 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.controller.payment;
 
-import com.nhnacademy.orderpaymentrefund.dto.payment.request.PaymentRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,14 +21,15 @@ public class PaymentController {
 
     @PostMapping("/api/client/order/{orderId}/payment")
     public void savePayment(@PathVariable long orderId,
-        @RequestBody PaymentResponseDto paymentResponseDto) {
-        paymentService.savePayment(orderId, paymentResponseDto);
+        @RequestBody TossPaymentsResponseDto tossPaymentsResponseDto) {
+        paymentService.savePayment(orderId, tossPaymentsResponseDto);
     }
 
     @GetMapping("/api/client/order/payment/{paymentId}")
-    public PaymentResponseDto findByPaymentId(@PathVariable Long paymentId) {
+    public TossPaymentsResponseDto findByPaymentId(@PathVariable Long paymentId) {
         return paymentService.findByPaymentId(paymentId);
     }
+
 //    TODO: 추후 구현해야 함.
 //    @GetMapping("/api/client/order/{orderId}/payment")
 //    public long findTotalPriceByOrderId(@PathVariable Long orderId) {
