@@ -48,4 +48,12 @@ public class ShippingPolicy {
         this.shippingFee = shippingFee;
         this.minPurchaseAmount = minPurchaseAmount;
     }
+
+    @Builder
+    public ShippingPolicy(String description, int shippingFee, int minPurchaseAmount, ShippingPolicyType shippingPolicyType){
+        this.description = description;
+        this.shippingFee = shippingFee;
+        this.minPurchaseAmount = minPurchaseAmount;
+        this.shippingPolicyType = shippingPolicyType;
+    }
 }

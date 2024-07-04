@@ -24,8 +24,8 @@ public class ShippingPolicyServiceImpl implements ShippingPolicyService {
         ShippingPolicy shippingPolicy = shippingPolicyRepository.findByShippingPolicyType(adminShippingPolicyPutRequestDto.shippingPolicyType()).orElseThrow(ShippingPolicyNotFoundException::new);
 
         shippingPolicy.updateShippingPolicy(adminShippingPolicyPutRequestDto.description()
-                , adminShippingPolicyPutRequestDto.fee()
-                , adminShippingPolicyPutRequestDto.lowerBound());
+                , adminShippingPolicyPutRequestDto.shippingFee()
+                , adminShippingPolicyPutRequestDto.minPurchaseAmount());
 
         shippingPolicyRepository.save(shippingPolicy);
 
@@ -43,5 +43,17 @@ public class ShippingPolicyServiceImpl implements ShippingPolicyService {
                 .shippingPolicyType(shippingPolicy.getShippingPolicyType())
                 .build();
 
+    }
+
+    @Override
+    public List<ShippingPolicyGetResponseDto> getAllShippingPolicies() {
+        return shippingPolicyRepository.findAll().stream().map((shippingPolicy) -> {
+            return ShippingPolicyGetResponseDto.builder()
+                    .description(shippingPolicy.getDescription())
+                    .shippingFee(shippingPolicy.getShippingFee())
+                    .minPurchaseAmount(shippingPolicy.getMinPurchaseAmount())
+                    .shippingPolicyType(shippingPolicy.getShippingPolicyType())
+                    .build();
+        }).toList();
     }
 }

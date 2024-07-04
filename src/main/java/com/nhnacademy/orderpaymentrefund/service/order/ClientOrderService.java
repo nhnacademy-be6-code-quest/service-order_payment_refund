@@ -9,9 +9,10 @@ import java.net.URI;
 import java.net.http.HttpHeaders;
 
 public interface ClientOrderService {
-    URI tryCreateOrder(HttpHeaders headers, CreateClientOrderRequestDto requestDto);
+    void tryCreateOrder(HttpHeaders headers, CreateClientOrderRequestDto requestDto);
     void preprocessing();
     void postprocessing();
     void createOrder(long clientId, CreateClientOrderRequestDto requestDto);
+    void saveOrderAndPaymentToDB();
     Page<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers, Pageable pageable);
 }

@@ -1,5 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
+import com.nhnacademy.orderpaymentrefund.client.TestOtherService;
 import com.nhnacademy.orderpaymentrefund.converter.impl.NonClientOrderConverterImpl;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverterImpl;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
@@ -20,6 +21,7 @@ import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.NonClientOrderService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,24 +44,28 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     private final NonClientOrderConverterImpl nonClientOrderConverter;
     private final ProductOrderDetailConverterImpl productOrderDetailConverter;
     private final ProductOrderDetailOptionConverter productOrderDetailOptionConverter;
+    // testOtherService
+    private final TestOtherService testOtherService;
 
+    @Transactional
     @Override
-    public URI tryCreateOrder(CreateNonClientOrderRequestDto requestDto) {
+    public void tryCreateOrder(CreateNonClientOrderRequestDto requestDto) {
         preprocessing();
         createOrder(requestDto);
         postprocessing();
-        return null;
     }
 
     @Override
     public void preprocessing() {
         // TODO 구현
+        testOtherService.checkStock(true);
     }
 
     @Override
     public void postprocessing() {
         // TODO 구현
         // TODO 비회원일때 쿠키 초기화.
+        testOtherService.processDroppingStock(true);
     }
 
     @Override
@@ -115,7 +121,6 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
     @Override
     public Page<FindNonClientOrderIdInfoResponseDto> findNonClientOrderId(FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, Pageable pageable) {
-
         return orderRepository.findNonClientOrderIdList(findNonClientOrderIdRequestDto, pageable).map((order) ->
             FindNonClientOrderIdInfoResponseDto.builder()
                     .orderDateTime(order.getOrderDatetime())

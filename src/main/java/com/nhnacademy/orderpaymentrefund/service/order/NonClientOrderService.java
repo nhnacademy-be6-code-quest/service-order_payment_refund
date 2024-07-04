@@ -22,7 +22,7 @@ public interface NonClientOrderService {
      * tryCreateOrder : 주문 생성을 위한 메서드. preprocessing(), createOrder(), postprocessing()이 호출됨.
      * @param requestDto 비회원 주문을 생성하기 위한 요청 dto
      **/
-    URI tryCreateOrder(CreateNonClientOrderRequestDto requestDto);
+    void tryCreateOrder(CreateNonClientOrderRequestDto requestDto);
 
     /**
      * preprocessing : 주문 생성 전 '전처리'를 위한 메서드

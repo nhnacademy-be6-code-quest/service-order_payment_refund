@@ -1,5 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
+import com.nhnacademy.orderpaymentrefund.client.TestOtherService;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ClientOrderConverterImpl;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverterImpl;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
@@ -16,6 +17,7 @@ import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,14 +43,17 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     private final ProductOrderDetailConverterImpl productOrderDetailConverter;
     private final ProductOrderDetailOptionConverter productOrderDetailOptionConverter;
 
+    // TODO 임의
+    private final TestOtherService testOtherService;
+
     @Override
-    public URI tryCreateOrder(HttpHeaders headers, CreateClientOrderRequestDto createClientOrderRequestDto) {
+    public void tryCreateOrder(HttpHeaders headers, CreateClientOrderRequestDto createClientOrderRequestDto) {
         long clientId = 1L;
         preprocessing();
         createOrder(clientId, createClientOrderRequestDto);
         //tryPay();
         postprocessing();
-        return null;
+        saveOrderAndPaymentToDB();
     }
 
     @Override
@@ -60,6 +65,10 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         * 3. 쿠폰 유효성 체크
         * 4. 적립금 유효성 체크
         * */
+        testOtherService.checkStock(true);
+        testOtherService.checkCouponAvailability(true);
+        testOtherService.checkPointAvailability(true);
+        testOtherService.checkAccumulatePointAvailability(true);
     }
 
     @Override
@@ -72,6 +81,10 @@ public class ClientOrderServiceImpl implements ClientOrderService {
          * 4. 적립금 부여
          * 5. 쿠폰 사용 처리
          * */
+        testOtherService.processDroppingStock(true);
+        testOtherService.processUsedCoupon(true);
+        testOtherService.processUsedPoint(true);
+        testOtherService.processAccumulatePoint(true);
     }
 
     @Override
@@ -128,4 +141,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     }
 
+    @Override
+    public void saveOrderAndPaymentToDB() {
+
+    }
 }

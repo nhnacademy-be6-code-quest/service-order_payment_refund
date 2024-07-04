@@ -28,7 +28,8 @@ public class NonClientOrderController {
 
     @PostMapping
     public ResponseEntity<String> createNonClientOrder(@RequestBody CreateNonClientOrderRequestDto createNonClientOrderRequestDto){
-        return ResponseEntity.created(nonClientOrderService.tryCreateOrder(createNonClientOrderRequestDto)).body("주문이 완료되었습니다");
+        nonClientOrderService.tryCreateOrder(createNonClientOrderRequestDto);
+        return ResponseEntity.created(null).body("주문이 완료되었습니다");
     }
 
     @GetMapping("/{orderId}")

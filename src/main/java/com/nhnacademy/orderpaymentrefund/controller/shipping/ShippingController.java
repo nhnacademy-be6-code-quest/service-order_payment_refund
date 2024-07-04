@@ -8,8 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/admin/shipping")
+@RequestMapping("/admin/shipping-policy")
 @RequiredArgsConstructor
 public class ShippingController {
 
@@ -24,6 +26,11 @@ public class ShippingController {
     @GetMapping
     public ResponseEntity<ShippingPolicyGetResponseDto> getShippingPolicy(@RequestParam(name = "type", required = true) String type){
         return ResponseEntity.ok().body(shippingPolicyService.getShippingPolicy(ShippingPolicyType.of(type)));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<ShippingPolicyGetResponseDto>> getAllShippingPolicies(){
+        return ResponseEntity.ok().body(shippingPolicyService.getAllShippingPolicies());
     }
 
 }

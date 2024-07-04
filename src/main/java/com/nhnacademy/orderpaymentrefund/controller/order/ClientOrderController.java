@@ -21,7 +21,8 @@ public class ClientOrderController {
 
     @PostMapping
     public ResponseEntity<String> createOrder(@RequestHeader HttpHeaders headers, @RequestBody CreateClientOrderRequestDto createClientOrderRequestDto){
-        return ResponseEntity.created(clientOrderService.tryCreateOrder(headers, createClientOrderRequestDto)).body("주문이 완료되었습니다");
+        clientOrderService.tryCreateOrder(headers, createClientOrderRequestDto);
+        return ResponseEntity.created(null).body("주문이 완료되었습니다");
     }
 
     @GetMapping
