@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -97,6 +98,9 @@ public class Order {
     @Size(max = 320)
     @Nullable
     private String nonClientOrdererEmail; // 비회원 주문자 이메일
+
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+    private List<ProductOrderDetail> productOrderDetailList;
 
     /**
      * 회원을 위한 Order 엔티티 생성 빌더

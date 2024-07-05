@@ -1,91 +1,148 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
+import com.nhnacademy.orderpaymentrefund.client.TestOtherService;
+import com.nhnacademy.orderpaymentrefund.converter.impl.ClientOrderConverterImpl;
+import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverterImpl;
+import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
+import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
+import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
+import com.nhnacademy.orderpaymentrefund.dto.order.field.ClientOrderPriceInfoDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOptionProductPairDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailOptionDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
+import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
+import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
-import com.nhnacademy.orderpaymentrefund.service.order.CommonOrderService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.net.http.HttpHeaders;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ClientOrderServiceImpl implements ClientOrderService {
 
-    private OrderRepository orderRepository;
-    private CommonOrderService commonOrderService;
+    private final ProductOrderDetailRepository productOrderDetailRepository;
+    private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
+    private final OrderRepository orderRepository;
+
+    // converter
+    private final ClientOrderConverterImpl clientOrderConverter;
+    private final ProductOrderDetailConverterImpl productOrderDetailConverter;
+    private final ProductOrderDetailOptionConverter productOrderDetailOptionConverter;
+
+    // TODO 임의
+    private final TestOtherService testOtherService;
 
     @Override
-    public URI tryCreateOrder(HttpHeaders headers, CreateClientOrderRequestDto createClientOrderRequestDto) {
+    public void tryCreateOrder(HttpHeaders headers, CreateClientOrderRequestDto createClientOrderRequestDto) {
         long clientId = 1L;
         preprocessing();
         createOrder(clientId, createClientOrderRequestDto);
+        //tryPay();
         postprocessing();
-        return null;
+        saveOrderAndPaymentToDB();
     }
 
     @Override
     public void preprocessing() {
-
+        // TODO 구현
+        /*
+        * 1. 재고확인(메인 상품 + 옵션 상품) 물량 확보하기.
+        * 2. 포인트 사용 가능 여부 체크
+        * 3. 쿠폰 유효성 체크
+        * 4. 적립금 유효성 체크
+        * */
+        testOtherService.checkStock(true);
+        testOtherService.checkCouponAvailability(true);
+        testOtherService.checkPointAvailability(true);
+        testOtherService.checkAccumulatePointAvailability(true);
     }
 
     @Override
     public void postprocessing() {
-
+        // TODO 구현
+        /*
+         * 1. 재고 감소
+         * 2. 포인트 감소
+         * 3. 주문, 결제데이터 저장 (?)
+         * 4. 적립금 부여
+         * 5. 쿠폰 사용 처리
+         * */
+        testOtherService.processDroppingStock(true);
+        testOtherService.processUsedCoupon(true);
+        testOtherService.processUsedPoint(true);
+        testOtherService.processAccumulatePoint(true);
     }
 
     @Override
     public void createOrder(long clientId, CreateClientOrderRequestDto requestDto) {
 
-        // 배송 주소
-        StringBuilder address = new StringBuilder();
-        address.append(requestDto.clientOrdererInfoDto().zipCode());
-        address.append(", ");
-        address.append(requestDto.clientOrdererInfoDto().address());
-        address.append(", ");
-        address.append(requestDto.clientOrdererInfoDto().detailAddress());
+        // 회원 Order 생성 및 저장
+        Order order = clientOrderConverter.dtoToEntity(requestDto, clientId);
+        orderRepository.save(order);
 
-        // 회원 Order 생성
-        Order order = Order.clientOrderBuilder()
-                .clientId(clientId)
-                .couponId(requestDto.couponId())
-                .pointPolicyId(requestDto.pointPolicyId())
-                .tossOrderId(UUID.randomUUID().toString())
-                .productTotalAmount(requestDto.clientOrderPriceInfoDto().productTotalAmount())
-                .shippingFee(requestDto.clientOrderPriceInfoDto().shippingFee())
-                .designatedDeliveryDate(requestDto.designatedDeliveryDate())
-                .phoneNumber(requestDto.clientOrdererInfoDto().phoneNumber())
-                .deliveryAddress(requestDto.clientOrdererInfoDto().address())
-                .discountAmountByCoupon(Optional.ofNullable(requestDto.clientOrderPriceInfoDto().couponDiscountAmount()).orElse(0L))
-                .discountAmountByPoint(Optional.ofNullable(requestDto.clientOrderPriceInfoDto().usedPointDiscountAmount()).orElse(0L))
-                .accumulatedPoint(requestDto.accumulatedPoint())
-                .build();
-
-        // OrderProductDetail 생성 + OrderProductDetailOption 생성
-        requestDto.orderedProductAndOptionProductPairDtoList().forEach((productAndOptionProductPair) -> {
-            commonOrderService.createOrderProductDetailAndOption(order, productAndOptionProductPair);
+        // OrderProductDetail + OrderProductDetailOption 생성 및 저장
+        requestDto.orderedProductAndOptionProductPairDtoList().forEach((pair) -> {
+            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(pair.productOrderDetailDto(), order);
+            productOrderDetailRepository.save(productOrderDetail);
+            pair.productOrderDetailOptionDtoList().forEach((optionDto) -> {
+                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(optionDto, productOrderDetail);
+                productOrderDetailOptionRepository.save(productOrderDetailOption);
+            });
         });
 
     }
 
     @Override
-    public List<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers) {
-        return List.of();
+    public Page<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers, Pageable pageable) {
+
+        long clientId = 1L;
+
+        return orderRepository.findByClientId(clientId, pageable).map((order) -> {
+
+            List<OrderedProductAndOptionProductPairDto> orderedProductAndOptionProductPairDtoList = order.getProductOrderDetailList().stream().map((productOrderDetail) -> {
+
+                ProductOrderDetailDto productOrderDetailDto = productOrderDetailConverter.entityToDto(productOrderDetail);
+
+                List<ProductOrderDetailOptionDto> productOrderDetailOptionDtoList = productOrderDetail.getProductOrderDetailOptionList().stream().map((option) -> {
+                    return productOrderDetailOptionConverter.entityToDto(option);
+                }).toList();
+
+                return OrderedProductAndOptionProductPairDto.builder()
+                        .productOrderDetailDto(productOrderDetailDto)
+                        .productOrderDetailOptionDtoList(productOrderDetailOptionDtoList)
+                        .build();
+
+            }).toList();
+
+            ClientOrderPriceInfoDto clientOrderPriceInfoDto = ClientOrderPriceInfoDto.builder()
+                    .shippingFee(order.getShippingFee())
+                    .productTotalAmount(order.getProductTotalAmount())
+                    .payAmount(100000) // TOO payment에서 지불금액 가져오기
+                    .couponDiscountAmount(order.getDiscountAmountByCoupon())
+                    .usedPointDiscountAmount(order.getDiscountAmountByPoint())
+                    .build();
+
+            return clientOrderConverter.entityToDto(order, "결제수단", clientOrderPriceInfoDto, orderedProductAndOptionProductPairDtoList);
+        });
+
     }
 
     @Override
-    public FindClientOrderDetailResponseDto findClientOrderDetail(long orderId) {
-        return null;
-    }
+    public void saveOrderAndPaymentToDB() {
 
+    }
 }

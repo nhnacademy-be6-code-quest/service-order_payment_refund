@@ -1,6 +1,11 @@
 package com.nhnacademy.orderpaymentrefund.domain.shipping;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonToken;
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 배송 정책 상태 ENUM
@@ -21,4 +26,25 @@ public enum ShippingPolicyType {
         this.typeNum = typeNum;
     }
 
+    public static ShippingPolicyType of(String kor){
+        if ((kor.startsWith("'") && kor.endsWith("'")) || (kor.startsWith("\"") && kor.endsWith("\""))) {
+            kor = kor.substring(1, kor.length() - 1);
+        }
+        for (ShippingPolicyType shippingPolicyType : ShippingPolicyType.values()) {
+            if (shippingPolicyType.kor.equals(kor)) {
+                return shippingPolicyType;
+            }
+        }
+        throw new IllegalArgumentException("shippingPolicyType의 value값이 잘못 되었습니다. '도서산간지역' 또는 '도서산간지역외'을 기입하세요");
+    }
+
+//    @JsonCreator
+//    public static ShippingPolicyType deserialize(@JsonProperty("shippingPolicyType") String kor){
+//        return of(kor);
+//    }
+
+    @Override
+    public String toString() {
+        return this.kor;
+    }
 }

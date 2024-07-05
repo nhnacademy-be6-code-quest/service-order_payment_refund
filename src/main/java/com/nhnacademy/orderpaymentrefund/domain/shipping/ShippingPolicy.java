@@ -1,5 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.domain.shipping;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -38,11 +40,20 @@ public class ShippingPolicy {
     private int minPurchaseAmount; // 최소 주문 금액
 
     @NotNull
+    @JsonSerialize(using = ToStringSerializer.class)
     private ShippingPolicyType shippingPolicyType;
 
     public void updateShippingPolicy(String description, int shippingFee, int minPurchaseAmount){
         this.description = description;
         this.shippingFee = shippingFee;
         this.minPurchaseAmount = minPurchaseAmount;
+    }
+
+    @Builder
+    public ShippingPolicy(String description, int shippingFee, int minPurchaseAmount, ShippingPolicyType shippingPolicyType){
+        this.description = description;
+        this.shippingFee = shippingFee;
+        this.minPurchaseAmount = minPurchaseAmount;
+        this.shippingPolicyType = shippingPolicyType;
     }
 }
