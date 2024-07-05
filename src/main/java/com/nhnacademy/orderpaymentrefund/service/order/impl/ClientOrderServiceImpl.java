@@ -17,22 +17,21 @@ import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
-import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
-import java.net.http.HttpHeaders;
 import java.util.List;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ClientOrderServiceImpl implements ClientOrderService {
+
+    private static final String ID_HEADER = "X-User-Id";
 
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
@@ -48,7 +47,10 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     @Override
     public void tryCreateOrder(HttpHeaders headers, CreateClientOrderRequestDto createClientOrderRequestDto) {
-        long clientId = 1L;
+        if (headers.get(ID_HEADER) == null){
+            throw new RuntimeException("clientId is null");
+        }
+        long clientId = Long.parseLong(headers.getFirst(ID_HEADER));
         preprocessing();
         createOrder(clientId, createClientOrderRequestDto);
         //tryPay();
@@ -88,7 +90,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public void createOrder(long clientId, CreateClientOrderRequestDto requestDto) {
+    public Long createOrder(long clientId, CreateClientOrderRequestDto requestDto) {
 
         // 회원 Order 생성 및 저장
         Order order = clientOrderConverter.dtoToEntity(requestDto, clientId);
@@ -103,6 +105,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                 productOrderDetailOptionRepository.save(productOrderDetailOption);
             });
         });
+
+        return order.getOrderId();
 
     }
 
