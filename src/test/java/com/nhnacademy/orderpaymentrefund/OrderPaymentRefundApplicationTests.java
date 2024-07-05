@@ -1,6 +1,5 @@
-package com.nhnacademy.order;
+package com.nhnacademy.orderpaymentrefund;
 
-import com.nhnacademy.orderpaymentrefund.OrderPaymentRefundApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

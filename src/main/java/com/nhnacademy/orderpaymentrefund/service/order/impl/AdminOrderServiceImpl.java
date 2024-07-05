@@ -7,15 +7,16 @@ import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOpti
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.AdminOrderService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AdminOrderServiceImpl implements AdminOrderService {
 
-    private OrderRepository orderRepository;
-    private ProductOrderDetailRepository productOrderDetailRepository;
-    private ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
+    private final OrderRepository orderRepository;
+    private final ProductOrderDetailRepository productOrderDetailRepository;
+    private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
 
     @Override
     public void changeOrderStatus(long orderId, OrderStatus orderStatus) {

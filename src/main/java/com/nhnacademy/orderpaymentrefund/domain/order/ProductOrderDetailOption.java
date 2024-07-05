@@ -37,6 +37,10 @@ public class ProductOrderDetailOption {
     @NotNull
     private long optionProductPrice;
 
+    @NotNull
+    @Column(name = "option_product_quantity")
+    private long quantity;
+
     /**
      * 주문한 상품에 선택된 옵션 상품
      * @param productId 옵션상품 상품 아이디
@@ -45,10 +49,11 @@ public class ProductOrderDetailOption {
      * @param optionProductPrice 옵션 상품 가격
      **/
     @Builder
-    public ProductOrderDetailOption(long productId, ProductOrderDetail productOrderDetail, String optionProductName, long optionProductPrice){
+    public ProductOrderDetailOption(long productId, ProductOrderDetail productOrderDetail, String optionProductName, long optionProductPrice, long quantity){
         this.productId = productId;
         this.productOrderDetail = productOrderDetail;
         this.optionProductName = optionProductName;
         this.optionProductPrice = optionProductPrice;
+        this.quantity = quantity;
     }
 }

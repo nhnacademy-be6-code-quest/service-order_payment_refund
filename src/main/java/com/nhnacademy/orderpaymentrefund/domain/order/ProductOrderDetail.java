@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * ProductOrderDetail 엔티티 : 주문 상세 엔티티
  * @author 박희원(bakhuiwon326)
@@ -35,6 +37,9 @@ public class ProductOrderDetail {
 
     @NotNull
     private long pricePerProduct; // 상품 개당 가격
+
+    @OneToMany(mappedBy = "productOrderDetail", fetch = FetchType.LAZY)
+    private List<ProductOrderDetailOption> productOrderDetailOptionList;
 
     /**
      * 주문 상세 빌더
