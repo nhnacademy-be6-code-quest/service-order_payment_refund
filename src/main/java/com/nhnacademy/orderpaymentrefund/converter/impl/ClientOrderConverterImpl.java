@@ -4,6 +4,7 @@ import com.nhnacademy.orderpaymentrefund.converter.ClientOrderConverter;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ClientOrderPriceInfoDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOptionProductPairDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import org.springframework.stereotype.Component;
@@ -15,21 +16,25 @@ import java.util.UUID;
 @Component
 public class ClientOrderConverterImpl implements ClientOrderConverter {
 
-    public Order dtoToEntity(CreateClientOrderRequestDto requestDto, long clientId) {
+    public Order dtoToEntity(ClientOrderForm requestDto, long clientId) {
 
+        StringBuilder address = new StringBuilder();
+        address.append(requestDto.getAddressZipCode());
+        address.append(", ");
+        address.append(requestDto.getDeliveryAddress());
         return Order.clientOrderBuilder()
                 .clientId(clientId)
-                .couponId(requestDto.couponId())
-                .pointPolicyId(requestDto.pointPolicyId())
+                .couponId(requestDto.getCouponId())
+                .pointPolicyId(requestDto.getPointPolicyId())
                 .tossOrderId(UUID.randomUUID().toString())
-                .productTotalAmount(requestDto.productTotalAmount())
-                .shippingFee(requestDto.shippingFee())
-                .designatedDeliveryDate(requestDto.designatedDeliveryDate())
-                .phoneNumber(requestDto.phoneNumber())
-                .deliveryAddress(requestDto.totalAddress())
-                .discountAmountByCoupon(Optional.ofNullable(requestDto.couponDiscountAmount()).orElse(0L))
-                .discountAmountByPoint(Optional.ofNullable(requestDto.usedPointDiscountAmount()).orElse(0L))
-                .accumulatedPoint(requestDto.accumulatedPoint())
+                .productTotalAmount(requestDto.getProductTotalAmount())
+                .shippingFee(requestDto.getShippingFee())
+                .designatedDeliveryDate(requestDto.getDesignatedDeliveryDate())
+                .phoneNumber(requestDto.getPhoneNumber())
+                .deliveryAddress(address.toString())
+                .discountAmountByCoupon(Optional.ofNullable(requestDto.getCouponDiscountAmount()).orElse(0L))
+                .discountAmountByPoint(Optional.ofNullable(requestDto.getUsedPointDiscountAmount()).orElse(0L))
+                .accumulatedPoint(requestDto.getAccumulatePoint())
                 .build();
 
     }

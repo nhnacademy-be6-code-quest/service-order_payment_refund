@@ -11,6 +11,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.field.ClientOrderPriceInfoDto
 import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOptionProductPairDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailOptionDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
@@ -46,13 +47,13 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     private final TestOtherService testOtherService;
 
     @Override
-    public void tryCreateOrder(HttpHeaders headers, CreateClientOrderRequestDto createClientOrderRequestDto) {
+    public void tryCreateOrder(HttpHeaders headers, ClientOrderForm clientOrderForm) {
         if (headers.get(ID_HEADER) == null){
             throw new RuntimeException("clientId is null");
         }
         long clientId = Long.parseLong(headers.getFirst(ID_HEADER));
         preprocessing();
-        createOrder(clientId, createClientOrderRequestDto);
+        createOrder(clientId, clientOrderForm);
         //tryPay();
         postprocessing();
         saveOrderAndPaymentToDB();
@@ -90,20 +91,18 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public Long createOrder(long clientId, CreateClientOrderRequestDto requestDto) {
+    public Long createOrder(long clientId, ClientOrderForm requestDto) {
 
         // 회원 Order 생성 및 저장
         Order order = clientOrderConverter.dtoToEntity(requestDto, clientId);
         orderRepository.save(order);
 
         // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-        requestDto.orderedProductAndOptionProductPairDtoList().forEach((pair) -> {
-            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(pair.productOrderDetailDto(), order);
+        requestDto.getOrderDetailDtoItemList().forEach((item) -> {
+            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(item, order);
             productOrderDetailRepository.save(productOrderDetail);
-            pair.productOrderDetailOptionDtoList().forEach((optionDto) -> {
-                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(optionDto, productOrderDetail);
-                productOrderDetailOptionRepository.save(productOrderDetailOption);
-            });
+            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(item, productOrderDetail);
+            productOrderDetailOptionRepository.save(productOrderDetailOption);
         });
 
         return order.getOrderId();
