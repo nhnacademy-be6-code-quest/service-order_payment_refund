@@ -17,25 +17,18 @@ public class ClientOrderConverterImpl implements ClientOrderConverter {
 
     public Order dtoToEntity(CreateClientOrderRequestDto requestDto, long clientId) {
 
-        StringBuilder address = new StringBuilder();
-        address.append(requestDto.clientOrdererInfoDto().zipCode());
-        address.append(", ");
-        address.append(requestDto.clientOrdererInfoDto().address());
-        address.append(", ");
-        address.append(requestDto.clientOrdererInfoDto().detailAddress());
-
         return Order.clientOrderBuilder()
                 .clientId(clientId)
                 .couponId(requestDto.couponId())
                 .pointPolicyId(requestDto.pointPolicyId())
                 .tossOrderId(UUID.randomUUID().toString())
-                .productTotalAmount(requestDto.clientOrderPriceInfoDto().productTotalAmount())
-                .shippingFee(requestDto.clientOrderPriceInfoDto().shippingFee())
+                .productTotalAmount(requestDto.productTotalAmount())
+                .shippingFee(requestDto.shippingFee())
                 .designatedDeliveryDate(requestDto.designatedDeliveryDate())
-                .phoneNumber(requestDto.clientOrdererInfoDto().phoneNumber())
-                .deliveryAddress(address.toString())
-                .discountAmountByCoupon(Optional.ofNullable(requestDto.clientOrderPriceInfoDto().couponDiscountAmount()).orElse(0L))
-                .discountAmountByPoint(Optional.ofNullable(requestDto.clientOrderPriceInfoDto().usedPointDiscountAmount()).orElse(0L))
+                .phoneNumber(requestDto.phoneNumber())
+                .deliveryAddress(requestDto.totalAddress())
+                .discountAmountByCoupon(Optional.ofNullable(requestDto.couponDiscountAmount()).orElse(0L))
+                .discountAmountByPoint(Optional.ofNullable(requestDto.usedPointDiscountAmount()).orElse(0L))
                 .accumulatedPoint(requestDto.accumulatedPoint())
                 .build();
 
