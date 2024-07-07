@@ -1,7 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.service.payment.impl;
 
 import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.OrderPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
@@ -26,22 +25,12 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = Payment.builder()
             .order(
-                orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException()))
+                orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new))
             .payAmount(tossPaymentsResponseDto.getTotalAmount())
             .payTime(LocalDateTime.now())
-            .paymentMethodName("CARD")
+            .paymentMethodName(tossPaymentsResponseDto.getMethod())
             .tossPaymentKey(tossPaymentsResponseDto.getPaymentKey())
             .build();
         paymentRepository.save(payment);
-    }
-
-    @Override
-    public TossPaymentsResponseDto findByPaymentId(Long paymentId) {
-        return null;
-    }
-
-    @Override
-    public OrderPaymentResponseDto findOrderPaymentResponseDtoByOrderId(Long orderId) {
-        return null;
     }
 }
