@@ -21,10 +21,10 @@ public class ProductOrderDetailOption {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long productOrderDetailOptionId;
+    private Long productOrderDetailOptionId;
 
     @NotNull
-    private long productId;
+    private Long productId;
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "product_order_detail_id")
@@ -35,11 +35,11 @@ public class ProductOrderDetailOption {
     private String optionProductName;
 
     @NotNull
-    private long optionProductPrice;
+    private Long optionProductPrice;
 
     @NotNull
     @Column(name = "option_product_quantity")
-    private long quantity;
+    private Long quantity;
 
     /**
      * 주문한 상품에 선택된 옵션 상품

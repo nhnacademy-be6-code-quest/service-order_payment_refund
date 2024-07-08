@@ -1,10 +1,8 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,9 +19,8 @@ public class ClientOrderController {
     private final ClientOrderService clientOrderService;
 
     @PostMapping
-    public ResponseEntity<String> createOrder(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderForm clientOrderForm){
-        clientOrderService.tryCreateOrder(headers, clientOrderForm);
-        return ResponseEntity.created(null).body("주문이 완료되었습니다");
+    public ResponseEntity<Long> createOrder(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderFormRequestDto clientOrderForm){
+        return ResponseEntity.created(null).body(clientOrderService.tryCreateOrder(headers, clientOrderForm));
     }
 
     @GetMapping

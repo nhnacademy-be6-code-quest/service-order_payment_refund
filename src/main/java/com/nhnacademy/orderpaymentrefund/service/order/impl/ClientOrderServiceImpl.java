@@ -11,8 +11,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.field.ClientOrderPriceInfoDto
 import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOptionProductPairDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailOptionDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
@@ -26,6 +25,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -47,16 +47,17 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     private final TestOtherService testOtherService;
 
     @Override
-    public void tryCreateOrder(HttpHeaders headers, ClientOrderForm clientOrderForm) {
+    public Long tryCreateOrder(HttpHeaders headers, ClientOrderFormRequestDto clientOrderForm) {
         if (headers.get(ID_HEADER) == null){
             throw new RuntimeException("clientId is null");
         }
         long clientId = Long.parseLong(headers.getFirst(ID_HEADER));
         preprocessing();
-        createOrder(clientId, clientOrderForm);
+        Long orderId = createOrder(clientId, clientOrderForm);
         //tryPay();
         postprocessing();
         saveOrderAndPaymentToDB();
+        return orderId;
     }
 
     @Override
@@ -91,7 +92,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public Long createOrder(long clientId, ClientOrderForm requestDto) {
+    public Long createOrder(long clientId, ClientOrderFormRequestDto requestDto) {
 
         // 회원 Order 생성 및 저장
         Order order = clientOrderConverter.dtoToEntity(requestDto, clientId);
@@ -101,8 +102,10 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         requestDto.getOrderDetailDtoItemList().forEach((item) -> {
             ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(item, order);
             productOrderDetailRepository.save(productOrderDetail);
-            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(item, productOrderDetail);
-            productOrderDetailOptionRepository.save(productOrderDetailOption);
+            if(item.isUsePackaging()){
+                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(item, productOrderDetail);
+                productOrderDetailOptionRepository.save(productOrderDetailOption);
+            }
         });
 
         return order.getOrderId();

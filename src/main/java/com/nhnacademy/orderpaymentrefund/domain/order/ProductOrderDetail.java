@@ -30,13 +30,13 @@ public class ProductOrderDetail {
     private Order order;
 
     @NotNull
-    private long productId; // fk
+    private Long productId; // fk
 
     @NotNull
-    private long quantity; // 상품 구매 수량
+    private Long quantity; // 상품 구매 수량
 
     @NotNull
-    private long pricePerProduct; // 상품 개당 가격
+    private Long pricePerProduct; // 상품 개당 가격
 
     @OneToMany(mappedBy = "productOrderDetail", fetch = FetchType.LAZY)
     private List<ProductOrderDetailOption> productOrderDetailOptionList;
@@ -49,7 +49,7 @@ public class ProductOrderDetail {
      * @param pricePerProduct 개당 상품
      **/
     @Builder
-    public ProductOrderDetail(Order order, long productId, long quantity, long pricePerProduct) {
+    public ProductOrderDetail(Order order, @NotNull Long productId, @NotNull Long quantity, @NotNull Long pricePerProduct) {
         this.order = order;
         this.productId = productId;
         this.quantity = quantity;

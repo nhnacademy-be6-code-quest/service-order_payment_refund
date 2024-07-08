@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
+ * Order 엔티티
  * @author 박희원(bakhuiwon326)
  * @version 2.0
  **/
@@ -28,7 +29,7 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id")
-    private long orderId;
+    private Long orderId;
 
     @Nullable
     @Column(unique = true)
@@ -37,29 +38,28 @@ public class Order {
     @Nullable
     private Long couponId; // fk
 
-    @NotNull
-    private long pointPolicyId; // fk
+    //@NotNull
+    private Long pointPolicyId; // fk
 
     @NotNull
     @Column(unique = true)
-    private UUID tossOrderId;
+    private String tossOrderId;
 
     @NotNull
     private LocalDateTime orderDatetime; // 주문 일시
 
-    @Size(max = 50)
     @NotNull
     private OrderStatus orderStatus;
 
     @NotNull
-    private long productTotalAmount; // 상품 총 금액
+    private Long productTotalAmount; // 상품 총 금액
 
     @NotNull
     @Column(name = "shipping_fee_of_order_date")
-    private int shippingFee; // 배송비
+    private Integer shippingFee; // 배송비
 
     @NotNull
-    private long orderTotalAmount; // 주문 총 금액 = 상품 총 금액 + 배송비
+    private Long orderTotalAmount; // 주문 총 금액 = 상품 총 금액 + 배송비
 
     @Nullable
     @Column(name = "designated_delivery_date")
@@ -69,7 +69,7 @@ public class Order {
     private LocalDate deliveryStartDate; // 출고일
 
     @NotNull
-    @Pattern(regexp = "/^01(0|1|[6-9])[0-9]{3,4}[0-9]{4}$/")
+    @Pattern(regexp = "^(010|011)\\d{8}$", message = "전화번호는 010 또는 011로 시작하는 11자리 숫자여야 합니다.")
     private String phoneNumber;
 
     @NotNull
@@ -78,13 +78,13 @@ public class Order {
     private String deliveryAddress; // 배송 주소지
 
     @NotNull
-    private long discountAmountByCoupon; // 쿠폰 할인금액
+    private Long discountAmountByCoupon; // 쿠폰 할인금액
 
     @NotNull
-    private long discountAmountByPoint; // 포인트 할인금액
+    private Long discountAmountByPoint; // 포인트 할인금액
 
     @NotNull
-    private long accumulatedPoint; // 적립 포인트
+    private Long accumulatedPoint; // 적립 포인트
 
     @Size(max = 255)
     @Nullable
@@ -108,7 +108,7 @@ public class Order {
      * @param couponId 쿠폰 아이디. 쿠폰을 사용하지 않으면 null. 쿠폰 사용 시 not null
      * @param pointPolicyId 쿠폰 정책 아이디. 쿠폰을 사용하지 않으면 null.
      * @param tossOrderId 토스 페이먼츠 아이디(uuid). PG service (토스페이먼츠)에 넘길 주문 고유값.
-     * @param productTotalAmount 상품 총 금액. 주문한 상품들의 총 금액.
+     * @param productTotalAmount 상품 총 금액. 주문한 상품들의 총 금액. (옵션 상품 포함)
      * @param shippingFee 배송비. 주문당시 배송정책에 따른 배송비.
      * @param designatedDeliveryDate 지정 날짜. 주문자가 지정하지 않으면 null.
      * @param phoneNumber 주문자 핸드폰 번호
@@ -119,8 +119,8 @@ public class Order {
      *
      **/
     @Builder(builderMethodName = "clientOrderBuilder", builderClassName = "clientOrderBuilder")
-    public Order(long clientId, @Nullable Long couponId, long pointPolicyId, UUID tossOrderId, long productTotalAmount, int shippingFee, @Nullable LocalDate designatedDeliveryDate,
-                 String phoneNumber, String deliveryAddress, long discountAmountByCoupon, long discountAmountByPoint, long accumulatedPoint){
+    public Order(@NotNull Long clientId, @Nullable Long couponId, Long pointPolicyId, @NotNull String tossOrderId, @NotNull Long productTotalAmount, @NotNull Integer shippingFee, @Nullable LocalDate designatedDeliveryDate,
+                 @NotNull String phoneNumber, @NotNull String deliveryAddress, Long discountAmountByCoupon, Long discountAmountByPoint, Long accumulatedPoint){
         this.clientId = clientId;
         this.couponId = couponId;
         this.pointPolicyId = pointPolicyId;
@@ -153,8 +153,8 @@ public class Order {
      *
      **/
     @Builder(builderMethodName = "nonClientOrderBuilder", builderClassName = "nonClientOrderBuilder")
-    public Order(UUID tossOrderId, long productTotalAmount, int shippingFee, @Nullable LocalDate designatedDeliveryDate, String phoneNumber,
-                 String deliveryAddress, @Nullable String nonClientOrderPassword, @Nullable String nonClientOrdererName, @Nullable String nonClientOrdererEmail){
+    public Order(String tossOrderId, long productTotalAmount, int shippingFee, @Nullable LocalDate designatedDeliveryDate, String phoneNumber,
+                 String deliveryAddress, @NotNull String nonClientOrderPassword, @NotNull String nonClientOrdererName, @NotNull String nonClientOrdererEmail){
         this.tossOrderId = tossOrderId;
         this.productTotalAmount = productTotalAmount;
         this.shippingFee = shippingFee;
@@ -164,7 +164,6 @@ public class Order {
         this.orderDatetime = LocalDateTime.now();
         this.orderStatus = OrderStatus.WAIT_PAYMENT;
         this.orderTotalAmount = this.productTotalAmount + this.shippingFee;
-        this.deliveryAddress = deliveryAddress;
         this.nonClientOrderPassword = nonClientOrderPassword;
         this.nonClientOrdererName = nonClientOrdererName;
         this.nonClientOrdererEmail = nonClientOrdererEmail;

@@ -1,21 +1,22 @@
 package com.nhnacademy.orderpaymentrefund.converter.impl;
 
-import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailOptionDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormRequestDto;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 public class ProductOrderDetailOptionConverter implements com.nhnacademy.orderpaymentrefund.converter.ProductOrderDetailOptionConverter {
 
-    public ProductOrderDetailOption dtoToEntity(ClientOrderForm.OrderDetailDtoItem dto, ProductOrderDetail productOrderDetail){
+    public ProductOrderDetailOption dtoToEntity(ClientOrderFormRequestDto.OrderDetailDtoItem dto, ProductOrderDetail productOrderDetail){
         return ProductOrderDetailOption.builder()
                 .productId(dto.getProductId())
                 .productOrderDetail(productOrderDetail)
                 .optionProductName(dto.getOptionProductName())
-                .optionProductPrice(dto.getOptionProductSinglePrice())
+                .optionProductPrice(Optional.ofNullable(dto.getOptionProductSinglePrice()).orElse(0L))
                 .build();
     }
 
