@@ -11,28 +11,28 @@ import com.nhnacademy.orderpaymentrefund.dto.order.field.ClientOrderPriceInfoDto
 import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOptionProductPairDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailOptionDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
-import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
-import java.net.http.HttpHeaders;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ClientOrderServiceImpl implements ClientOrderService {
+
+    private static final String ID_HEADER = "X-User-Id";
 
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
@@ -47,13 +47,17 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     private final TestOtherService testOtherService;
 
     @Override
-    public void tryCreateOrder(HttpHeaders headers, CreateClientOrderRequestDto createClientOrderRequestDto) {
-        long clientId = 1L;
+    public Long tryCreateOrder(HttpHeaders headers, ClientOrderFormRequestDto clientOrderForm) {
+        if (headers.get(ID_HEADER) == null){
+            throw new RuntimeException("clientId is null");
+        }
+        long clientId = Long.parseLong(headers.getFirst(ID_HEADER));
         preprocessing();
-        createOrder(clientId, createClientOrderRequestDto);
+        Long orderId = createOrder(clientId, clientOrderForm);
         //tryPay();
         postprocessing();
         saveOrderAndPaymentToDB();
+        return orderId;
     }
 
     @Override
@@ -88,21 +92,23 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public void createOrder(long clientId, CreateClientOrderRequestDto requestDto) {
+    public Long createOrder(long clientId, ClientOrderFormRequestDto requestDto) {
 
         // 회원 Order 생성 및 저장
         Order order = clientOrderConverter.dtoToEntity(requestDto, clientId);
         orderRepository.save(order);
 
         // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-        requestDto.orderedProductAndOptionProductPairDtoList().forEach((pair) -> {
-            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(pair.productOrderDetailDto(), order);
+        requestDto.getOrderDetailDtoItemList().forEach((item) -> {
+            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(item, order);
             productOrderDetailRepository.save(productOrderDetail);
-            pair.productOrderDetailOptionDtoList().forEach((optionDto) -> {
-                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(optionDto, productOrderDetail);
+            if(item.isUsePackaging()){
+                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(item, productOrderDetail);
                 productOrderDetailOptionRepository.save(productOrderDetailOption);
-            });
+            }
         });
+
+        return order.getOrderId();
 
     }
 

@@ -11,24 +11,23 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/shipping-policy")
 @RequiredArgsConstructor
 public class ShippingController {
 
     private final ShippingPolicyService shippingPolicyService;
 
-    @PutMapping
+    @PutMapping("/admin/shipping-policy")
     public ResponseEntity<String> updateShippingPolicy(@RequestBody AdminShippingPolicyPutRequestDto adminShippingPolicyPutRequestDto){
         shippingPolicyService.updateShippingPolicy(adminShippingPolicyPutRequestDto);
         return ResponseEntity.ok("배송정책이 수정되었습니다.");
     }
 
-    @GetMapping
+    @GetMapping("/shipping-policy")
     public ResponseEntity<ShippingPolicyGetResponseDto> getShippingPolicy(@RequestParam(name = "type", required = true) String type){
         return ResponseEntity.ok().body(shippingPolicyService.getShippingPolicy(ShippingPolicyType.of(type)));
     }
 
-    @GetMapping("/all")
+    @GetMapping("/shipping-policy/all")
     public ResponseEntity<List<ShippingPolicyGetResponseDto>> getAllShippingPolicies(){
         return ResponseEntity.ok().body(shippingPolicyService.getAllShippingPolicies());
     }

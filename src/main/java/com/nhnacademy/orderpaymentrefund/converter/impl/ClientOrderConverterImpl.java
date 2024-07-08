@@ -4,7 +4,7 @@ import com.nhnacademy.orderpaymentrefund.converter.ClientOrderConverter;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ClientOrderPriceInfoDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOptionProductPairDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateClientOrderRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import org.springframework.stereotype.Component;
 
@@ -15,28 +15,26 @@ import java.util.UUID;
 @Component
 public class ClientOrderConverterImpl implements ClientOrderConverter {
 
-    public Order dtoToEntity(CreateClientOrderRequestDto requestDto, long clientId) {
+    public Order dtoToEntity(ClientOrderFormRequestDto requestDto, long clientId) {
 
         StringBuilder address = new StringBuilder();
-        address.append(requestDto.clientOrdererInfoDto().zipCode());
+        address.append(requestDto.getAddressZipCode());
         address.append(", ");
-        address.append(requestDto.clientOrdererInfoDto().address());
-        address.append(", ");
-        address.append(requestDto.clientOrdererInfoDto().detailAddress());
-
+        address.append(requestDto.getDeliveryAddress());
         return Order.clientOrderBuilder()
                 .clientId(clientId)
-                .couponId(requestDto.couponId())
-                .pointPolicyId(requestDto.pointPolicyId())
+                .couponId(requestDto.getCouponId())
+                // TODO 주석지우기 .pointPolicyId(requestDto.getPointPolicyId())
+                .pointPolicyId(1L)
                 .tossOrderId(UUID.randomUUID().toString())
-                .productTotalAmount(requestDto.clientOrderPriceInfoDto().productTotalAmount())
-                .shippingFee(requestDto.clientOrderPriceInfoDto().shippingFee())
-                .designatedDeliveryDate(requestDto.designatedDeliveryDate())
-                .phoneNumber(requestDto.clientOrdererInfoDto().phoneNumber())
+                .productTotalAmount(requestDto.getProductTotalAmount())
+                .shippingFee(requestDto.getShippingFee())
+                .designatedDeliveryDate(requestDto.getDesignatedDeliveryDate())
+                .phoneNumber(requestDto.getPhoneNumber())
                 .deliveryAddress(address.toString())
-                .discountAmountByCoupon(Optional.ofNullable(requestDto.clientOrderPriceInfoDto().couponDiscountAmount()).orElse(0L))
-                .discountAmountByPoint(Optional.ofNullable(requestDto.clientOrderPriceInfoDto().usedPointDiscountAmount()).orElse(0L))
-                .accumulatedPoint(requestDto.accumulatedPoint())
+                .discountAmountByCoupon(Optional.ofNullable(requestDto.getCouponDiscountAmount()).orElse(0L))
+                .discountAmountByPoint(Optional.ofNullable(requestDto.getUsedPointDiscountAmount()).orElse(0L))
+                .accumulatedPoint(Optional.ofNullable(requestDto.getAccumulatePoint()).orElse(0L))
                 .build();
 
     }
