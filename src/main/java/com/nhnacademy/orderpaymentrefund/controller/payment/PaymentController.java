@@ -3,15 +3,16 @@ package com.nhnacademy.orderpaymentrefund.controller.payment;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @author Virtus_Chae
- * @version 0.0
+ * 결제 정보를 저장하고, 조회하는 컨트롤러입니다. 결제 정보는 수정되거나 삭제되지 않습니다.
+ *
+ * @author 김채호
+ * @version 1.0
  */
 @RestController
 @RequiredArgsConstructor
@@ -24,20 +25,4 @@ public class PaymentController {
         @RequestBody TossPaymentsResponseDto tossPaymentsResponseDto) {
         paymentService.savePayment(orderId, tossPaymentsResponseDto);
     }
-
-    @GetMapping("/api/client/order/payment/{paymentId}")
-    public TossPaymentsResponseDto findByPaymentId(@PathVariable Long paymentId) {
-        return paymentService.findByPaymentId(paymentId);
-    }
-
-//    TODO: 추후 구현해야 함.
-//    @GetMapping("/api/client/order/{orderId}/payment")
-//    public long findTotalPriceByOrderId(@PathVariable Long orderId) {
-//        return orderService.getTotalPrice(orderId);
-//    }
-//
-//    @GetMapping("/api/client/order/{orderId}/payment")
-//    OrderPaymentResponseDto findOrderPaymentResponseDtoByOrderId(@PathVariable Long orderId) {
-//        return paymentService.findOrderPaymentResponseDtoByOrderId(orderId);
-//    }
 }
