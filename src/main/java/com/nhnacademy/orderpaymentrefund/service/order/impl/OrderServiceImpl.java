@@ -10,6 +10,7 @@ import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepo
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
@@ -25,7 +27,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
 
     @Override
-    public PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(HttpHeaders headers, long orderId) {
+    public PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(long orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
         Long discountAmountByCoupon = order.getDiscountAmountByCoupon();
@@ -47,9 +49,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(HttpHeaders headers, long orderId) {
+    public PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(long orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-
+        log.debug("getPaymentOrderApproveRequestDto 들어옴!!");
         Long discountAmountByCoupon = order.getDiscountAmountByCoupon();
         Long discountAmountByPoint = order.getDiscountAmountByPoint();
 

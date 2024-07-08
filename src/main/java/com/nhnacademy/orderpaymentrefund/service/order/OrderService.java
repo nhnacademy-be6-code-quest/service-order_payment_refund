@@ -6,6 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 
 public interface OrderService {
-    PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(HttpHeaders headers, long orderId);
-    PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(HttpHeaders headers, long orderId);
+    PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(long orderId);
+    PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(long orderId);
 }
