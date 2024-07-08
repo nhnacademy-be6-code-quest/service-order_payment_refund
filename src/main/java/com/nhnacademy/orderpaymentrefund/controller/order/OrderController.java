@@ -22,7 +22,7 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}/approve-request")
-    public ResponseEntity<PaymentOrderApproveRequestDto> getPaymentOrderApproveRequestDto(@RequestHeader HttpHeaders headers, HttpServletRequest req, @PathVariable Long orderId){
+    public ResponseEntity<PaymentOrderApproveRequestDto> getPaymentOrderApproveRequestDto(@RequestHeader HttpHeaders headers, @PathVariable Long orderId){
         return ResponseEntity.ok().body(orderService.getPaymentOrderApproveRequestDto(headers, orderId));
     }
 
