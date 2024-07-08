@@ -38,6 +38,9 @@ public class ProductOrderDetail {
     @NotNull
     private Long pricePerProduct; // 상품 개당 가격
 
+    @NotNull
+    private String productName; // 상품 이름
+
     @OneToMany(mappedBy = "productOrderDetail", fetch = FetchType.LAZY)
     private List<ProductOrderDetailOption> productOrderDetailOptionList;
 
@@ -47,13 +50,15 @@ public class ProductOrderDetail {
      * @param productId 상품 아이디
      * @param quantity 상품 수량
      * @param pricePerProduct 개당 상품
+     * @param productName 상품 이름
      **/
     @Builder
-    public ProductOrderDetail(Order order, @NotNull Long productId, @NotNull Long quantity, @NotNull Long pricePerProduct) {
+    public ProductOrderDetail(Order order, @NotNull Long productId, @NotNull Long quantity, @NotNull Long pricePerProduct, @NotNull String productName) {
         this.order = order;
         this.productId = productId;
         this.quantity = quantity;
         this.pricePerProduct = pricePerProduct;
+        this.productName = productName;
     }
 
 }

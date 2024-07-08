@@ -16,8 +16,11 @@ public class ProductOrderDetailConverterImpl implements ProductOrderDetailConver
                 .productId(dto.getProductId())
                 .quantity(dto.getQuantity())
                 .pricePerProduct(dto.getProductSinglePrice())
+                .productName(dto.getProductName())
                 .build();
     }
+
+    // TODO 상품주문상세에 '상품_이름' 컬럼 추가함으로써 밑에 있는 두 메서드 수정해야함.
 
     public ProductOrderDetail dtoToEntity(ProductOrderDetailDto dto, Order order) {
         return ProductOrderDetail.builder()

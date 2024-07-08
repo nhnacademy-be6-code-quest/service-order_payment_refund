@@ -24,5 +24,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findNonClientOrderIdList(@Param("req") FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, @Param("pageable") Pageable pageable);
 
     Optional<Order> findByOrderIdAndNonClientOrderPassword(Long orderId, String ordererPassword);
+
     Page<Order> findByClientId(long clientId, Pageable pageable);
+
 }
