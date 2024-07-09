@@ -101,7 +101,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         requestDto.getOrderDetailDtoItemList().forEach((item) -> {
             ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(item, order);
             productOrderDetailRepository.save(productOrderDetail);
-            if(item.isUsePackaging()){
+            if(item.getUsePackaging()){
                 ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(item, productOrderDetail);
                 productOrderDetailOptionRepository.save(productOrderDetailOption);
             }

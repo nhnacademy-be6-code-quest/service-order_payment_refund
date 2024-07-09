@@ -24,8 +24,6 @@ public class ClientOrderConverterImpl implements ClientOrderConverter {
         return Order.clientOrderBuilder()
                 .clientId(clientId)
                 .couponId(requestDto.getCouponId())
-                // TODO 주석지우기 .pointPolicyId(requestDto.getPointPolicyId())
-                .pointPolicyId(1L)
                 .tossOrderId(UUID.randomUUID().toString())
                 .productTotalAmount(requestDto.getProductTotalAmount())
                 .shippingFee(requestDto.getShippingFee())
