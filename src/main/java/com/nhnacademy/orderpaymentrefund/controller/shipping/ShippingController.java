@@ -16,18 +16,18 @@ public class ShippingController {
 
     private final ShippingPolicyService shippingPolicyService;
 
-    @PutMapping("/admin/shipping-policy")
+    @PutMapping("/api/admin/shipping-policy")
     public ResponseEntity<String> updateShippingPolicy(@RequestBody AdminShippingPolicyPutRequestDto adminShippingPolicyPutRequestDto){
         shippingPolicyService.updateShippingPolicy(adminShippingPolicyPutRequestDto);
         return ResponseEntity.ok("배송정책이 수정되었습니다.");
     }
 
-    @GetMapping("/shipping-policy")
+    @GetMapping("/api/shipping-policy")
     public ResponseEntity<ShippingPolicyGetResponseDto> getShippingPolicy(@RequestParam(name = "type", required = true) String type){
         return ResponseEntity.ok().body(shippingPolicyService.getShippingPolicy(ShippingPolicyType.of(type)));
     }
 
-    @GetMapping("/shipping-policy/all")
+    @GetMapping("/api/shipping-policy/all")
     public ResponseEntity<List<ShippingPolicyGetResponseDto>> getAllShippingPolicies(){
         return ResponseEntity.ok().body(shippingPolicyService.getAllShippingPolicies());
     }
