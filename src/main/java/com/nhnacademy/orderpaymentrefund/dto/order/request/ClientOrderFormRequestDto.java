@@ -18,8 +18,6 @@ public class ClientOrderFormRequestDto {
 
     Long couponId; // 적용한 쿠폰
 
-    Long pointPolicyId; // 포인트 적립 정책
-
     @NotNull
     Integer shippingFee; // 배송비
 

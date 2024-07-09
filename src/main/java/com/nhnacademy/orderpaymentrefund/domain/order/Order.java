@@ -38,9 +38,6 @@ public class Order {
     @Nullable
     private Long couponId; // fk
 
-    //@NotNull
-    private Long pointPolicyId; // fk
-
     @NotNull
     @Column(unique = true)
     private String tossOrderId;
@@ -106,7 +103,6 @@ public class Order {
      *
      * @param clientId 회원 아이디
      * @param couponId 쿠폰 아이디. 쿠폰을 사용하지 않으면 null. 쿠폰 사용 시 not null
-     * @param pointPolicyId 쿠폰 정책 아이디. 쿠폰을 사용하지 않으면 null.
      * @param tossOrderId 토스 페이먼츠 아이디(uuid). PG service (토스페이먼츠)에 넘길 주문 고유값.
      * @param productTotalAmount 상품 총 금액. 주문한 상품들의 총 금액. (옵션 상품 포함)
      * @param shippingFee 배송비. 주문당시 배송정책에 따른 배송비.
@@ -119,11 +115,10 @@ public class Order {
      *
      **/
     @Builder(builderMethodName = "clientOrderBuilder", builderClassName = "clientOrderBuilder")
-    public Order(@NotNull Long clientId, @Nullable Long couponId, Long pointPolicyId, @NotNull String tossOrderId, @NotNull Long productTotalAmount, @NotNull Integer shippingFee, @Nullable LocalDate designatedDeliveryDate,
+    public Order(@NotNull Long clientId, @Nullable Long couponId, @NotNull String tossOrderId, @NotNull Long productTotalAmount, @NotNull Integer shippingFee, @Nullable LocalDate designatedDeliveryDate,
                  @NotNull String phoneNumber, @NotNull String deliveryAddress, Long discountAmountByCoupon, Long discountAmountByPoint, Long accumulatedPoint){
         this.clientId = clientId;
         this.couponId = couponId;
-        this.pointPolicyId = pointPolicyId;
         this.tossOrderId = tossOrderId;
         this.productTotalAmount = productTotalAmount;
         this.shippingFee = shippingFee;

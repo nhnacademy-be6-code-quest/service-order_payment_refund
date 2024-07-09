@@ -32,7 +32,6 @@ public record CreateClientOrderRequestDto(
         /**
          * @param orderedProductAndOptionProductPairDtoList 주문된 상품과 옵션상품 쌍 리스트
          * @param couponId 쿠폰 선택 시, 할인에 적용될 쿠폰 아이디
-         * @param pointPolicyId 포인트 회원 적립에 대한 정책 아이디
          * @param shippingFee 배송비
          * @param productTotalAmount 상품 총 금액
          * @param payAmount 최종 결제 금액
@@ -47,7 +46,6 @@ public record CreateClientOrderRequestDto(
          **/
         List<OrderedProductAndOptionProductPairDto> orderedProductAndOptionProductPairDtoList,
         Long couponId,
-        Long pointPolicyId,
         int shippingFee, // 배송비
         long productTotalAmount, // 상품 총 금액
         long payAmount, // 최종결제금액
