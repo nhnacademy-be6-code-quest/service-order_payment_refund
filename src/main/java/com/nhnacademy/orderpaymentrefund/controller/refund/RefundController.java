@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @version 0.0
  */
 @RestController
-public class RefundController implements RefundControllerJavaDoc {
+public class RefundController {
 
     /**
      * 사용자에게 환불 창을 보여 줍니다. 미완성입니다.
