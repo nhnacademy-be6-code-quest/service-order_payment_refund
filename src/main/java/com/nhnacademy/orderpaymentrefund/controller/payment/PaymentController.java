@@ -20,7 +20,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/api/client/order/{orderId}/payment")
+    @PostMapping("/api/order/{orderId}/payment")
     public void savePayment(@PathVariable long orderId,
         @RequestBody TossPaymentsResponseDto tossPaymentsResponseDto) {
         paymentService.savePayment(orderId, tossPaymentsResponseDto);
