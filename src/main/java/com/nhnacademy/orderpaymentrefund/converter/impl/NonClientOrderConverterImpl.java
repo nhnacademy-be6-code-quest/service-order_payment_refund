@@ -6,6 +6,7 @@ import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.NonClientOrderPriceInfoDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOptionProductPairDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateNonClientOrderRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderResponseDto;
 import org.springframework.stereotype.Component;
 
@@ -15,25 +16,23 @@ import java.util.UUID;
 @Component
 public class NonClientOrderConverterImpl implements NonClientOrderConverter {
 
-    public Order dtoToEntity(CreateNonClientOrderRequestDto dto) {
+    public Order dtoToEntity(NonClientOrderFormRequestDto requestDto) {
 
         StringBuilder address = new StringBuilder();
-        address.append(dto.nonClientOrdererInfoDto().zipCode());
+        address.append(requestDto.getAddressZipCode());
         address.append(", ");
-        address.append(dto.nonClientOrdererInfoDto().address());
-        address.append(", ");
-        address.append(dto.nonClientOrdererInfoDto().detailAddress());
+        address.append(requestDto.getDeliveryAddress());
 
         return Order.nonClientOrderBuilder()
                 .tossOrderId(UUID.randomUUID().toString())
-                .productTotalAmount(dto.nonClientOrderPriceInfoDto().productTotalAmount())
-                .shippingFee(dto.nonClientOrderPriceInfoDto().shippingFee())
-                .designatedDeliveryDate(dto.designatedDeliveryDate())
-                .phoneNumber(dto.nonClientOrdererInfoDto().phoneNumber())
+                .productTotalAmount(requestDto.getProductTotalAmount())
+                .shippingFee(requestDto.getShippingFee())
+                .designatedDeliveryDate(requestDto.getDesignatedDeliveryDate())
+                .phoneNumber(requestDto.getPhoneNumber())
                 .deliveryAddress(address.toString())
-                .nonClientOrderPassword(dto.nonClientOrdererInfoDto().nonClientOrderPassword())
-                .nonClientOrdererName(dto.nonClientOrdererInfoDto().nonClientOrdererName())
-                .nonClientOrdererEmail(dto.nonClientOrdererInfoDto().nonClientOrdererEmail())
+                .nonClientOrderPassword(requestDto.getOrderPassword())
+                .nonClientOrdererName(requestDto.getOrderedPersonName())
+                .nonClientOrdererEmail(requestDto.getEmail())
                 .build();
 
     }

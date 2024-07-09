@@ -12,6 +12,10 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.NoArgsConstructor;
 
+/**
+ * @author 김채호
+ * @version 0.0
+ */
 @Entity
 @NoArgsConstructor
 public class RefundAndCancel {
