@@ -5,6 +5,7 @@ import com.nhnacademy.orderpaymentrefund.converter.impl.ClientOrderConverterImpl
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverterImpl;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
+import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ClientOrderPriceInfoDto;
@@ -15,12 +16,14 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormReques
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderListGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.exception.CannotCancelOrder;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.exception.WrongClientAccessToOrder;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
+import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -251,21 +254,52 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         return orderResponseDto;
     }
 
-    private long getClientId(HttpHeaders headers){
-        if (headers.get(ID_HEADER) == null){
-            throw new RuntimeException("clientId is null");
-        }
-
-        return Long.parseLong(headers.getFirst(ID_HEADER));
-    }
-
     @Override
     public void cancelOrder(HttpHeaders headers, long orderId) {
+
+        long clientId = getClientId(headers);
+
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if(!order.getClientId().equals(clientId)) {
+            throw new WrongClientAccessToOrder();
+        }
+
+        if(!(order.getOrderStatus() == OrderStatus.WAIT_PAYMENT || order.getOrderStatus() == OrderStatus.PAYED)){
+            throw new CannotCancelOrder("결제대기 또는 결제완료 상태에서 주문취소 가능합니다.");
+        }
+        // TODO 후처리 필요
+
+        order.updateOrderStatus(OrderStatus.CANCEL);
+        orderRepository.save(order);
 
     }
 
     @Override
     public void refundOrder(HttpHeaders headers, long orderId) {
+        long clientId = getClientId(headers);
 
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if(!order.getClientId().equals(clientId)) {
+            throw new WrongClientAccessToOrder();
+        }
+
+        if(!(order.getOrderStatus() == OrderStatus.DELIVERING || order.getOrderStatus() == OrderStatus.DELIVERY_COMPLETE)){
+            throw new CannotCancelOrder("배송중 또는 배송완료 상태에서 주문취소 가능합니다.");
+        }
+
+        // TODO 후처리 필요
+
+        order.updateOrderStatus(OrderStatus.REFUND);
+        orderRepository.save(order);
+
+    }
+
+    private long getClientId(HttpHeaders headers){
+        if (headers.get(ID_HEADER) == null){
+            throw new RuntimeException("clientId is null");
+        }
+        return Long.parseLong(headers.getFirst(ID_HEADER));
     }
 }
