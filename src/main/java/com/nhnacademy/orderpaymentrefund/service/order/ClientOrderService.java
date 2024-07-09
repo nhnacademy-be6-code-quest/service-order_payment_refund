@@ -1,16 +1,17 @@
 package com.nhnacademy.orderpaymentrefund.service.order;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientOrderPostRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.client.ClientViewOrderPostRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientAllOrderGetResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientOrderPostResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.client.ClientViewOrderPostResponseDto;
-import jakarta.servlet.http.HttpServletResponse;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+
 
 public interface ClientOrderService {
-    ClientViewOrderPostResponseDto orderView(long clientId, ClientViewOrderPostRequestDto clientOrderPostRequestDto);
-    Page<ClientAllOrderGetResponseDto> getAllOrder(long clientId, Pageable pageable);
-    ClientOrderPostResponseDto createOrder(ClientOrderPostRequestDto clientOrderPostRequestDto, HttpServletResponse httpServletResponse);
+    Long tryCreateOrder(HttpHeaders headers, ClientOrderFormRequestDto clientOrderForm);
+    void preprocessing();
+    void postprocessing();
+    Long createOrder(long clientId, ClientOrderFormRequestDto clientOrderForm);
+    void saveOrderAndPaymentToDB();
+    Page<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers, Pageable pageable);
 }

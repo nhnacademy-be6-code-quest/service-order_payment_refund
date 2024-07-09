@@ -1,42 +1,59 @@
 package com.nhnacademy.orderpaymentrefund.service.shipping.impl;
 
 import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicy;
-import com.nhnacademy.orderpaymentrefund.dto.shipping.admin.AdminShippingPolicyPutRequestDto;
+import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicyType;
+import com.nhnacademy.orderpaymentrefund.dto.shipping.admin.request.AdminShippingPolicyPutRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.shipping.admin.response.ShippingPolicyGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.ShippingPolicyNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.shipping.ShippingPolicyRepository;
 import com.nhnacademy.orderpaymentrefund.service.shipping.ShippingPolicyService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ShippingPolicyServiceImpl implements ShippingPolicyService {
 
-    private ShippingPolicyRepository shippingPolicyRepository;
+    private final ShippingPolicyRepository shippingPolicyRepository;
 
     @Override
     public void updateShippingPolicy(AdminShippingPolicyPutRequestDto adminShippingPolicyPutRequestDto) {
 
-        ShippingPolicy shippingPolicy = getShippingPolicy();
+        ShippingPolicy shippingPolicy = shippingPolicyRepository.findByShippingPolicyType(adminShippingPolicyPutRequestDto.shippingPolicyType()).orElseThrow(ShippingPolicyNotFoundException::new);
 
-        shippingPolicy.updatePost(adminShippingPolicyPutRequestDto.description()
-                , adminShippingPolicyPutRequestDto.fee()
-                , adminShippingPolicyPutRequestDto.lowerBound());
+        shippingPolicy.updateShippingPolicy(adminShippingPolicyPutRequestDto.description()
+                , adminShippingPolicyPutRequestDto.shippingFee()
+                , adminShippingPolicyPutRequestDto.minPurchaseAmount());
 
         shippingPolicyRepository.save(shippingPolicy);
 
     }
 
     @Override
-    public ShippingPolicy getShippingPolicy() {
+    public ShippingPolicyGetResponseDto getShippingPolicy(ShippingPolicyType shippingPolicyType) {
 
-        List<ShippingPolicy> shippingPolicy = shippingPolicyRepository.findAll();
+        ShippingPolicy shippingPolicy = shippingPolicyRepository.findByShippingPolicyType(shippingPolicyType).orElseThrow(ShippingPolicyNotFoundException::new);
 
-        if(shippingPolicy.isEmpty()) throw new ShippingPolicyNotFoundException();
+        return ShippingPolicyGetResponseDto.builder()
+                .shippingFee(shippingPolicy.getShippingFee())
+                .description(shippingPolicy.getDescription())
+                .minPurchaseAmount(shippingPolicy.getMinPurchaseAmount())
+                .shippingPolicyType(shippingPolicy.getShippingPolicyType())
+                .build();
 
-        return shippingPolicy.getFirst();
+    }
 
+    @Override
+    public List<ShippingPolicyGetResponseDto> getAllShippingPolicies() {
+        return shippingPolicyRepository.findAll().stream().map((shippingPolicy) -> {
+            return ShippingPolicyGetResponseDto.builder()
+                    .description(shippingPolicy.getDescription())
+                    .shippingFee(shippingPolicy.getShippingFee())
+                    .minPurchaseAmount(shippingPolicy.getMinPurchaseAmount())
+                    .shippingPolicyType(shippingPolicy.getShippingPolicyType())
+                    .build();
+        }).toList();
     }
 }

@@ -1,46 +1,28 @@
 package com.nhnacademy.orderpaymentrefund.controller.payment;
 
-import com.nhnacademy.orderpaymentrefund.dto.payment.request.PaymentRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.OrderPaymentResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentResponseDto;
-import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @author Virtus_Chae
- * @version 0.0
+ * 결제 정보를 저장하고, 조회하는 컨트롤러입니다. 결제 정보는 수정되거나 삭제되지 않습니다.
+ *
+ * @author 김채호
+ * @version 1.0
  */
 @RestController
 @RequiredArgsConstructor
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final OrderService orderService;
 
     @PostMapping("/api/client/order/{orderId}/payment")
-    public void savePayment(@RequestBody PaymentRequestDto paymentRequestDto) {
-        paymentService.savePayment(paymentRequestDto); // 여기에서 에러 발생
+    public void savePayment(@PathVariable long orderId,
+        @RequestBody TossPaymentsResponseDto tossPaymentsResponseDto) {
+        paymentService.savePayment(orderId, tossPaymentsResponseDto);
     }
-
-    @GetMapping("/api/client/order/{orderId}/payment/{paymentId}")
-    public PaymentResponseDto findByPaymentId(@PathVariable Long paymentId) {
-        return paymentService.findByPaymentId(paymentId);
-    }
-//    TODO: 추후 구현해야 함.
-//    @GetMapping("/api/client/order/{orderId}/payment")
-//    public long findTotalPriceByOrderId(@PathVariable Long orderId) {
-//        return orderService.getTotalPrice(orderId);
-//    }
-//
-//    @GetMapping("/api/client/order/{orderId}/payment")
-//    OrderPaymentResponseDto findOrderPaymentResponseDtoByOrderId(@PathVariable Long orderId) {
-//        return paymentService.findOrderPaymentResponseDtoByOrderId(orderId);
-//    }
 }

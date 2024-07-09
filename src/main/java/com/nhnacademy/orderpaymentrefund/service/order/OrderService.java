@@ -1,12 +1,11 @@
 package com.nhnacademy.orderpaymentrefund.service.order;
 
-import com.nhnacademy.orderpaymentrefund.domain.order.Order;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.service.UserDetailGetResponseDto;
-
-import java.util.List;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
 
 public interface OrderService {
-    long getTotalPrice(long orderId);
-    List<UserDetailGetResponseDto> getUserDetails(long orderId);
-    void completePayment(long orderId);
+    PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(long orderId);
+    PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(long orderId);
 }
