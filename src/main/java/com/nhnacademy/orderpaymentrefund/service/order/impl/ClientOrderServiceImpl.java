@@ -12,7 +12,11 @@ import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOption
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailOptionDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderListGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
+import com.nhnacademy.orderpaymentrefund.exception.WrongClientAccessToOrder;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
@@ -20,10 +24,13 @@ import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -47,15 +54,11 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     @Override
     public Long tryCreateOrder(HttpHeaders headers, ClientOrderFormRequestDto clientOrderForm) {
-        if (headers.get(ID_HEADER) == null){
-            throw new RuntimeException("clientId is null");
-        }
-        long clientId = Long.parseLong(headers.getFirst(ID_HEADER));
+        long clientId = getClientId(headers);
         preprocessing();
         Long orderId = createOrder(clientId, clientOrderForm);
         //tryPay();
         postprocessing();
-        saveOrderAndPaymentToDB();
         return orderId;
     }
 
@@ -114,7 +117,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     @Override
     public Page<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers, Pageable pageable) {
 
-        long clientId = 1L;
+        long clientId = getClientId(headers);
 
         return orderRepository.findByClientId(clientId, pageable).map((order) -> {
 
@@ -147,7 +150,122 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public void saveOrderAndPaymentToDB() {
+    public Page<OrderResponseDto> getOrders(HttpHeaders headers, int pageSize, int pageNo, String sortBy, String sortDir) {
+
+        long clientId = getClientId(headers);
+
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ?
+                Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        return orderRepository.findByClientId(clientId, PageRequest.of(pageNo, pageSize, sort)).map(order -> {
+
+            if(!order.getClientId().equals(clientId)) throw new WrongClientAccessToOrder();
+
+            OrderResponseDto orderResponseDto = OrderResponseDto.builder()
+                    .orderId(order.getOrderId())
+                    .clientId(order.getClientId())
+                    .couponId(order.getCouponId())
+                    .tossOrderId(order.getTossOrderId())
+                    .orderDatetime(order.getOrderDatetime().toString())
+                    .orderStatus(order.getOrderStatus().kor)
+                    .productTotalAmount(order.getOrderTotalAmount())
+                    .shippingFee(order.getShippingFee())
+                    .orderTotalAmount(order.getOrderTotalAmount())
+                    .designatedDeliveryDate(order.getDesignatedDeliveryDate().toString())
+                    .phoneNumber(order.getPhoneNumber())
+                    .deliveryAddress(order.getDeliveryAddress())
+                    .discountAmountByCoupon(order.getDiscountAmountByCoupon() == null ? 0 : order.getDiscountAmountByCoupon())
+                    .discountAmountByPoint(order.getDiscountAmountByPoint() == null ? 0 : order.getDiscountAmountByPoint())
+                    .accumulatedPoint(order.getAccumulatedPoint() == null ? 0 : order.getAccumulatedPoint())
+                    .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
+                    .nonClientOrderPassword(order.getNonClientOrderPassword())
+                    .nonClientOrdererName(order.getNonClientOrdererName())
+                    .nonClientOrdererEmail(order.getNonClientOrdererEmail())
+                    .build();
+
+            productOrderDetailRepository.findAllByOrder(order).forEach(productOrderDetail -> {
+                ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+                orderResponseDto.addClientOrderListItem(
+                        OrderResponseDto.ClientOrderListItem.builder()
+                                .productId(productOrderDetail.getProductId())
+                                .productName(productOrderDetail.getProductName())
+                                .productQuantity(productOrderDetail.getQuantity())
+                                .productSinglePrice(option != null ? option.getOptionProductPrice() : 0)
+                                .optionProductId(option != null ? option.getProductId() : null)
+                                .optionProductName(option != null ? option.getOptionProductName() : null)
+                                .optionProductQuantity(option != null ? option.getQuantity() : 0)
+                                .build()
+                );
+            });
+
+            return orderResponseDto;
+        });
+    }
+
+    @Override
+    public OrderResponseDto getOrder(HttpHeaders headers, long orderId) {
+
+        long clientId = getClientId(headers);
+
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if(!order.getClientId().equals(clientId)) throw new WrongClientAccessToOrder();
+
+        OrderResponseDto orderResponseDto = OrderResponseDto.builder()
+                .orderId(order.getOrderId())
+                .clientId(order.getClientId())
+                .couponId(order.getCouponId())
+                .tossOrderId(order.getTossOrderId())
+                .orderDatetime(order.getOrderDatetime().toString())
+                .orderStatus(order.getOrderStatus().kor)
+                .productTotalAmount(order.getOrderTotalAmount())
+                .shippingFee(order.getShippingFee())
+                .orderTotalAmount(order.getOrderTotalAmount())
+                .designatedDeliveryDate(order.getDesignatedDeliveryDate().toString())
+                .phoneNumber(order.getPhoneNumber())
+                .deliveryAddress(order.getDeliveryAddress())
+                .discountAmountByCoupon(order.getDiscountAmountByCoupon() == null ? 0 : order.getDiscountAmountByCoupon())
+                .discountAmountByPoint(order.getDiscountAmountByPoint() == null ? 0 : order.getDiscountAmountByPoint())
+                .accumulatedPoint(order.getAccumulatedPoint() == null ? 0 : order.getAccumulatedPoint())
+                .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
+                .nonClientOrderPassword(order.getNonClientOrderPassword())
+                .nonClientOrdererName(order.getNonClientOrdererName())
+                .nonClientOrdererEmail(order.getNonClientOrdererEmail())
+                .build();
+
+        productOrderDetailRepository.findAllByOrder(order).forEach(productOrderDetail -> {
+            ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+            orderResponseDto.addClientOrderListItem(
+                    OrderResponseDto.ClientOrderListItem.builder()
+                            .productId(productOrderDetail.getProductId())
+                            .productName(productOrderDetail.getProductName())
+                            .productQuantity(productOrderDetail.getQuantity())
+                            .productSinglePrice(option != null ? option.getOptionProductPrice() : 0)
+                            .optionProductId(option != null ? option.getProductId() : null)
+                            .optionProductName(option != null ? option.getOptionProductName() : null)
+                            .optionProductQuantity(option != null ? option.getQuantity() : 0)
+                            .build()
+            );
+        });
+
+        return orderResponseDto;
+    }
+
+    private long getClientId(HttpHeaders headers){
+        if (headers.get(ID_HEADER) == null){
+            throw new RuntimeException("clientId is null");
+        }
+
+        return Long.parseLong(headers.getFirst(ID_HEADER));
+    }
+
+    @Override
+    public void cancelOrder(HttpHeaders headers, long orderId) {
+
+    }
+
+    @Override
+    public void refundOrder(HttpHeaders headers, long orderId) {
 
     }
 }
