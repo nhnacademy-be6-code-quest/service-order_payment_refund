@@ -14,6 +14,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailOptio
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateNonClientOrderRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPasswordRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -49,7 +51,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
     @Transactional
     @Override
-    public void tryCreateOrder(CreateNonClientOrderRequestDto requestDto) {
+    public void tryCreateOrder(NonClientOrderFormRequestDto requestDto) {
         preprocessing();
         createOrder(requestDto);
         postprocessing();
@@ -69,20 +71,20 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     }
 
     @Override
-    public void createOrder(CreateNonClientOrderRequestDto requestDto) {
+    public void createOrder(NonClientOrderFormRequestDto requestDto) {
 
         // 비회원 Order 생성
         Order order = nonClientOrderConverter.dtoToEntity(requestDto);
         orderRepository.save(order);
 
         // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-        requestDto.orderedProductAndOptionProductPairDtoList().forEach((pair) -> {
-            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(pair.productOrderDetailDto(), order);
+        requestDto.getOrderDetailDtoItemList().forEach((item) -> {
+            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(item, order);
             productOrderDetailRepository.save(productOrderDetail);
-            pair.productOrderDetailOptionDtoList().forEach((optionDto) -> {
-                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(optionDto, productOrderDetail);
+            if(Objects.nonNull(item.getPackableProduct()) || item.getUsePackaging().booleanValue() == true){
+                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(item, productOrderDetail);
                 productOrderDetailOptionRepository.save(productOrderDetailOption);
-            });
+            }
         });
 
     }
