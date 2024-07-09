@@ -162,6 +162,9 @@ public class Order {
         this.nonClientOrderPassword = nonClientOrderPassword;
         this.nonClientOrdererName = nonClientOrdererName;
         this.nonClientOrdererEmail = nonClientOrdererEmail;
+        this.discountAmountByPoint = 0L;
+        this.discountAmountByCoupon = 0L;
+        this.accumulatedPoint = 0L;
     }
 
     /**

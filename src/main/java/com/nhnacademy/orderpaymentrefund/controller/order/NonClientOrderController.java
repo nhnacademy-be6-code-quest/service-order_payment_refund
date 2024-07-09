@@ -3,6 +3,7 @@ package com.nhnacademy.orderpaymentrefund.controller.order;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateNonClientOrderRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPasswordRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.NonClientOrderService;
@@ -27,8 +28,8 @@ public class NonClientOrderController {
     private final NonClientOrderService nonClientOrderService;
 
     @PostMapping
-    public ResponseEntity<String> createNonClientOrder(@RequestBody CreateNonClientOrderRequestDto createNonClientOrderRequestDto){
-        nonClientOrderService.tryCreateOrder(createNonClientOrderRequestDto);
+    public ResponseEntity<String> createNonClientOrder(@RequestBody NonClientOrderFormRequestDto nonClientOrderFormRequestDto){
+        nonClientOrderService.tryCreateOrder(nonClientOrderFormRequestDto);
         return ResponseEntity.created(null).body("주문이 완료되었습니다");
     }
 
