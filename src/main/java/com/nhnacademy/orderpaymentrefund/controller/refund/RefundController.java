@@ -1,11 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.controller.refund;
 
-import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import com.nhnacademy.orderpaymentrefund.service.refund.RefundService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -16,21 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
  * @version 0.0
  */
 @RestController
+@RequiredArgsConstructor
 public class RefundController {
 
-    /**
-     * 사용자에게 환불 창을 보여 줍니다. 미완성입니다.
-     */
-    @GetMapping("client/order/{orderId}/refund")
-    public String refund(@PathVariable String orderId, Model model) {
-        return "refund";
-    }
+    private final RefundService refundService;
 
-    /**
-     * 환불 정보를 저장합니다. 미완성입니다.
-     */
-    @PostMapping("client/order/{orderId}/refund")
-    public String refund(@PathVariable String orderId, @ModelAttribute("payment") Payment payment) {
-        return "refund";
-    }
+
 }
