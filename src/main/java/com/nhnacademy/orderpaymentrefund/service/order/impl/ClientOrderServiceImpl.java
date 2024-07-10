@@ -169,7 +169,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                     .clientId(order.getClientId())
                     .couponId(order.getCouponId())
                     .tossOrderId(order.getTossOrderId())
-                    .orderDatetime(order.getOrderDatetime().toString())
+                    .orderDatetime(order.getOrderDatetime().toString().split("T")[0])
                     .orderStatus(order.getOrderStatus().kor)
                     .productTotalAmount(order.getOrderTotalAmount())
                     .shippingFee(order.getShippingFee())
