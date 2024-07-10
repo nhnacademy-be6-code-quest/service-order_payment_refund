@@ -6,6 +6,7 @@ import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.exception.InvalidOrderChangeAttempt;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
@@ -40,7 +41,7 @@ public class OrderServiceImpl implements OrderService {
         StringBuilder orderHistoryTitle = new StringBuilder();
         orderHistoryTitle.append(productOrderDetailRepository.findFirstByOrder(order).orElseThrow(OrderNotFoundException::new).getProductName());
         if(sizeProductOrderDetail > 1){
-            orderHistoryTitle.append(String.format(" 외 %d건", sizeProductOrderDetail));
+            orderHistoryTitle.append(String.format(" 외 %d건", sizeProductOrderDetail - 1));
         }
 
         return PaymentOrderShowRequestDto.builder()
@@ -96,10 +97,27 @@ public class OrderServiceImpl implements OrderService {
     public void changeOrderStatus(long orderId, String orderStatusKor) {
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
-        OrderStatus orderStatus = OrderStatus.valueOf(orderStatusKor);
-        order.updateOrderStatus(orderStatus);
+        OrderStatus nextOrderStatus = OrderStatus.of(orderStatusKor);
 
-        if(orderStatus.equals(OrderStatus.DELIVERING)){
+        /*
+         * [[ 주문 상태 변경 성공 시나리오 ]]
+         * 1. 결제대기 -> 결제완료
+         * 2. 결제완료 -> 배송중
+         * 3. 배송중 -> 배송완료
+         * 4. 결제대기 or 결제완료 -> 주문취소
+         * 5. 배송중 or 배송완료 -> 반품
+         */
+        boolean canChange = (nextOrderStatus.equals(OrderStatus.PAYED) && order.getOrderStatus().equals(OrderStatus.WAIT_PAYMENT)) ||
+                (nextOrderStatus.equals(OrderStatus.DELIVERING) && order.getOrderStatus().equals(OrderStatus.PAYED)) ||
+                (nextOrderStatus.equals(OrderStatus.DELIVERY_COMPLETE) && order.getOrderStatus() == OrderStatus.DELIVERING) ||
+                (nextOrderStatus.equals(OrderStatus.CANCEL) && (order.getOrderStatus().equals(OrderStatus.WAIT_PAYMENT) || order.getOrderStatus().equals(OrderStatus.PAYED))) ||
+                (nextOrderStatus.equals(OrderStatus.REFUND) && (order.getOrderStatus().equals(OrderStatus.DELIVERING) || order.getOrderStatus().equals(OrderStatus.DELIVERY_COMPLETE)));
+
+        if(canChange) order.updateOrderStatus(nextOrderStatus);
+        else throw new InvalidOrderChangeAttempt();
+
+        // 배송중으로 변경하면, 출고일 업데이트!
+        if(nextOrderStatus == OrderStatus.DELIVERING){
             order.updateDeliveryStartDate();
         }
 
