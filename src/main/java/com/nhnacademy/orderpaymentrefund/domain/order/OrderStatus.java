@@ -1,5 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.domain.order;
 
+import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicyType;
 import lombok.Getter;
 
 /**
@@ -16,16 +17,27 @@ public enum OrderStatus
     public final String kor;
     public final int typeNum;
 
-    /**
-     * 주문 상태 생성자
-     *
-     * @param kor 주문상태 한글로
-     * @param typeNum 주문상태 타입 번호
-     *
-     **/
     OrderStatus(String kor, int typeNum){
         this.kor = kor;
         this.typeNum = typeNum;
+    }
+
+    public static OrderStatus of(String kor){
+        if ((kor.startsWith("'") && kor.endsWith("'")) || (kor.startsWith("\"") && kor.endsWith("\""))) {
+            kor = kor.substring(1, kor.length() - 1);
+        }
+        for (OrderStatus orderStatus : OrderStatus.values()) {
+            if (orderStatus.kor.equals(kor)) {
+                return orderStatus;
+            }
+        }
+        throw new IllegalArgumentException("OrderStatus의 value값이 잘못 되었습니다. '결제대기', '결제완료', '배송중', '배송완료' 중 하나를 기입하세요");
+
+    }
+
+    @Override
+    public String toString() {
+        return this.kor;
     }
 
 }
