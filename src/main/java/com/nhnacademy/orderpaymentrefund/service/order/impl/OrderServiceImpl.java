@@ -2,8 +2,11 @@ package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
+import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.exception.InvalidOrderChangeAttempt;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
@@ -11,6 +14,8 @@ import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepo
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
