@@ -6,6 +6,16 @@ spring:
     name: orderPaymentRefund
   profiles:
     active: prod
+  datasource:
+    dbcp2:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      test-on-borrow: true
+      validation-query: select 1
+      initial-size: 2
+      max-idle: 10
+      max-total: 10
+      min-idle: 2
+      max-open-prepared-statements: 3000
 
 eureka:
   client:
