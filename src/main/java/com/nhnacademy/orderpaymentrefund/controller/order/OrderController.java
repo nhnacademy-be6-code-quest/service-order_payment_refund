@@ -1,9 +1,14 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
+import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderListGetResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +28,12 @@ public class OrderController {
     @GetMapping("/{orderId}/approve-request")
     public ResponseEntity<PaymentOrderApproveRequestDto> getPaymentOrderApproveRequestDto(@PathVariable Long orderId){
         return ResponseEntity.ok().body(orderService.getPaymentOrderApproveRequestDto(orderId));
+    }
+
+    @PutMapping("/{orderId}")
+    public ResponseEntity<String> updateOrderStatus(@PathVariable(name = "orderId") Long orderId, @RequestParam(name = "status", required = true) String status){
+        orderService.changeOrderStatus(orderId, status);
+        return ResponseEntity.ok().body("주문 상태가 변경되었습니다");
     }
 
 }

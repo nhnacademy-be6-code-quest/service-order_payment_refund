@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface ProductOrderDetailOptionRepository extends JpaRepository<ProductOrderDetailOption, Long> {
     List<ProductOrderDetailOption> findByProductOrderDetail(ProductOrderDetail productOrderDetail);
+    ProductOrderDetailOption findFirstByProductOrderDetail(ProductOrderDetail productOrderDetail);
 }

@@ -1,6 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
+import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
@@ -8,10 +9,8 @@ import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -88,5 +87,17 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
+    @Override
+    public void changeOrderStatus(long orderId, String orderStatusKor) {
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
+        OrderStatus orderStatus = OrderStatus.valueOf(orderStatusKor);
+        order.updateOrderStatus(orderStatus);
+
+        if(orderStatus.equals(OrderStatus.DELIVERING)){
+            order.updateDeliveryStartDate();
+        }
+
+        orderRepository.save(order);
+    }
 }
