@@ -6,8 +6,10 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPas
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 
 import java.net.URI;
 
@@ -59,4 +61,9 @@ public interface NonClientOrderService {
      * @param findNonClientOrderPasswordRequestDto 주문 비밀번호르 찾기 위해 필요한 데이터
      **/
     String findNonClientOrderPassword(FindNonClientOrderPasswordRequestDto findNonClientOrderPasswordRequestDto);
+
+    /**
+     * getOrders : 비회원 주문 단건 조회
+     **/
+    OrderResponseDto getOrder(Long orderId, String orderPassword);
 }

@@ -174,7 +174,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                     .productTotalAmount(order.getOrderTotalAmount())
                     .shippingFee(order.getShippingFee())
                     .orderTotalAmount(order.getOrderTotalAmount())
-                    .designatedDeliveryDate(order.getDesignatedDeliveryDate().toString())
+                    .designatedDeliveryDate(order.getDesignatedDeliveryDate() == null ? null : order.getDesignatedDeliveryDate().toString())
                     .phoneNumber(order.getPhoneNumber())
                     .deliveryAddress(order.getDeliveryAddress())
                     .discountAmountByCoupon(order.getDiscountAmountByCoupon() == null ? 0 : order.getDiscountAmountByCoupon())
@@ -277,6 +277,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     @Override
     public void refundOrder(HttpHeaders headers, long orderId) {
+
         long clientId = getClientId(headers);
 
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);

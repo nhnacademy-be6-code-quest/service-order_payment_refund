@@ -17,6 +17,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPas
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
@@ -28,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -140,4 +143,52 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
         return order.getNonClientOrderPassword();
     }
 
+    @Override
+    public OrderResponseDto getOrder(Long orderId, String orderPassword) {
+
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if(!order.equals(orderPassword)){
+            throw new OrderNotFoundException();
+        }
+
+        OrderResponseDto orderResponseDto = OrderResponseDto.builder()
+                .orderId(order.getOrderId())
+                .clientId(order.getClientId())
+                .couponId(order.getCouponId())
+                .tossOrderId(order.getTossOrderId())
+                .orderDatetime(order.getOrderDatetime().toString())
+                .orderStatus(order.getOrderStatus().kor)
+                .productTotalAmount(order.getOrderTotalAmount())
+                .shippingFee(order.getShippingFee())
+                .orderTotalAmount(order.getOrderTotalAmount())
+                .designatedDeliveryDate(order.getDesignatedDeliveryDate().toString())
+                .phoneNumber(order.getPhoneNumber())
+                .deliveryAddress(order.getDeliveryAddress())
+                .discountAmountByCoupon(order.getDiscountAmountByCoupon() == null ? 0 : order.getDiscountAmountByCoupon())
+                .discountAmountByPoint(order.getDiscountAmountByPoint() == null ? 0 : order.getDiscountAmountByPoint())
+                .accumulatedPoint(order.getAccumulatedPoint() == null ? 0 : order.getAccumulatedPoint())
+                .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
+                .nonClientOrderPassword(order.getNonClientOrderPassword())
+                .nonClientOrdererName(order.getNonClientOrdererName())
+                .nonClientOrdererEmail(order.getNonClientOrdererEmail())
+                .build();
+
+        productOrderDetailRepository.findAllByOrder(order).forEach(productOrderDetail -> {
+            ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+            orderResponseDto.addClientOrderListItem(
+                    OrderResponseDto.ClientOrderListItem.builder()
+                            .productId(productOrderDetail.getProductId())
+                            .productName(productOrderDetail.getProductName())
+                            .productQuantity(productOrderDetail.getQuantity())
+                            .productSinglePrice(option != null ? option.getOptionProductPrice() : 0)
+                            .optionProductId(option != null ? option.getProductId() : null)
+                            .optionProductName(option != null ? option.getOptionProductName() : null)
+                            .optionProductQuantity(option != null ? option.getQuantity() : 0)
+                            .build()
+            );
+        });
+
+        return orderResponseDto;
+    }
 }

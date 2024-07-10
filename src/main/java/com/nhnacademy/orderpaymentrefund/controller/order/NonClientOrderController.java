@@ -6,11 +6,13 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPas
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.NonClientOrderService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,8 +36,8 @@ public class NonClientOrderController {
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<FindNonClientOrderResponseDto> findNonClientOrder(@PathVariable long orderId, @RequestParam("orderPassword") String orderPassword){
-        return ResponseEntity.ok().body(nonClientOrderService.findNonClientOrder(orderId, orderPassword));
+    public ResponseEntity<OrderResponseDto> findNonClientOrder(@PathVariable long orderId, @RequestParam("orderPassword") String orderPassword){
+        return ResponseEntity.ok().body(nonClientOrderService.getOrder(orderId, orderPassword));
     }
 
     @GetMapping("/find-orderId")

@@ -34,7 +34,7 @@ public class ClientOrderController {
             @RequestHeader HttpHeaders headers,
             @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
             @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
-            @RequestParam(value = "sortBy", defaultValue = "orderDate", required = false) String sortBy,
+            @RequestParam(value = "sortBy", defaultValue = "orderDatetime", required = false) String sortBy,
             @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir){
         return ResponseEntity.ok(clientOrderService.getOrders(headers, pageSize, pageNo, sortBy, sortDir));
     }
