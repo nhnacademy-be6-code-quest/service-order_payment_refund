@@ -40,9 +40,4 @@ public class OrderController {
         return ResponseEntity.ok().body(orderService.getAllOrderList(pageable));
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<Page<OrderResponseDto>> getOrder(@PageableDefault(size = 10, page = 0, sort = "orderDatetime", direction = Sort.Direction.DESC) Pageable pageable){
-        return ResponseEntity.ok().body(orderService.getAllOrderList(pageable));
-    }
-
 }
