@@ -10,6 +10,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.net.URI;
 
@@ -25,7 +26,7 @@ public interface NonClientOrderService {
      * tryCreateOrder : 주문 생성을 위한 메서드. preprocessing(), createOrder(), postprocessing()이 호출됨.
      * @param requestDto 비회원 주문을 생성하기 위한 요청 dto
      **/
-    void tryCreateOrder(NonClientOrderFormRequestDto requestDto);
+    Long tryCreateOrder(HttpHeaders headers, NonClientOrderFormRequestDto requestDto);
 
     /**
      * preprocessing : 주문 생성 전 '전처리'를 위한 메서드
@@ -41,7 +42,7 @@ public interface NonClientOrderService {
      * createOrder : 주문생성 메서드
      * @param requestDto 주문 생성에 필요한 데이가 담긴 요청 Dto
      **/
-    void createOrder(NonClientOrderFormRequestDto requestDto);
+    Long createOrder(NonClientOrderFormRequestDto requestDto);
 
     /**
      * findNonClientOrderByOrderId : 비회원이 입력한 OrderId에 대해 주문 조회 결과를 반환하는 메서드 - 단건
@@ -54,16 +55,22 @@ public interface NonClientOrderService {
      * findNonClientOrderId : 비회원이 주문 번호를 잃어버렸을 때, 주문번호를 찾을 수 있는 서비스
      * @param findNonClientOrderIdRequestDto 주문번호를 찾기 위해 필요한 데이터
      **/
-    Page<FindNonClientOrderIdInfoResponseDto> findNonClientOrderId(FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, Pageable pageable);
+    Page<FindNonClientOrderIdInfoResponseDto> findNonClientOrderId(HttpHeaders headers, FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, Pageable pageable);
 
     /**
      * findNonClientOrderPassword : 비회원이 주문 비밀번호를 잃어버렸을 때, 주문 비밀번호를 찾을 수 있는 서비스
      * @param findNonClientOrderPasswordRequestDto 주문 비밀번호르 찾기 위해 필요한 데이터
      **/
-    String findNonClientOrderPassword(FindNonClientOrderPasswordRequestDto findNonClientOrderPasswordRequestDto);
+    String findNonClientOrderPassword(HttpHeaders headers, FindNonClientOrderPasswordRequestDto findNonClientOrderPasswordRequestDto);
 
     /**
      * getOrders : 비회원 주문 단건 조회
      **/
-    OrderResponseDto getOrder(Long orderId, String orderPassword);
+    OrderResponseDto getOrder(HttpHeaders headers, Long orderId, String orderPassword);
+
+    void paymentCompleteOrder(HttpHeaders headers, long orderId);
+
+    void cancelOrder(HttpHeaders headers, long orderId);
+
+    void refundOrder(HttpHeaders headers, long orderId);
 }

@@ -1,6 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.exception.handle;
 
 import com.nhnacademy.orderpaymentrefund.exception.type.BadRequestExceptionType;
+import com.nhnacademy.orderpaymentrefund.exception.type.ForbiddenExceptionType;
 import com.nhnacademy.orderpaymentrefund.exception.type.NotFoundExceptionType;
 import com.nhnacademy.orderpaymentrefund.exception.type.UnauthorizedExceptionType;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +25,11 @@ public class ExceptionRestControllerAdvice {
     @ExceptionHandler(UnauthorizedExceptionType.class)
     public String handleBadRequestException(UnauthorizedExceptionType exception, HttpServletResponse response) {
         return handleException(exception, response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(ForbiddenExceptionType.class)
+    public String handleForbiddenException(ForbiddenExceptionType exception, HttpServletResponse response) {
+        return handleException(exception, response, HttpStatus.FORBIDDEN);
     }
 
     private String handleException(RuntimeException e, HttpServletResponse response, HttpStatus httpStatus){

@@ -268,7 +268,6 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         if(!(order.getOrderStatus() == OrderStatus.WAIT_PAYMENT || order.getOrderStatus() == OrderStatus.PAYED)){
             throw new CannotCancelOrder("결제대기 또는 결제완료 상태에서 주문취소 가능합니다.");
         }
-        // TODO 후처리 필요
 
         order.updateOrderStatus(OrderStatus.CANCEL);
         orderRepository.save(order);
@@ -290,10 +289,43 @@ public class ClientOrderServiceImpl implements ClientOrderService {
             throw new CannotCancelOrder("배송중 또는 배송완료 상태에서 주문취소 가능합니다.");
         }
 
-        // TODO 후처리 필요
-
         order.updateOrderStatus(OrderStatus.REFUND);
         orderRepository.save(order);
+
+    }
+
+    @Override
+    public void paymentCompleteOrder(HttpHeaders headers, long orderId) {
+
+        long clientId = getClientId(headers);
+
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if(!order.getClientId().equals(clientId)) {
+            throw new WrongClientAccessToOrder();
+        }
+
+        if(order.getOrderStatus() != OrderStatus.WAIT_PAYMENT){
+            throw new CannotCancelOrder("결제대기 상태일때만 결제완료 상태로 변경할 수 있습니다.");
+        }
+
+        order.updateOrderStatus(OrderStatus.DELIVERY_COMPLETE);
+        orderRepository.save(order);
+
+    }
+
+    @Override
+    public String getOrderStatus(HttpHeaders headers, long orderId) {
+
+        long clientId = getClientId(headers);
+
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if(!order.getClientId().equals(clientId)) {
+            throw new WrongClientAccessToOrder();
+        }
+
+        return order.getOrderStatus().kor;
 
     }
 

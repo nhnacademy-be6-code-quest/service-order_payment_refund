@@ -14,8 +14,8 @@ import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    @Query("select o from Order as o where o.orderId = :orderId and o.nonClientOrdererName = :ordererName and o.phoneNumber = :phoneNumber and o.nonClientOrdererEmail = :email")
-    Optional<Order> findNonClientOrderPassword(@Param("orderId") long orderId, @Param("ordererName") String ordererName, @Param("phoneNumber") String phoneNumber, @Param("email") String email);
+    @Query("SELECT o FROM Order o WHERE o.orderId = :orderId and o.nonClientOrdererName = :ordererName and o.phoneNumber = :phoneNumber and o.nonClientOrdererEmail = :email")
+    Optional<Order> findNonClientOrderPassword(@Param("orderId") Long orderId, @Param("ordererName") String ordererName, @Param("phoneNumber") String phoneNumber, @Param("email") String email);
 
     // 비회원 주문 아이디 찾기
     @Query("SELECT o FROM Order o WHERE o.nonClientOrdererName = :#{#req.ordererName} " +

@@ -44,16 +44,27 @@ public class ClientOrderController {
         return ResponseEntity.ok(clientOrderService.getOrder(headers, orderId));
     }
 
+    @PutMapping("/{orderId}/payment-complete")
+    public ResponseEntity<String> paymentCompleteOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
+        clientOrderService.paymentCompleteOrder(headers, orderId);
+        return ResponseEntity.ok("주문 결제완료 되었습니다.");
+    }
+
     @PutMapping("/{orderId}/cancel")
     public ResponseEntity<String> cancelOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
         clientOrderService.cancelOrder(headers, orderId);
-        return ResponseEntity.ok("주문 취소 되었습니다.");
+        return ResponseEntity.ok("주문 취소 상태로 변경되었습니다.");
     }
 
     @PutMapping("/{orderId}/refund")
     public ResponseEntity<String> refundOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
         clientOrderService.refundOrder(headers, orderId);
-        return ResponseEntity.ok("환불처리 되었습니다.");
+        return ResponseEntity.ok("반품 상태로 변경되었습니다.");
+    }
+
+    @GetMapping("/{orderId}/order-status")
+    public ResponseEntity<String> getOrderStatus(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
+        return ResponseEntity.ok().body(clientOrderService.getOrderStatus(headers, orderId));
     }
 
 }

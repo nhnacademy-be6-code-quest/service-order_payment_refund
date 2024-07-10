@@ -5,6 +5,7 @@ import com.nhnacademy.orderpaymentrefund.converter.impl.NonClientOrderConverterI
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverterImpl;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
+import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.NonClientOrderPriceInfoDto;
@@ -18,7 +19,8 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormReq
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
-import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
+import com.nhnacademy.orderpaymentrefund.exception.*;
+import com.nhnacademy.orderpaymentrefund.exception.type.ForbiddenExceptionType;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
@@ -42,6 +44,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class NonClientOrderServiceImpl implements NonClientOrderService {
 
+    private static final String ID_HEADER = "X-User-Id";
+
     private final OrderRepository orderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
@@ -54,10 +58,10 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
     @Transactional
     @Override
-    public void tryCreateOrder(NonClientOrderFormRequestDto requestDto) {
-        preprocessing();
-        createOrder(requestDto);
-        postprocessing();
+    public Long tryCreateOrder(HttpHeaders headers, NonClientOrderFormRequestDto requestDto) {
+        checkNonClient(headers);
+        Long orderId = createOrder(requestDto);
+        return orderId;
     }
 
     @Override
@@ -74,7 +78,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     }
 
     @Override
-    public void createOrder(NonClientOrderFormRequestDto requestDto) {
+    public Long createOrder(NonClientOrderFormRequestDto requestDto) {
 
         // 비회원 Order 생성
         Order order = nonClientOrderConverter.dtoToEntity(requestDto);
@@ -90,6 +94,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
             }
         });
 
+        return order.getOrderId();
     }
 
     @Override
@@ -125,17 +130,18 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     }
 
     @Override
-    public Page<FindNonClientOrderIdInfoResponseDto> findNonClientOrderId(FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, Pageable pageable) {
+    public Page<FindNonClientOrderIdInfoResponseDto> findNonClientOrderId(HttpHeaders headers, FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, Pageable pageable) {
+        checkNonClient(headers);
         return orderRepository.findNonClientOrderIdList(findNonClientOrderIdRequestDto, pageable).map((order) ->
             FindNonClientOrderIdInfoResponseDto.builder()
                     .orderDateTime(order.getOrderDatetime())
                     .orderId(order.getOrderId())
                     .build());
-
     }
 
     @Override
-    public String findNonClientOrderPassword(FindNonClientOrderPasswordRequestDto requestDto) {
+    public String findNonClientOrderPassword(HttpHeaders headers, FindNonClientOrderPasswordRequestDto requestDto) {
+        checkNonClient(headers);
         Order order = orderRepository.findNonClientOrderPassword(requestDto.orderId(),
                 requestDto.ordererName(),
                 requestDto.ordererName(),
@@ -144,12 +150,13 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     }
 
     @Override
-    public OrderResponseDto getOrder(Long orderId, String orderPassword) {
-
+    public OrderResponseDto getOrder(HttpHeaders headers, Long orderId, String orderPassword) {
+        checkNonClient(headers);
+        
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
-        if(!order.equals(orderPassword)){
-            throw new OrderNotFoundException();
+        if(!order.getNonClientOrderPassword().equals(orderPassword)){
+            throw new OrderPasswordNotCorrect();
         }
 
         OrderResponseDto orderResponseDto = OrderResponseDto.builder()
@@ -190,5 +197,56 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
         });
 
         return orderResponseDto;
+    }
+
+    @Override
+    public void paymentCompleteOrder(HttpHeaders headers, long orderId) {
+
+        checkNonClient(headers);
+
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if(order.getOrderStatus() != OrderStatus.WAIT_PAYMENT){
+            throw new CannotCancelOrder("결제대기 상태일때만 결제완료 상태로 변경할 수 있습니다.");
+        }
+
+        order.updateOrderStatus(OrderStatus.DELIVERY_COMPLETE);
+        orderRepository.save(order);
+    }
+
+    @Override
+    public void cancelOrder(HttpHeaders headers, long orderId) {
+
+        checkNonClient(headers);
+
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if(!(order.getOrderStatus() == OrderStatus.WAIT_PAYMENT || order.getOrderStatus() == OrderStatus.PAYED)){
+            throw new CannotCancelOrder("결제대기 또는 결제완료 상태에서 주문취소 가능합니다.");
+        }
+
+        order.updateOrderStatus(OrderStatus.CANCEL);
+        orderRepository.save(order);
+    }
+
+    @Override
+    public void refundOrder(HttpHeaders headers, long orderId) {
+
+        checkNonClient(headers);
+
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if(!(order.getOrderStatus() == OrderStatus.DELIVERING || order.getOrderStatus() == OrderStatus.DELIVERY_COMPLETE)){
+            throw new CannotCancelOrder("배송중 또는 배송완료 상태에서 주문취소 가능합니다.");
+        }
+
+        order.updateOrderStatus(OrderStatus.REFUND);
+        orderRepository.save(order);
+    }
+
+    private void checkNonClient(HttpHeaders headers){
+        if(headers.get(ID_HEADER) != null){
+            throw new ClientCannotAccessNonClientService();
+        }
     }
 }

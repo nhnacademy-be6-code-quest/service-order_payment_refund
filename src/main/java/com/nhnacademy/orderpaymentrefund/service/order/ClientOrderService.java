@@ -17,6 +17,8 @@ public interface ClientOrderService {
     Page<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers, Pageable pageable);
     Page<OrderResponseDto> getOrders(HttpHeaders headers, int pageSize, int pageNo, String sortBy, String sortDir);
     OrderResponseDto getOrder(HttpHeaders headers, long orderId);
+    void paymentCompleteOrder(HttpHeaders headers, long orderId);
     void cancelOrder(HttpHeaders headers, long orderId);
     void refundOrder(HttpHeaders headers, long orderId);
+    String getOrderStatus(HttpHeaders headers, long orderId);
 }

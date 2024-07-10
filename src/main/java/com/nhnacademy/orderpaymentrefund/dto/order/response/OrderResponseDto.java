@@ -1,13 +1,10 @@
 package com.nhnacademy.orderpaymentrefund.dto.order.response;
 
-import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
