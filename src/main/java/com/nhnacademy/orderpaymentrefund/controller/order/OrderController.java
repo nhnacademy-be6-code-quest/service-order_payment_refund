@@ -30,7 +30,7 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}")
-    public ResponseEntity<String> updateOrderStatus(@PathVariable(name = "orderId") Long orderId, @RequestParam(name = "status", required = true) String status){
+    public ResponseEntity<String> updateOrderStatus(@PathVariable(name = "orderId") Long orderId, @RequestParam(name = "status") String status){
         orderService.changeOrderStatus(orderId, status);
         return ResponseEntity.ok().body("주문 상태가 변경되었습니다");
     }

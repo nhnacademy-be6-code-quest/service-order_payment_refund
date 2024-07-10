@@ -31,7 +31,7 @@ public enum OrderStatus
                 return orderStatus;
             }
         }
-        throw new IllegalArgumentException("OrderStatus의 value값이 잘못 되었습니다. '결제대기', '결제완료', '배송중', '배송완료' 중 하나를 기입하세요");
+        throw new IllegalArgumentException("OrderStatus의 value값이 잘못 되었습니다. '결제대기', '결제완료', '배송중', '반품', '배송완료' 중 하나를 기입하세요");
 
     }
 
