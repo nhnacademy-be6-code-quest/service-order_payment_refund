@@ -1,18 +1,14 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateNonClientOrderRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPasswordRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.NonClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.NonClientOrderService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +33,7 @@ public class NonClientOrderController {
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderResponseDto> findNonClientOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId, @RequestParam("pwd") String orderPassword){
+    public ResponseEntity<NonClientOrderGetResponseDto> findNonClientOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId, @RequestParam("pwd") String orderPassword){
         return ResponseEntity.ok().body(nonClientOrderService.getOrder(headers, orderId, orderPassword));
     }
 

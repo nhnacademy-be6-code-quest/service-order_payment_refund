@@ -56,7 +56,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(long orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-        log.debug("getPaymentOrderApproveRequestDto 들어옴!!");
+
         Long discountAmountByCoupon = order.getDiscountAmountByCoupon();
         Long discountAmountByPoint = order.getDiscountAmountByPoint();
 
@@ -107,6 +107,7 @@ public class OrderServiceImpl implements OrderService {
          * 4. 결제대기 or 결제완료 -> 주문취소
          * 5. 배송중 or 배송완료 -> 반품
          */
+
         boolean canChange = (nextOrderStatus.equals(OrderStatus.PAYED) && order.getOrderStatus().equals(OrderStatus.WAIT_PAYMENT)) ||
                 (nextOrderStatus.equals(OrderStatus.DELIVERING) && order.getOrderStatus().equals(OrderStatus.PAYED)) ||
                 (nextOrderStatus.equals(OrderStatus.DELIVERY_COMPLETE) && order.getOrderStatus() == OrderStatus.DELIVERING) ||
@@ -158,10 +159,10 @@ public class OrderServiceImpl implements OrderService {
                                 .productId(productOrderDetail.getProductId())
                                 .productName(productOrderDetail.getProductName())
                                 .productQuantity(productOrderDetail.getQuantity())
-                                .productSinglePrice(option != null ? option.getOptionProductPrice() : 0)
-                                .optionProductId(option != null ? option.getProductId() : null)
-                                .optionProductName(option != null ? option.getOptionProductName() : null)
-                                .optionProductQuantity(option != null ? option.getQuantity() : 0)
+                                .productSinglePrice(productOrderDetail.getPricePerProduct())
+                                .optionProductId(option == null ? null : option.getProductId())
+                                .optionProductName(option == null ? null : option.getOptionProductName())
+                                .optionProductQuantity(option == null ? null : option.getQuantity())
                                 .build()
                 );
             });

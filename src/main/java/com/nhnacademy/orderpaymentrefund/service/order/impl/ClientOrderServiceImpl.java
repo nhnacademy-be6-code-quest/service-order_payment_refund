@@ -13,9 +13,8 @@ import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOption
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailOptionDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderListGetResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.CannotCancelOrder;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.exception.WrongClientAccessToOrder;
@@ -23,13 +22,9 @@ import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
-import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
@@ -118,95 +113,73 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public Page<FindClientOrderResponseDto> findClientOrderList(HttpHeaders headers, Pageable pageable) {
-
-        long clientId = getClientId(headers);
-
-        return orderRepository.findByClientId(clientId, pageable).map((order) -> {
-
-            List<OrderedProductAndOptionProductPairDto> orderedProductAndOptionProductPairDtoList = order.getProductOrderDetailList().stream().map((productOrderDetail) -> {
-
-                ProductOrderDetailDto productOrderDetailDto = productOrderDetailConverter.entityToDto(productOrderDetail);
-
-                List<ProductOrderDetailOptionDto> productOrderDetailOptionDtoList = productOrderDetail.getProductOrderDetailOptionList().stream().map((option) -> {
-                    return productOrderDetailOptionConverter.entityToDto(option);
-                }).toList();
-
-                return OrderedProductAndOptionProductPairDto.builder()
-                        .productOrderDetailDto(productOrderDetailDto)
-                        .productOrderDetailOptionDtoList(productOrderDetailOptionDtoList)
-                        .build();
-
-            }).toList();
-
-            ClientOrderPriceInfoDto clientOrderPriceInfoDto = ClientOrderPriceInfoDto.builder()
-                    .shippingFee(order.getShippingFee())
-                    .productTotalAmount(order.getProductTotalAmount())
-                    .payAmount(100000) // TOO payment에서 지불금액 가져오기
-                    .couponDiscountAmount(order.getDiscountAmountByCoupon())
-                    .usedPointDiscountAmount(order.getDiscountAmountByPoint())
-                    .build();
-
-            return clientOrderConverter.entityToDto(order, "결제수단", clientOrderPriceInfoDto, orderedProductAndOptionProductPairDtoList);
-        });
-
-    }
-
-    @Override
-    public Page<OrderResponseDto> getOrders(HttpHeaders headers, int pageSize, int pageNo, String sortBy, String sortDir) {
+    public Page<ClientOrderGetResponseDto> getOrders(HttpHeaders headers, int pageSize, int pageNo, String sortBy, String sortDir) {
 
         long clientId = getClientId(headers);
 
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ?
                 Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
-        return orderRepository.findByClientId(clientId, PageRequest.of(pageNo, pageSize, sort)).map(order -> {
+        Page<Order> orderPage = orderRepository.findByClientId(clientId, PageRequest.of(pageNo, pageSize, sort));
+
+        List<ClientOrderGetResponseDto> responseDtoList = new ArrayList<>();
+
+        for(Order order : orderPage.getContent()){
 
             if(!order.getClientId().equals(clientId)) throw new WrongClientAccessToOrder();
 
-            OrderResponseDto orderResponseDto = OrderResponseDto.builder()
+            ClientOrderGetResponseDto clientOrderGetResponseDto = ClientOrderGetResponseDto.builder()
                     .orderId(order.getOrderId())
                     .clientId(order.getClientId())
                     .couponId(order.getCouponId())
                     .tossOrderId(order.getTossOrderId())
-                    .orderDatetime(order.getOrderDatetime().toString().split("T")[0])
+                    .orderDatetime(order.getOrderDatetime().toString())
                     .orderStatus(order.getOrderStatus().kor)
-                    .productTotalAmount(order.getOrderTotalAmount())
+                    .productTotalAmount(order.getProductTotalAmount())
                     .shippingFee(order.getShippingFee())
                     .orderTotalAmount(order.getOrderTotalAmount())
                     .designatedDeliveryDate(order.getDesignatedDeliveryDate() == null ? null : order.getDesignatedDeliveryDate().toString())
+                    .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
                     .phoneNumber(order.getPhoneNumber())
                     .deliveryAddress(order.getDeliveryAddress())
-                    .discountAmountByCoupon(order.getDiscountAmountByCoupon() == null ? 0 : order.getDiscountAmountByCoupon())
-                    .discountAmountByPoint(order.getDiscountAmountByPoint() == null ? 0 : order.getDiscountAmountByPoint())
-                    .accumulatedPoint(order.getAccumulatedPoint() == null ? 0 : order.getAccumulatedPoint())
-                    .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
-                    .nonClientOrderPassword(order.getNonClientOrderPassword())
-                    .nonClientOrdererName(order.getNonClientOrdererName())
-                    .nonClientOrdererEmail(order.getNonClientOrdererEmail())
+                    .discountAmountByCoupon(order.getDiscountAmountByCoupon())
+                    .discountAmountByPoint(order.getDiscountAmountByPoint())
+                    .accumulatedPoint(order.getAccumulatedPoint())
                     .build();
 
-            productOrderDetailRepository.findAllByOrder(order).forEach(productOrderDetail -> {
-                ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
-                orderResponseDto.addClientOrderListItem(
-                        OrderResponseDto.ClientOrderListItem.builder()
+            List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(order);
+
+            for(ProductOrderDetail productOrderDetail : orderDetailList){
+
+                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+
+                ClientOrderGetResponseDto.ClientProductOrderDetailListItem clientProductOrderDetailListItem =
+                        ClientOrderGetResponseDto.ClientProductOrderDetailListItem.builder()
+                                .productOrderDetailId(productOrderDetail.getProductOrderDetailId())
                                 .productId(productOrderDetail.getProductId())
                                 .productName(productOrderDetail.getProductName())
                                 .productQuantity(productOrderDetail.getQuantity())
-                                .productSinglePrice(option != null ? option.getOptionProductPrice() : 0)
-                                .optionProductId(option != null ? option.getProductId() : null)
-                                .optionProductName(option != null ? option.getOptionProductName() : null)
-                                .optionProductQuantity(option != null ? option.getQuantity() : 0)
-                                .build()
-                );
-            });
+                                .productSinglePrice(productOrderDetail.getPricePerProduct())
+                                .optionProductId(productOrderDetailOption == null ? null : productOrderDetailOption.getProductId())
+                                .optionProductName(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductName())
+                                .optionProductQuantity(productOrderDetailOption == null ? null : productOrderDetailOption.getQuantity())
+                                .optionProductPrice(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductPrice())
+                                .build();
 
-            return orderResponseDto;
-        });
+                clientOrderGetResponseDto.addClientProductOrderDetailListItem(clientProductOrderDetailListItem);
+
+            }
+
+            responseDtoList.add(clientOrderGetResponseDto);
+
+        }
+
+        return new PageImpl<>(responseDtoList, PageRequest.of(pageNo, pageSize, sort), orderPage.getTotalElements());
+
     }
 
     @Override
-    public OrderResponseDto getOrder(HttpHeaders headers, long orderId) {
+    public ClientOrderGetResponseDto getOrder(HttpHeaders headers, long orderId) {
 
         long clientId = getClientId(headers);
 
@@ -214,44 +187,50 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
         if(!order.getClientId().equals(clientId)) throw new WrongClientAccessToOrder();
 
-        OrderResponseDto orderResponseDto = OrderResponseDto.builder()
+        ClientOrderGetResponseDto clientOrderGetResponseDto = ClientOrderGetResponseDto.builder()
                 .orderId(order.getOrderId())
                 .clientId(order.getClientId())
                 .couponId(order.getCouponId())
                 .tossOrderId(order.getTossOrderId())
                 .orderDatetime(order.getOrderDatetime().toString())
                 .orderStatus(order.getOrderStatus().kor)
-                .productTotalAmount(order.getOrderTotalAmount())
+                .productTotalAmount(order.getProductTotalAmount())
                 .shippingFee(order.getShippingFee())
                 .orderTotalAmount(order.getOrderTotalAmount())
-                .designatedDeliveryDate(order.getDesignatedDeliveryDate().toString())
+                .designatedDeliveryDate(order.getDesignatedDeliveryDate() == null ? null : order.getDesignatedDeliveryDate().toString())
+                .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
                 .phoneNumber(order.getPhoneNumber())
                 .deliveryAddress(order.getDeliveryAddress())
-                .discountAmountByCoupon(order.getDiscountAmountByCoupon() == null ? 0 : order.getDiscountAmountByCoupon())
-                .discountAmountByPoint(order.getDiscountAmountByPoint() == null ? 0 : order.getDiscountAmountByPoint())
-                .accumulatedPoint(order.getAccumulatedPoint() == null ? 0 : order.getAccumulatedPoint())
-                .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
-                .nonClientOrderPassword(order.getNonClientOrderPassword())
-                .nonClientOrdererName(order.getNonClientOrdererName())
-                .nonClientOrdererEmail(order.getNonClientOrdererEmail())
+                .discountAmountByCoupon(order.getDiscountAmountByCoupon())
+                .discountAmountByPoint(order.getDiscountAmountByPoint())
+                .accumulatedPoint(order.getAccumulatedPoint())
                 .build();
 
-        productOrderDetailRepository.findAllByOrder(order).forEach(productOrderDetail -> {
-            ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
-            orderResponseDto.addClientOrderListItem(
-                    OrderResponseDto.ClientOrderListItem.builder()
+        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(order);
+
+        for(ProductOrderDetail productOrderDetail : orderDetailList){
+
+            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+
+            ClientOrderGetResponseDto.ClientProductOrderDetailListItem clientProductOrderDetailListItem =
+                    ClientOrderGetResponseDto.ClientProductOrderDetailListItem.builder()
+                            .productOrderDetailId(productOrderDetail.getProductOrderDetailId())
                             .productId(productOrderDetail.getProductId())
                             .productName(productOrderDetail.getProductName())
                             .productQuantity(productOrderDetail.getQuantity())
-                            .productSinglePrice(option != null ? option.getOptionProductPrice() : 0)
-                            .optionProductId(option != null ? option.getProductId() : null)
-                            .optionProductName(option != null ? option.getOptionProductName() : null)
-                            .optionProductQuantity(option != null ? option.getQuantity() : 0)
-                            .build()
-            );
-        });
+                            .productSinglePrice(productOrderDetail.getPricePerProduct())
+                            .optionProductId(productOrderDetailOption == null ? null : productOrderDetailOption.getProductId())
+                            .optionProductName(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductName())
+                            .optionProductQuantity(productOrderDetailOption == null ? null : productOrderDetailOption.getQuantity())
+                            .optionProductPrice(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductPrice())
+                            .build();
 
-        return orderResponseDto;
+            clientOrderGetResponseDto.addClientProductOrderDetailListItem(clientProductOrderDetailListItem);
+
+        }
+
+        return clientOrderGetResponseDto;
+
     }
 
     @Override
