@@ -32,7 +32,7 @@ public class Order {
     private Long orderId;
 
     @Nullable
-    @Column(unique = true)
+    @Column(name = "client_id", unique = true)
     private Long clientId; // fk
 
     @Nullable

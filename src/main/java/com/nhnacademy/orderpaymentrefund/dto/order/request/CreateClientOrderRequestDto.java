@@ -1,12 +1,9 @@
 package com.nhnacademy.orderpaymentrefund.dto.order.request;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.field.ClientOrdererInfoDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.field.ClientOrderPriceInfoDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOptionProductPairDto;
 import lombok.Builder;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**

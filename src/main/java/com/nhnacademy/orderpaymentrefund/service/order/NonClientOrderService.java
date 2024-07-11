@@ -1,18 +1,13 @@
 package com.nhnacademy.orderpaymentrefund.service.order;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateNonClientOrderRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPasswordRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.NonClientOrderGetResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.RequestHeader;
-
-import java.net.URI;
 
 /**
  * 비회원 주문 서비스 인터페이스
@@ -45,13 +40,6 @@ public interface NonClientOrderService {
     Long createOrder(NonClientOrderFormRequestDto requestDto);
 
     /**
-     * findNonClientOrderByOrderId : 비회원이 입력한 OrderId에 대해 주문 조회 결과를 반환하는 메서드 - 단건
-     * @param orderId 비회원이 조회하고자 하는 주문 아이디
-     * @param orderPassword 주문 아이디에 해당하는 주문 비밀번호
-     **/
-    FindNonClientOrderResponseDto findNonClientOrder(long orderId, String orderPassword);
-
-    /**
      * findNonClientOrderId : 비회원이 주문 번호를 잃어버렸을 때, 주문번호를 찾을 수 있는 서비스
      * @param findNonClientOrderIdRequestDto 주문번호를 찾기 위해 필요한 데이터
      **/
@@ -66,7 +54,7 @@ public interface NonClientOrderService {
     /**
      * getOrders : 비회원 주문 단건 조회
      **/
-    OrderResponseDto getOrder(HttpHeaders headers, Long orderId, String orderPassword);
+    NonClientOrderGetResponseDto getOrder(HttpHeaders headers, Long orderId, String orderPassword);
 
     void paymentCompleteOrder(HttpHeaders headers, long orderId);
 

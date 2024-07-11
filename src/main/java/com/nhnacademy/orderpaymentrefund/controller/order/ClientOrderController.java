@@ -1,18 +1,17 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderListGetResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.FindClientOrderResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -30,7 +29,7 @@ public class ClientOrderController {
 
     // 주문 내역(Page) 조회 - 모든
     @GetMapping
-    public ResponseEntity<Page<OrderResponseDto>> getOrders(
+    public ResponseEntity<Page<ClientOrderGetResponseDto>> getOrders(
             @RequestHeader HttpHeaders headers,
             @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
             @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
@@ -40,8 +39,25 @@ public class ClientOrderController {
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderResponseDto> getOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
+    public ResponseEntity<ClientOrderGetResponseDto> getOrder(@RequestHeader HttpHeaders headers, @PathVariable Long orderId){
         return ResponseEntity.ok(clientOrderService.getOrder(headers, orderId));
+    }
+
+    @GetMapping("/{orderId}/detail")
+    public ResponseEntity<List<ProductOrderDetailResponseDto>> getProductOrderDetailList(@RequestHeader HttpHeaders headers, @PathVariable Long orderId){
+        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailList(headers, orderId));
+    }
+
+    @GetMapping("/{orderId}/detail/{productOrderDetailId}")
+    public ResponseEntity<ProductOrderDetailResponseDto> getProductOrderDetail(@RequestHeader HttpHeaders headers, @PathVariable Long orderId,
+                                                                               @PathVariable Long productOrderDetailId){
+        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetail(headers, orderId, productOrderDetailId));
+    }
+
+    @GetMapping("/{orderId}/detail/{productOrderDetailId}/option")
+    public ResponseEntity<ProductOrderDetailOptionResponseDto> getProductOrderDetailOption(@RequestHeader HttpHeaders headers,@PathVariable Long orderId,
+                                                                                           @PathVariable Long productOrderDetailId){
+        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailOptionResponseDto(headers, orderId, productOrderDetailId));
     }
 
     @PutMapping("/{orderId}/payment-complete")
