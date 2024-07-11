@@ -117,7 +117,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
         NonClientOrderGetResponseDto nonClientOrderGetResponseDto = NonClientOrderGetResponseDto.builder()
                 .orderId(order.getOrderId())
                 .tossOrderId(order.getTossOrderId())
-                .orderDatetime(order.getOrderDatetime().toString())
+                .orderDatetime(order.getOrderDatetime().toString().split("T")[0])
                 .orderStatus(order.getOrderStatus().kor)
                 .productTotalAmount(order.getProductTotalAmount())
                 .shippingFee(order.getShippingFee())
@@ -146,7 +146,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
                             .optionProductId(productOrderDetailOption == null ? null : productOrderDetailOption.getProductId())
                             .optionProductName(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductName())
                             .optionProductQuantity(productOrderDetailOption == null ? null : productOrderDetailOption.getQuantity())
-                            .optionProductPrice(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductPrice())
+                            .optionProductSinglePrice(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductPrice())
                             .build();
 
             nonClientOrderGetResponseDto.addNonClientProductOrderDetailList(nonClientProductOrderDetailListItem);

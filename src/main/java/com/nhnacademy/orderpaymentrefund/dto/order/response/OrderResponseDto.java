@@ -33,20 +33,22 @@ public class OrderResponseDto {
     private String nonClientOrderPassword;
     private String nonClientOrdererName;
     private String nonClientOrdererEmail;
-    private List<ClientOrderListItem> clientOrderListItemList;
+    private List<OrderListItem> orderListItemList;
 
-    public void addClientOrderListItem(ClientOrderListItem clientOrderListItem) {
-        if(clientOrderListItemList == null){
-            clientOrderListItemList = new ArrayList<>();
+    public void addClientOrderListItem(OrderListItem item) {
+        if(orderListItemList == null){
+            orderListItemList = new ArrayList<>();
         }
-        clientOrderListItemList.add(clientOrderListItem);
+        orderListItemList.add(item);
     }
 
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
     @Getter
-    public static class ClientOrderListItem{
+    public static class OrderListItem{
+        private Long productOrderDetailId;
+
         private Long productId;
         private String productName;
         private Long productQuantity;

@@ -73,7 +73,7 @@ public class ClientOrderGetResponseDto {
         private Long optionProductId;
         private String optionProductName;
         private Long optionProductQuantity;
-        private Long optionProductPrice;
+        private Long optionProductSinglePrice;
     }
 
 }

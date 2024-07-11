@@ -17,16 +17,7 @@ public class ProductOrderDetailOptionConverter implements com.nhnacademy.orderpa
                 .productId(dto.getProductId())
                 .productOrderDetail(productOrderDetail)
                 .optionProductName(dto.getOptionProductName())
-                .optionProductPrice(Optional.ofNullable(dto.getOptionProductSinglePrice()).orElse(0L))
-                .build();
-    }
-
-    public ProductOrderDetailOption dtoToEntity(ProductOrderDetailOptionDto dto, ProductOrderDetail productOrderDetail) {
-        return ProductOrderDetailOption.builder()
-                .productId(dto.productId())
-                .productOrderDetail(productOrderDetail)
-                .optionProductName(dto.optionProductName())
-                .optionProductPrice(dto.optionProductSinglePrice())
+                .optionProductPrice(dto.getOptionProductSinglePrice() == null ? 0 : dto.getOptionProductSinglePrice())
                 .build();
     }
 
@@ -35,16 +26,7 @@ public class ProductOrderDetailOptionConverter implements com.nhnacademy.orderpa
                 .productId(dto.getOptionProductId())
                 .productOrderDetail(productOrderDetail)
                 .optionProductName(dto.getOptionProductName())
-                .optionProductPrice(dto.getOptionProductSinglePrice())
-                .build();
-    }
-
-    public ProductOrderDetailOptionDto entityToDto(ProductOrderDetailOption entity){
-        return ProductOrderDetailOptionDto.builder()
-                .productId(entity.getProductId())
-                .optionProductName(entity.getOptionProductName())
-                .optionProductSinglePrice(entity.getOptionProductPrice())
-                .quantity(entity.getQuantity())
+                .optionProductPrice(dto.getOptionProductSinglePrice() == null ? 0 : dto.getOptionProductSinglePrice())
                 .build();
     }
 

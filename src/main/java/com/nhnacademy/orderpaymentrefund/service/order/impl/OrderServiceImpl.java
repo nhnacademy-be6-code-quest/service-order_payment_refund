@@ -2,12 +2,17 @@ package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
+import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.InvalidOrderChangeAttempt;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
+import com.nhnacademy.orderpaymentrefund.exception.ProductOrderDetailNotFoundException;
+import com.nhnacademy.orderpaymentrefund.exception.type.BadRequestExceptionType;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
@@ -15,7 +20,9 @@ import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -126,49 +133,129 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Page<OrderResponseDto> getAllOrderList(Pageable pageable) {
+    public Page<OrderResponseDto> getAllOrderList(int pageSize, int pageNo, String sortBy, String sortDir) {
 
-        return orderRepository.findAll(pageable).map(order -> {
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ?
+                Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        Page<Order> orderPage = orderRepository.findAll(PageRequest.of(pageNo, pageSize, sort));
+
+        List<OrderResponseDto> responseDtoList = new ArrayList<>();
+
+        for(Order order : orderPage.getContent()){
 
             OrderResponseDto orderResponseDto = OrderResponseDto.builder()
                     .orderId(order.getOrderId())
                     .clientId(order.getClientId())
                     .couponId(order.getCouponId())
                     .tossOrderId(order.getTossOrderId())
-                    .orderDatetime(order.getOrderDatetime().toString().split("T")[0])
+                    .orderDatetime(order.getOrderDatetime().toString())
                     .orderStatus(order.getOrderStatus().kor)
-                    .productTotalAmount(order.getOrderTotalAmount())
+                    .productTotalAmount(order.getProductTotalAmount())
                     .shippingFee(order.getShippingFee())
                     .orderTotalAmount(order.getOrderTotalAmount())
                     .designatedDeliveryDate(order.getDesignatedDeliveryDate() == null ? null : order.getDesignatedDeliveryDate().toString())
+                    .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
                     .phoneNumber(order.getPhoneNumber())
                     .deliveryAddress(order.getDeliveryAddress())
-                    .discountAmountByCoupon(order.getDiscountAmountByCoupon() == null ? 0 : order.getDiscountAmountByCoupon())
-                    .discountAmountByPoint(order.getDiscountAmountByPoint() == null ? 0 : order.getDiscountAmountByPoint())
-                    .accumulatedPoint(order.getAccumulatedPoint() == null ? 0 : order.getAccumulatedPoint())
-                    .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
-                    .nonClientOrderPassword(order.getNonClientOrderPassword())
-                    .nonClientOrdererName(order.getNonClientOrdererName())
+                    .discountAmountByCoupon(order.getDiscountAmountByCoupon())
+                    .discountAmountByPoint(order.getDiscountAmountByPoint())
+                    .accumulatedPoint(order.getAccumulatedPoint())
                     .nonClientOrdererEmail(order.getNonClientOrdererEmail())
+                    .nonClientOrdererName(order.getNonClientOrdererName())
+                    .nonClientOrderPassword(order.getNonClientOrderPassword())
                     .build();
 
-            productOrderDetailRepository.findAllByOrder(order).forEach(productOrderDetail -> {
-                ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
-                orderResponseDto.addClientOrderListItem(
-                        OrderResponseDto.ClientOrderListItem.builder()
+            List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(order);
+
+            for(ProductOrderDetail productOrderDetail : orderDetailList){
+
+                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+
+                OrderResponseDto.OrderListItem orderListItem =
+                        OrderResponseDto.OrderListItem.builder()
+                                .productOrderDetailId(productOrderDetail.getProductOrderDetailId())
                                 .productId(productOrderDetail.getProductId())
                                 .productName(productOrderDetail.getProductName())
                                 .productQuantity(productOrderDetail.getQuantity())
                                 .productSinglePrice(productOrderDetail.getPricePerProduct())
-                                .optionProductId(option == null ? null : option.getProductId())
-                                .optionProductName(option == null ? null : option.getOptionProductName())
-                                .optionProductQuantity(option == null ? null : option.getQuantity())
-                                .build()
-                );
-            });
+                                .optionProductId(productOrderDetailOption == null ? null : productOrderDetailOption.getProductId())
+                                .optionProductName(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductName())
+                                .optionProductQuantity(productOrderDetailOption == null ? null : productOrderDetailOption.getQuantity())
+                                .optionProductSinglePrice(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductPrice())
+                                .build();
 
-            return orderResponseDto;
-        });
+                orderResponseDto.addClientOrderListItem(orderListItem);
+
+            }
+
+            responseDtoList.add(orderResponseDto);
+
+        }
+
+        return new PageImpl<>(responseDtoList, PageRequest.of(pageNo, pageSize, sort), orderPage.getTotalElements());
 
     }
+
+    @Override
+    public List<ProductOrderDetailResponseDto> getProductOrderDetailList(Long orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        List<ProductOrderDetail> productOrderDetailList = productOrderDetailRepository.findAllByOrder(order);
+
+        List<ProductOrderDetailResponseDto> productOrderDetailResponseDtoList = new ArrayList<>();
+
+        for(ProductOrderDetail productOrderDetail : productOrderDetailList){
+            ProductOrderDetailResponseDto productOrderDetailResponseDto = ProductOrderDetailResponseDto.builder()
+                    .orderId(order.getOrderId())
+                    .productId(productOrderDetail.getProductId())
+                    .quantity(productOrderDetail.getQuantity())
+                    .pricePerProduct(productOrderDetail.getPricePerProduct())
+                    .productName(productOrderDetail.getProductName())
+                    .build();
+            productOrderDetailResponseDtoList.add(productOrderDetailResponseDto);
+        }
+
+        return productOrderDetailResponseDtoList;
+    }
+
+    @Override
+    public ProductOrderDetailResponseDto getProductOrderDetail(Long orderId, Long productOrderDetailId) {
+
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+        ProductOrderDetail productOrderDetail = productOrderDetailRepository.findById(productOrderDetailId).orElseThrow(ProductOrderDetailNotFoundException::new);
+
+        if(productOrderDetail.getOrder().equals(order)){
+            throw new BadRequestExceptionType("orderId와 productOrderDetailId가 매칭되지 않습니다");
+        }
+
+        return ProductOrderDetailResponseDto.builder()
+                .orderId(order.getOrderId())
+                .productId(productOrderDetail.getProductId())
+                .quantity(productOrderDetail.getQuantity())
+                .pricePerProduct(productOrderDetail.getPricePerProduct())
+                .productName(productOrderDetail.getProductName())
+                .build();
+    }
+
+    @Override
+    public ProductOrderDetailOptionResponseDto getProductOrderDetailOptionResponseDto(long orderId, long detailId) {
+
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+        ProductOrderDetail productOrderDetail = productOrderDetailRepository.findById(detailId).orElseThrow(ProductOrderDetailNotFoundException::new);
+        ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+
+        if(productOrderDetail.getOrder().equals(order)){
+            throw new BadRequestExceptionType("orderId와 productOrderDetailId가 매칭되지 않습니다");
+        }
+
+        return ProductOrderDetailOptionResponseDto.builder()
+                .productId(productOrderDetailOption.getProductId())
+                .productOrderDetailId(productOrderDetailOption.getProductOrderDetailOptionId())
+                .optionProductName(productOrderDetailOption.getOptionProductName())
+                .optionProductPrice(productOrderDetailOption.getOptionProductPrice())
+                .optionProductQuantity(productOrderDetailOption.getQuantity())
+                .build();
+    }
+
 }
