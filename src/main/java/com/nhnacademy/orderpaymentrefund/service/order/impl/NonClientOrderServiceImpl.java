@@ -8,34 +8,26 @@ import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
-import com.nhnacademy.orderpaymentrefund.dto.order.field.NonClientOrderPriceInfoDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.field.OrderedProductAndOptionProductPairDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.field.ProductOrderDetailOptionDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.CreateNonClientOrderRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPasswordRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
-import com.nhnacademy.orderpaymentrefund.exception.*;
-import com.nhnacademy.orderpaymentrefund.exception.type.ForbiddenExceptionType;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.NonClientOrderGetResponseDto;
+import com.nhnacademy.orderpaymentrefund.exception.CannotCancelOrder;
+import com.nhnacademy.orderpaymentrefund.exception.ClientCannotAccessNonClientService;
+import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.NonClientOrderService;
-import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 
@@ -56,7 +48,6 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     // testOtherService
     private final TestOtherService testOtherService;
 
-    @Transactional
     @Override
     public Long tryCreateOrder(HttpHeaders headers, NonClientOrderFormRequestDto requestDto) {
         checkNonClient(headers);
@@ -98,38 +89,6 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     }
 
     @Override
-    public FindNonClientOrderResponseDto findNonClientOrder(long orderId, String orderPassword) {
-
-        Order order = orderRepository.findByOrderIdAndNonClientOrderPassword(orderId, orderPassword).orElseThrow(OrderNotFoundException::new);
-
-        List<OrderedProductAndOptionProductPairDto> orderedProductAndOptionProductPairDtoList = order.getProductOrderDetailList().stream().map((productOrderDetail) -> {
-
-            ProductOrderDetailDto productOrderDetailDto = productOrderDetailConverter.entityToDto(productOrderDetail);
-
-            List<ProductOrderDetailOptionDto> productOrderDetailOptionDtoList = productOrderDetail.getProductOrderDetailOptionList().stream().map((option) -> {
-                return productOrderDetailOptionConverter.entityToDto(option);
-            }).toList();
-
-
-            return OrderedProductAndOptionProductPairDto.builder()
-                    .productOrderDetailDto(productOrderDetailDto)
-                    .productOrderDetailOptionDtoList(productOrderDetailOptionDtoList)
-                    .build();
-
-        }).toList();
-
-        NonClientOrderPriceInfoDto nonClientOrderPriceInfoDto = NonClientOrderPriceInfoDto.builder()
-                .shippingFee(order.getShippingFee())
-                .productTotalAmount(order.getProductTotalAmount())
-                .payAmount(1000000) // TODO payment에서 지불금액 가져오기
-                .build();
-
-        // TODO 컨버터 인자로 Payment 추가로 넘기기
-        return nonClientOrderConverter.entityToDto(order, "결제수단", nonClientOrderPriceInfoDto, orderedProductAndOptionProductPairDtoList);
-
-    }
-
-    @Override
     public Page<FindNonClientOrderIdInfoResponseDto> findNonClientOrderId(HttpHeaders headers, FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, Pageable pageable) {
         checkNonClient(headers);
         return orderRepository.findNonClientOrderIdList(findNonClientOrderIdRequestDto, pageable).map((order) ->
@@ -150,53 +109,52 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     }
 
     @Override
-    public OrderResponseDto getOrder(HttpHeaders headers, Long orderId, String orderPassword) {
+    public NonClientOrderGetResponseDto getOrder(HttpHeaders headers, Long orderId, String orderPassword) {
         checkNonClient(headers);
-        
+
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
-        if(!order.getNonClientOrderPassword().equals(orderPassword)){
-            throw new OrderPasswordNotCorrect();
-        }
-
-        OrderResponseDto orderResponseDto = OrderResponseDto.builder()
+        NonClientOrderGetResponseDto nonClientOrderGetResponseDto = NonClientOrderGetResponseDto.builder()
                 .orderId(order.getOrderId())
-                .clientId(order.getClientId())
-                .couponId(order.getCouponId())
                 .tossOrderId(order.getTossOrderId())
-                .orderDatetime(order.getOrderDatetime().toString())
+                .orderDatetime(order.getOrderDatetime().toString().split("T")[0])
                 .orderStatus(order.getOrderStatus().kor)
-                .productTotalAmount(order.getOrderTotalAmount())
+                .productTotalAmount(order.getProductTotalAmount())
                 .shippingFee(order.getShippingFee())
                 .orderTotalAmount(order.getOrderTotalAmount())
-                .designatedDeliveryDate(order.getDesignatedDeliveryDate().toString())
+                .designatedDeliveryDate(order.getDesignatedDeliveryDate() == null ? null : order.getDesignatedDeliveryDate().toString())
+                .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
                 .phoneNumber(order.getPhoneNumber())
                 .deliveryAddress(order.getDeliveryAddress())
-                .discountAmountByCoupon(order.getDiscountAmountByCoupon() == null ? 0 : order.getDiscountAmountByCoupon())
-                .discountAmountByPoint(order.getDiscountAmountByPoint() == null ? 0 : order.getDiscountAmountByPoint())
-                .accumulatedPoint(order.getAccumulatedPoint() == null ? 0 : order.getAccumulatedPoint())
-                .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
                 .nonClientOrderPassword(order.getNonClientOrderPassword())
                 .nonClientOrdererName(order.getNonClientOrdererName())
                 .nonClientOrdererEmail(order.getNonClientOrdererEmail())
                 .build();
 
-        productOrderDetailRepository.findAllByOrder(order).forEach(productOrderDetail -> {
-            ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
-            orderResponseDto.addClientOrderListItem(
-                    OrderResponseDto.ClientOrderListItem.builder()
-                            .productId(productOrderDetail.getProductId())
+        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(order);
+
+        for(ProductOrderDetail productOrderDetail : orderDetailList){
+
+            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+
+            NonClientOrderGetResponseDto.NonClientProductOrderDetailListItem nonClientProductOrderDetailListItem =
+                    NonClientOrderGetResponseDto.NonClientProductOrderDetailListItem.builder()
+                            .productId(productOrderDetail.getProductOrderDetailId())
                             .productName(productOrderDetail.getProductName())
                             .productQuantity(productOrderDetail.getQuantity())
-                            .productSinglePrice(option != null ? option.getOptionProductPrice() : 0)
-                            .optionProductId(option != null ? option.getProductId() : null)
-                            .optionProductName(option != null ? option.getOptionProductName() : null)
-                            .optionProductQuantity(option != null ? option.getQuantity() : 0)
-                            .build()
-            );
-        });
+                            .productSinglePrice(productOrderDetail.getPricePerProduct())
+                            .optionProductId(productOrderDetailOption == null ? null : productOrderDetailOption.getProductId())
+                            .optionProductName(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductName())
+                            .optionProductQuantity(productOrderDetailOption == null ? null : productOrderDetailOption.getQuantity())
+                            .optionProductSinglePrice(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductPrice())
+                            .build();
 
-        return orderResponseDto;
+            nonClientOrderGetResponseDto.addNonClientProductOrderDetailList(nonClientProductOrderDetailListItem);
+
+        }
+
+
+        return nonClientOrderGetResponseDto;
     }
 
     @Override
