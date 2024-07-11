@@ -54,10 +54,10 @@ public class ClientOrderController {
         return ResponseEntity.ok().body(clientOrderService.getProductOrderDetail(headers, orderId, productOrderDetailId));
     }
 
-    @GetMapping("/{orderId}/detail/{detailId}/option")
+    @GetMapping("/{orderId}/detail/{productOrderDetailId}/option")
     public ResponseEntity<ProductOrderDetailOptionResponseDto> getProductOrderDetailOption(@RequestHeader HttpHeaders headers,@PathVariable Long orderId,
-                                                                                           @PathVariable Long detailId){
-        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailOptionResponseDto(headers, orderId, detailId));
+                                                                                           @PathVariable Long productOrderDetailId){
+        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailOptionResponseDto(headers, orderId, productOrderDetailId));
     }
 
     @PutMapping("/{orderId}/payment-complete")

@@ -356,11 +356,12 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
         ProductOrderDetail productOrderDetail = productOrderDetailRepository.findById(productOrderDetailId).orElseThrow(ProductOrderDetailNotFoundException::new);
 
-        if(productOrderDetail.getOrder().equals(order)){
+        if(!productOrderDetail.getOrder().equals(order)){
             throw new BadRequestExceptionType("orderId와 productOrderDetailId가 매칭되지 않습니다");
         }
 
         return ProductOrderDetailResponseDto.builder()
+                .productOrderDetailId(productOrderDetail.getProductOrderDetailId())
                 .orderId(order.getOrderId())
                 .productId(productOrderDetail.getProductId())
                 .quantity(productOrderDetail.getQuantity())
@@ -384,8 +385,12 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         ProductOrderDetail productOrderDetail = productOrderDetailRepository.findById(detailId).orElseThrow(ProductOrderDetailNotFoundException::new);
         ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
 
-        if(productOrderDetail.getOrder().equals(order)){
+        if(!productOrderDetail.getOrder().equals(order)){
             throw new BadRequestExceptionType("orderId와 productOrderDetailId가 매칭되지 않습니다");
+        }
+
+        if(productOrderDetailOption == null){
+            throw new BadRequestExceptionType("옵션 상품을 구매하지 않았습니다");
         }
 
         return ProductOrderDetailOptionResponseDto.builder()

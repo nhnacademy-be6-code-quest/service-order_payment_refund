@@ -57,9 +57,9 @@ public class OrderController {
         return ResponseEntity.ok().body(orderService.getProductOrderDetail(orderId, productOrderDetailId));
     }
 
-    @GetMapping("/{orderId}/detail/{detailId}/option")
-    public ResponseEntity<ProductOrderDetailOptionResponseDto> getProductOrderDetailOption(@PathVariable Long orderId, @PathVariable Long detailId){
-        return ResponseEntity.ok().body(orderService.getProductOrderDetailOptionResponseDto(orderId, detailId));
+    @GetMapping("/{orderId}/detail/{productOrderDetailId}/option")
+    public ResponseEntity<ProductOrderDetailOptionResponseDto> getProductOrderDetailOption(@PathVariable Long orderId, @PathVariable Long productOrderDetailId){
+        return ResponseEntity.ok().body(orderService.getProductOrderDetailOptionResponseDto(orderId, productOrderDetailId));
     }
 
 }
