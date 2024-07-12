@@ -1,6 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.service.payment.impl;
 
 import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
@@ -22,7 +23,6 @@ public class PaymentServiceImpl implements PaymentService {
     // Order Enum Type -> String, 배송 상태 -> tinyInt
     @Override
     public void savePayment(long orderId, TossPaymentsResponseDto tossPaymentsResponseDto) {
-
         Payment payment = Payment.builder()
             .order(
                 orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new))
@@ -32,5 +32,21 @@ public class PaymentServiceImpl implements PaymentService {
             .tossPaymentKey(tossPaymentsResponseDto.getPaymentKey())
             .build();
         paymentRepository.save(payment);
+    }
+
+    @Override
+    public PaymentGradeResponseDto getPaymentRecordOfClient(Long clientId) {
+        Long totalOptionPriceForLastThreeMonth = orderRepository.getTotalOptionPriceForLastThreeMonths(
+            clientId, LocalDateTime.now().minusDays(90L));
+        if (totalOptionPriceForLastThreeMonth == null) {
+            totalOptionPriceForLastThreeMonth = 0L;
+        }
+
+        return PaymentGradeResponseDto.builder()
+            .paymentGradeValue(
+                orderRepository.sumFinalAmountForCompletedOrders(clientId,
+                    LocalDateTime.now().minusDays(90L))
+                    - totalOptionPriceForLastThreeMonth)
+            .build();
     }
 }

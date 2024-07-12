@@ -57,7 +57,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
     @Override
     public void preprocessing() {
-        // TODO 구현
+        // TODO 구현 --
         testOtherService.checkStock(true);
     }
 

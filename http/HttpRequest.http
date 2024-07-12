@@ -8,3 +8,7 @@ Content-Type: application/json
   "paymentMethodId": 1,
   "couponId": 1
 }
+
+###
+
+GET localhost:8008/api/payment/grade/190
