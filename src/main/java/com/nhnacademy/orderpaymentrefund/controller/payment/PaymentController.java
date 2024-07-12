@@ -1,8 +1,10 @@
 package com.nhnacademy.orderpaymentrefund.controller.payment;
 
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,5 +26,10 @@ public class PaymentController {
     public void savePayment(@PathVariable long orderId,
         @RequestBody TossPaymentsResponseDto tossPaymentsResponseDto) {
         paymentService.savePayment(orderId, tossPaymentsResponseDto);
+    }
+
+    @GetMapping("/api/payment/grade/{clientId}")
+    PaymentGradeResponseDto getPaymentRecordOfClient(@PathVariable Long clientId) {
+        return paymentService.getPaymentRecordOfClient(clientId);
     }
 }
