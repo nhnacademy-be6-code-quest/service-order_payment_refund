@@ -13,7 +13,7 @@ public interface ProductOrderDetailRepository extends JpaRepository<ProductOrder
     List<ProductOrderDetail> findAllByOrder(Order order);
     Optional<ProductOrderDetail> findFirstByOrder(Order order);
 
-    @Query(value = "select count(o) from Order o where o.orderId = :orderId")
-    long getSizeByOrderId(long orderId);
+    @Query(value = "select count(o) from ProductOrderDetail o where o.order = :order")
+    long getSizeByOrderId(Order order);
     
 }

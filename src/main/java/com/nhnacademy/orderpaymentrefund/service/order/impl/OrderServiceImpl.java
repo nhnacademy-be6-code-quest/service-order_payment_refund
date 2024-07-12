@@ -43,7 +43,7 @@ public class OrderServiceImpl implements OrderService {
 
         Long discountAmountByCoupon = order.getDiscountAmountByCoupon();
         Long discountAmountByPoint = order.getDiscountAmountByPoint();
-        Long sizeProductOrderDetail = productOrderDetailRepository.getSizeByOrderId(orderId);
+        Long sizeProductOrderDetail = productOrderDetailRepository.getSizeByOrderId(order);
 
         StringBuilder orderHistoryTitle = new StringBuilder();
         orderHistoryTitle.append(productOrderDetailRepository.findFirstByOrder(order).orElseThrow(OrderNotFoundException::new).getProductName());
