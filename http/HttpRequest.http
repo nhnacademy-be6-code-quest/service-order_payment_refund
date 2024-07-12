@@ -12,3 +12,7 @@ Content-Type: application/json
 ###
 
 GET localhost:8008/api/payment/grade/190
+
+###
+
+http://localhost:8008/api/payment/grade/179
