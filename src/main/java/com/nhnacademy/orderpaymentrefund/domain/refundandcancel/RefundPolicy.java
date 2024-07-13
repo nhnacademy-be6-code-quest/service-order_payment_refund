@@ -15,17 +15,17 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @Getter
-public class RefundAndCancelPolicy {
+public class RefundPolicy {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long refundAndCancelPolicyId;
+    private long refundPolicyId;
 
     @NotNull
-    private String refundAndCancelPolicyReason;
+    private String refundPolicyReason;
 
     @NotNull
-    private String refundAndCancelPolicyType;
+    private String refundPolicyType;
 
     private int refundShippingFee;
 }
