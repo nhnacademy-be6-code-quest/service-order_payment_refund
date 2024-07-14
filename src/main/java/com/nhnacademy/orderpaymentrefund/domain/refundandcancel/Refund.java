@@ -18,11 +18,11 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @NoArgsConstructor
-public class RefundAndCancel {
+public class Refund {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long refundAndCancelId;
+    private long refundId;
 
     @NotNull
     @OneToOne
@@ -31,11 +31,11 @@ public class RefundAndCancel {
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "refund_and_cancel_policy_id")
-    private RefundAndCancelPolicy refundAndCancelPolicy;
+    @JoinColumn(name = "refund_policy_id")
+    private RefundPolicy refundPolicy;
 
     @NotNull
-    private LocalDateTime refundAndCancelDatetime;
+    private LocalDateTime refundDatetime;
 
-    private String refundAndCancelDetailReason;
+    private String refundDetailReason;
 }

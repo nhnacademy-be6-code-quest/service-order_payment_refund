@@ -1,6 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.service.refund;
 
-import com.nhnacademy.orderpaymentrefund.domain.refundandcancel.RefundAndCancelPolicy;
+import com.nhnacademy.orderpaymentrefund.domain.refundandcancel.RefundPolicy;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundPolicyRequestDto;
 import com.nhnacademy.orderpaymentrefund.repository.refund.RefundPolicyRepository;
 import java.util.ArrayList;
@@ -17,14 +17,14 @@ public class RefundPolicyService {
     public List<RefundPolicyRequestDto> findAllRefundPolicyRequestDtoList() {
         List<RefundPolicyRequestDto> refundPolicyRequestDtoList = new ArrayList<>();
 
-        List<RefundAndCancelPolicy> refundAndCancelPolicyList = refundPolicyRepository.findAll();
-        for (RefundAndCancelPolicy refundAndCancelPolicy : refundAndCancelPolicyList) {
+        List<RefundPolicy> refundPolicyList = refundPolicyRepository.findAll();
+        for (RefundPolicy refundPolicy : refundPolicyList) {
             refundPolicyRequestDtoList.add(
                 RefundPolicyRequestDto.builder()
                     .refundAndCancelPolicyReason(
-                        refundAndCancelPolicy.getRefundAndCancelPolicyReason())
-                    .refundAndCancelPolicyType(refundAndCancelPolicy.getRefundAndCancelPolicyType())
-                    .refundShippingFee(refundAndCancelPolicy.getRefundShippingFee())
+                        refundPolicy.getRefundPolicyReason())
+                    .refundAndCancelPolicyType(refundPolicy.getRefundPolicyType())
+                    .refundShippingFee(refundPolicy.getRefundShippingFee())
                     .build()
             );
         }
