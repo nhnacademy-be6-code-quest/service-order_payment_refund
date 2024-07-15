@@ -27,5 +27,9 @@ public class RefundPolicy {
     @NotNull
     private String refundPolicyType;
 
+    @NotNull
     private int refundShippingFee;
+
+    @NotNull
+    private Boolean refundPolicyStatus;
 }
