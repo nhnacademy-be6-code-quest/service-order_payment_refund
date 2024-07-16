@@ -37,12 +37,12 @@ public class ShippingServiceTest {
 
     @BeforeEach
     void setUp(){
-        shippingPolicyType = ShippingPolicyType.ISLAND_MOUNTAIN;
+        shippingPolicyType = ShippingPolicyType.CLIENT_SHIPPING;
         shippingPolicy = ShippingPolicy.builder()
                 .description("테스트 배송비 정책")
                 .shippingFee(3000)
                 .minPurchaseAmount(30000)
-                .shippingPolicyType(ShippingPolicyType.ISLAND_MOUNTAIN)
+                .shippingPolicyType(ShippingPolicyType.CLIENT_SHIPPING)
                 .build();
     }
 
@@ -103,7 +103,7 @@ public class ShippingServiceTest {
 
     @Test
     @DisplayName("배송정책 수정 실패 - 정책 없음")
-    void updateShippingPolicyFialTest() {
+    void updateShippingPolicyFailTest() {
         AdminShippingPolicyPutRequestDto requestDto = AdminShippingPolicyPutRequestDto.builder()
                 .description("수정된 배송정책")
                 .shippingFee(2000)

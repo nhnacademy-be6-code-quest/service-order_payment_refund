@@ -39,6 +39,13 @@ public class OrderController {
         return ResponseEntity.ok().body("주문 상태가 변경되었습니다.");
     }
 
+    // 주문 삭제
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<String> deleteOrder(@PathVariable long orderId){
+        orderService.deleteOrder(orderId);
+        return ResponseEntity.ok().body("주문이 삭제되었습니다.");
+    }
+
     @GetMapping("/all")
     public ResponseEntity<Page<OrderResponseDto>> getOrder(@RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
                                                            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,

@@ -16,7 +16,7 @@ public class ShippingController {
 
     private final ShippingPolicyService shippingPolicyService;
 
-    @PutMapping("/api/admin/shipping-policy")
+    @PutMapping("/api/shipping-policy")
     public ResponseEntity<String> updateShippingPolicy(@RequestBody AdminShippingPolicyPutRequestDto adminShippingPolicyPutRequestDto){
         shippingPolicyService.updateShippingPolicy(adminShippingPolicyPutRequestDto);
         return ResponseEntity.ok("배송정책이 수정되었습니다.");

@@ -21,8 +21,6 @@ public class RefundPolicyService {
         for (RefundPolicy refundPolicy : refundPolicyList) {
             refundPolicyRequestDtoList.add(
                 RefundPolicyRequestDto.builder()
-                    .refundAndCancelPolicyReason(
-                        refundPolicy.getRefundPolicyReason())
                     .refundAndCancelPolicyType(refundPolicy.getRefundPolicyType())
                     .refundShippingFee(refundPolicy.getRefundShippingFee())
                     .build()
