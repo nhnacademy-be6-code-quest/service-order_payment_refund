@@ -41,7 +41,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (totalOptionPriceForLastThreeMonth == null) {
             totalOptionPriceForLastThreeMonth = 0L;
         }
-
+        log.error("totalOptionPriceForLastThreeMonth: {}", totalOptionPriceForLastThreeMonth);
         return PaymentGradeResponseDto.builder()
             .paymentGradeValue(
                 orderRepository.sumFinalAmountForCompletedOrders(clientId,
