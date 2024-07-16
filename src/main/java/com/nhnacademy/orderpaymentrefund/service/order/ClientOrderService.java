@@ -20,6 +20,7 @@ public interface ClientOrderService {
     void paymentCompleteOrder(HttpHeaders headers, long orderId);
     void cancelOrder(HttpHeaders headers, long orderId);
     void refundOrder(HttpHeaders headers, long orderId);
+    void refundOrderRequest(HttpHeaders headers, long orderId);
     String getOrderStatus(HttpHeaders headers, long orderId);
     List<ProductOrderDetailResponseDto> getProductOrderDetailList(HttpHeaders headers, Long orderId);
     ProductOrderDetailResponseDto getProductOrderDetail(HttpHeaders headers, Long orderId, Long productOrderDetailId);
