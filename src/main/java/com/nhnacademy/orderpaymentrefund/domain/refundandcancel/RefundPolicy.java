@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 /**
@@ -28,8 +29,16 @@ public class RefundPolicy {
 
     @NotNull
     private int refundShippingFee;
+
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm.ss")
     private LocalDateTime refundPolicyIssuedDate;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm.ss")
+    @Setter
     private LocalDateTime refundPolicyExpirationDate;
+
+    public RefundPolicy(String refundPolicyType, int refundShippingFee) {
+        this.refundPolicyType = refundPolicyType;
+        this.refundShippingFee = refundShippingFee;
+        this.refundPolicyIssuedDate = LocalDateTime.now();
+    }
 }
