@@ -264,4 +264,8 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
+    @Override
+    public void deleteOrder(long orderId) {
+
+    }
 }
