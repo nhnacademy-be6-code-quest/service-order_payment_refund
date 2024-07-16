@@ -16,7 +16,7 @@ import lombok.Setter;
 @Getter
 public enum ShippingPolicyType {
 
-    ISLAND_MOUNTAIN("도서산간지역", 0), NOT_ISLAND_MOUNTAIN("도서산간지역외", 1);
+    CLIENT_SHIPPING("회원배송비", 0), NON_CLIENT_SHIPPING("비회원배송비", 1);
 
     public final String kor;
     public final int typeNum;
@@ -35,13 +35,8 @@ public enum ShippingPolicyType {
                 return shippingPolicyType;
             }
         }
-        throw new IllegalArgumentException("shippingPolicyType의 value값이 잘못 되었습니다. '도서산간지역' 또는 '도서산간지역외'을 기입하세요");
+        throw new IllegalArgumentException("shippingPolicyType의 value값이 잘못 되었습니다. '회원배송비' 또는 '비회원배송비'을 기입하세요");
     }
-
-//    @JsonCreator
-//    public static ShippingPolicyType deserialize(@JsonProperty("shippingPolicyType") String kor){
-//        return of(kor);
-//    }
 
     @Override
     public String toString() {

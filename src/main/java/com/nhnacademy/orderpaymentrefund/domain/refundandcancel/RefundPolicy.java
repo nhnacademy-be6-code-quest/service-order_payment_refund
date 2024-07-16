@@ -5,8 +5,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * @author 김채호
@@ -15,17 +17,19 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @Getter
-public class RefundAndCancelPolicy {
+public class RefundPolicy {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long refundAndCancelPolicyId;
+    private long refundPolicyId;
 
     @NotNull
-    private String refundAndCancelPolicyReason;
+    private String refundPolicyType;
 
     @NotNull
-    private String refundAndCancelPolicyType;
-
     private int refundShippingFee;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm.ss")
+    private LocalDateTime refundPolicyIssuedDate;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm.ss")
+    private LocalDateTime refundPolicyExpirationDate;
 }

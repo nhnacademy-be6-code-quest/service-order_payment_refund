@@ -2,6 +2,8 @@ package com.nhnacademy.orderpaymentrefund.controller.refund;
 
 import com.nhnacademy.orderpaymentrefund.service.refund.RefundService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -11,11 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Virtus_Chae
  * @version 0.0
  */
-@RestController
+@RestController()
 @RequiredArgsConstructor
 public class RefundController {
 
     private final RefundService refundService;
 
-
+    @GetMapping("/api/order/{orderId}/orderStatus")
+    String findOrderStatusByOrderId(@PathVariable long orderId) {
+        return refundService.findOrderStatusByOrderId(orderId);
+    }
 }
