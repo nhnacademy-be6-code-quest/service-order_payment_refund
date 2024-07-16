@@ -1,0 +1,7 @@
+### GET request to example server
+GET http://localhost:8008/api/refund?orderId=160
+
+###
+
+### post
+POST /v1/payments/{paymentKey/cancel
