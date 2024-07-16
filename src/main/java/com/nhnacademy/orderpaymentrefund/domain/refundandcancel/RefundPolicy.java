@@ -5,8 +5,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * @author 김채호
@@ -22,14 +24,12 @@ public class RefundPolicy {
     private long refundPolicyId;
 
     @NotNull
-    private String refundPolicyReason;
-
-    @NotNull
     private String refundPolicyType;
 
     @NotNull
     private int refundShippingFee;
-
-    @NotNull
-    private Boolean refundPolicyStatus;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm.ss")
+    private LocalDateTime refundPolicyIssuedDate;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm.ss")
+    private LocalDateTime refundPolicyExpirationDate;
 }
