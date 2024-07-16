@@ -12,7 +12,8 @@ import lombok.Getter;
 @Getter
 public enum OrderStatus
 {
-    WAIT_PAYMENT("결제대기", 0), PAYED("결제완료", 1), DELIVERING("배송중", 2), DELIVERY_COMPLETE("배송완료", 3), REFUND("반품", 4), CANCEL("주문취소", 5);
+    WAIT_PAYMENT("결제대기", 0), PAYED("결제완료", 1), DELIVERING("배송중", 2), DELIVERY_COMPLETE("배송완료", 3),
+    REFUND("반품", 4), CANCEL("주문취소", 5), REFUND_REQUEST("반품요청", 6);
 
     public final String kor;
     public final int typeNum;
@@ -31,7 +32,7 @@ public enum OrderStatus
                 return orderStatus;
             }
         }
-        throw new IllegalArgumentException("OrderStatus의 value값이 잘못 되었습니다. '결제대기', '결제완료', '배송중', '반품', '배송완료' 중 하나를 기입하세요");
+        throw new IllegalArgumentException("OrderStatus의 value값이 잘못 되었습니다. '결제대기', '결제완료', '배송중', '반품', '배송완료', '반품요청' 중 하나를 기입하세요");
     }
 
     @Override

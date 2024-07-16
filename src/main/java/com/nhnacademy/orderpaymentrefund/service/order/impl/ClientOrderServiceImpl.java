@@ -280,6 +280,26 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
+    public void refundOrderRequest(HttpHeaders headers, long orderId) {
+
+        long clientId = getClientId(headers);
+
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if(!order.getClientId().equals(clientId)) {
+            throw new WrongClientAccessToOrder();
+        }
+
+        if(!(order.getOrderStatus() == OrderStatus.DELIVERING || order.getOrderStatus() == OrderStatus.DELIVERY_COMPLETE)){
+            throw new CannotCancelOrder("배송중 또는 배송완료 상태에서 주문취소요청 가능합니다.");
+        }
+
+        order.updateOrderStatus(OrderStatus.REFUND_REQUEST);
+        orderRepository.save(order);
+
+    }
+
+    @Override
     public void paymentCompleteOrder(HttpHeaders headers, long orderId) {
 
         long clientId = getClientId(headers);

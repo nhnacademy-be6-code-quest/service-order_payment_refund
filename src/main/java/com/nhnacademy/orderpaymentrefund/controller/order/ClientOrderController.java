@@ -78,6 +78,12 @@ public class ClientOrderController {
         return ResponseEntity.ok("반품 상태로 변경되었습니다.");
     }
 
+    @PutMapping("/{orderId}/refund-request")
+    public ResponseEntity<String> refundRequestOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
+        clientOrderService.refundOrderRequest(headers, orderId);
+        return ResponseEntity.ok("반품 상태로 변경되었습니다.");
+    }
+
     @GetMapping("/{orderId}/order-status")
     public ResponseEntity<String> getOrderStatus(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
         return ResponseEntity.ok().body(clientOrderService.getOrderStatus(headers, orderId));
