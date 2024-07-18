@@ -129,7 +129,7 @@ public class Order {
         this.discountAmountByPoint = discountAmountByPoint;
         this.accumulatedPoint = accumulatedPoint;
         this.orderDatetime = LocalDateTime.now();
-        this.orderStatus = OrderStatus.WAIT_PAYMENT;
+        this.orderStatus = OrderStatus.DELIVERY_COMPLETE;
         this.orderTotalAmount = this.productTotalAmount + this.shippingFee;
     }
 
@@ -157,7 +157,7 @@ public class Order {
         this.phoneNumber = phoneNumber;
         this.deliveryAddress = deliveryAddress;
         this.orderDatetime = LocalDateTime.now();
-        this.orderStatus = OrderStatus.WAIT_PAYMENT;
+        this.orderStatus = OrderStatus.DELIVERY_COMPLETE;
         this.orderTotalAmount = this.productTotalAmount + this.shippingFee;
         this.nonClientOrderPassword = nonClientOrderPassword;
         this.nonClientOrdererName = nonClientOrdererName;

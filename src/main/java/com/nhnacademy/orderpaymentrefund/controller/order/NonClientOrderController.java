@@ -2,7 +2,7 @@ package com.nhnacademy.orderpaymentrefund.controller.order;
 
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPasswordRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.NonClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.NonClientOrderService;
@@ -28,8 +28,21 @@ public class NonClientOrderController {
     private final NonClientOrderService nonClientOrderService;
 
     @PostMapping
-    public ResponseEntity<Long> createNonClientOrder(@RequestHeader HttpHeaders headers, @RequestBody NonClientOrderFormRequestDto nonClientOrderFormRequestDto){
-        return ResponseEntity.created(null).body(nonClientOrderService.tryCreateOrder(headers, nonClientOrderFormRequestDto));
+    public ResponseEntity<Long> createNonClientOrder(@RequestHeader HttpHeaders headers, @RequestBody NonClientOrderForm nonClientOrderForm){
+        return ResponseEntity.created(null).body(nonClientOrderService.tryCreateOrder(headers, nonClientOrderForm));
+    }
+
+    // 임시 주문 저장
+    @PostMapping("/temporary")
+    public ResponseEntity<String> saveClientTemporalOrder(@RequestHeader HttpHeaders headers, @RequestBody NonClientOrderForm nonClientOrderForm){
+        nonClientOrderService.saveNonClientTemporalOrder(headers, nonClientOrderForm);
+        return ResponseEntity.ok().body("임시 주문 저장");
+    }
+
+    // 임시 주문 가져오기
+    @GetMapping("/temporary")
+    public ResponseEntity<NonClientOrderForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers, String tossOrderId){
+        return ResponseEntity.ok().body(nonClientOrderService.getNonClientTemporalOrder(headers, tossOrderId));
     }
 
     @GetMapping("/{orderId}")
