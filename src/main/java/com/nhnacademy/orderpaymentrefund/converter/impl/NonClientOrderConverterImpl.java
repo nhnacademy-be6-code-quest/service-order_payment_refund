@@ -2,7 +2,7 @@ package com.nhnacademy.orderpaymentrefund.converter.impl;
 
 import com.nhnacademy.orderpaymentrefund.converter.NonClientOrderConverter;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -10,7 +10,7 @@ import java.util.UUID;
 @Component
 public class NonClientOrderConverterImpl implements NonClientOrderConverter {
 
-    public Order dtoToEntity(NonClientOrderFormRequestDto requestDto) {
+    public Order dtoToEntity(NonClientOrderForm requestDto) {
 
         StringBuilder address = new StringBuilder();
         address.append(requestDto.getAddressZipCode());

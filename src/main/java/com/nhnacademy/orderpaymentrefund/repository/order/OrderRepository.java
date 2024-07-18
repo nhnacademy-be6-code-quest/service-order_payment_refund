@@ -1,9 +1,13 @@
 package com.nhnacademy.orderpaymentrefund.repository.order;
 
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
+import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -40,4 +44,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         "AND o.orderDatetime >= :startDate " +
         "AND o.clientId = :clientId")
     Long getTotalOptionPriceForLastThreeMonths(Long clientId, @Param("startDate") LocalDateTime localDateTime);
+
+    Order getOrderByTossOrderId(String tossOrderId);
+
+    List<Order> findAllByOrderStatusAndOrderDatetimeBefore(OrderStatus orderStatus, LocalDateTime orderDatetime);
 }

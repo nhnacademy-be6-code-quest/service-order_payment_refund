@@ -2,7 +2,7 @@ package com.nhnacademy.orderpaymentrefund.service.order;
 
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPasswordRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderFormRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.NonClientOrderGetResponseDto;
 import org.springframework.data.domain.Page;
@@ -21,7 +21,7 @@ public interface NonClientOrderService {
      * tryCreateOrder : 주문 생성을 위한 메서드. preprocessing(), createOrder(), postprocessing()이 호출됨.
      * @param requestDto 비회원 주문을 생성하기 위한 요청 dto
      **/
-    Long tryCreateOrder(HttpHeaders headers, NonClientOrderFormRequestDto requestDto);
+    Long tryCreateOrder(HttpHeaders headers, NonClientOrderForm requestDto);
 
     /**
      * preprocessing : 주문 생성 전 '전처리'를 위한 메서드
@@ -37,7 +37,11 @@ public interface NonClientOrderService {
      * createOrder : 주문생성 메서드
      * @param requestDto 주문 생성에 필요한 데이가 담긴 요청 Dto
      **/
-    Long createOrder(NonClientOrderFormRequestDto requestDto);
+    Long createOrder(NonClientOrderForm requestDto);
+
+    void saveNonClientTemporalOrder(HttpHeaders headers, NonClientOrderForm requestDto);
+
+    NonClientOrderForm getNonClientTemporalOrder(HttpHeaders headers, String tossOrderId);
 
     /**
      * findNonClientOrderId : 비회원이 주문 번호를 잃어버렸을 때, 주문번호를 찾을 수 있는 서비스

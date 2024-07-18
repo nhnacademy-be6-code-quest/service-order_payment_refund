@@ -2,9 +2,7 @@ package com.nhnacademy.orderpaymentrefund.dto.payment.response;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * 결제가 성공했을 때 사용자에게 적절한 정보를 보여줄 때, 그리고 DB 에 저장될 때 사용되는 DTO 입니다. 토스 페이먼츠에서 넘어 오는 값들을 파싱하여 만듭니다. 이 정보가
@@ -13,6 +11,8 @@ import lombok.Setter;
  * @author 김채호
  * @version 1.0
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Builder
 public class TossPaymentsResponseDto {
@@ -43,4 +43,6 @@ public class TossPaymentsResponseDto {
     @Setter
     @Nullable
     String customerMobilePhone; // method 가 휴대폰일 때 : 구매자가 결제에 사용한 휴대폰 번호
+
+    String orderId; // tossOrderId
 }

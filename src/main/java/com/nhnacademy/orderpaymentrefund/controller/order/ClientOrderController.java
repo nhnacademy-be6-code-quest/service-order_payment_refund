@@ -1,6 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
@@ -23,8 +24,21 @@ public class ClientOrderController {
 
     // 주문 생성
     @PostMapping
-    public ResponseEntity<Long> createOrder(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderFormRequestDto clientOrderForm){
+    public ResponseEntity<Long> createOrder(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderCreateForm clientOrderForm){
         return ResponseEntity.created(null).body(clientOrderService.tryCreateOrder(headers, clientOrderForm));
+    }
+
+    // 임시 주문 저장
+    @PostMapping("/temporary")
+    public ResponseEntity<String> saveClientTemporalOrder(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderCreateForm clientOrderForm){
+        clientOrderService.saveClientTemporalOrder(headers, clientOrderForm);
+        return ResponseEntity.ok().body("주문이 임시저장 되었습니다");
+    }
+
+    // 임시 주문 가져오기
+    @GetMapping("/temporary")
+    public ResponseEntity<ClientOrderCreateForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers, String tossOrderId){
+        return ResponseEntity.ok().body(clientOrderService.getClientTemporalOrder(headers, tossOrderId));
     }
 
     // 주문 내역(Page) 조회 - 모든

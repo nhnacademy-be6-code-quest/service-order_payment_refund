@@ -6,11 +6,13 @@ import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,14 +25,14 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @GetMapping("/{orderId}/payment-request")
-    public ResponseEntity<PaymentOrderShowRequestDto> getPaymentOrderShowRequestDto(@PathVariable Long orderId){
-        return ResponseEntity.ok().body(orderService.getPaymentOrderShowRequestDto(orderId));
+    @GetMapping("/{tossOrderId}/payment-request")
+    public ResponseEntity<PaymentOrderShowRequestDto> getPaymentOrderShowRequestDto(@PathVariable String tossOrderId, HttpServletRequest request, @RequestHeader HttpHeaders headers){
+        return ResponseEntity.ok().body(orderService.getPaymentOrderShowRequestDto(headers, request, tossOrderId));
     }
 
-    @GetMapping("/{orderId}/approve-request")
-    public ResponseEntity<PaymentOrderApproveRequestDto> getPaymentOrderApproveRequestDto(@PathVariable Long orderId){
-        return ResponseEntity.ok().body(orderService.getPaymentOrderApproveRequestDto(orderId));
+    @GetMapping("/{tossOrderId}/approve-request")
+    public ResponseEntity<PaymentOrderApproveRequestDto> getPaymentOrderApproveRequestDto(@PathVariable String tossOrderId, HttpServletRequest request, @RequestHeader HttpHeaders headers){
+        return ResponseEntity.ok().body(orderService.getPaymentOrderApproveRequestDto(headers, request, tossOrderId));
     }
 
     @PutMapping("/{orderId}")
