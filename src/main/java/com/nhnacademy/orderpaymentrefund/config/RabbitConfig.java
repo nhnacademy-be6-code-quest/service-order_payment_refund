@@ -10,26 +10,24 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @RequiredArgsConstructor
-public class RabbitMQConfig {
-    private final KeyManagerConfig keyManagerConfig;
-//    private final String rabbitHost;
-//    private final int rabbitPort;
-//    private final String rabbitUsername;
-//    private final String rabbitPassword;
+public class RabbitConfig {
+    private final String rabbitHost;
+    private final int rabbitPort;
+    private final String rabbitUsername;
+    private final String rabbitPassword;
 
     @Bean
     public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(keyManagerConfig.rabbitHost(), 5672);
-        connectionFactory.setUsername(keyManagerConfig.rabbitUsername());
-        connectionFactory.setPassword(keyManagerConfig.rabbitPassword());
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(rabbitHost, rabbitPort);
+        connectionFactory.setUsername(rabbitUsername);
+        connectionFactory.setPassword(rabbitPassword);
         return connectionFactory;
     }
 
     @Bean
-    RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory){
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
         return rabbitTemplate;
     }
-
 }
