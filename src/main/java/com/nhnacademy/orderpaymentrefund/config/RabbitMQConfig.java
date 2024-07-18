@@ -19,7 +19,7 @@ public class RabbitMQConfig {
 
     @Bean
     public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(keyManagerConfig.rabbitHost(), keyManagerConfig.rabbitPort());
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(keyManagerConfig.rabbitHost(), 5672);
         connectionFactory.setUsername(keyManagerConfig.rabbitUsername());
         connectionFactory.setPassword(keyManagerConfig.rabbitPassword());
         return connectionFactory;
