@@ -11,17 +11,17 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RequiredArgsConstructor
 public class RabbitMQConfig {
-
-    private final String rabbitHost;
-    private final int rabbitPort;
-    private final String rabbitUsername;
-    private final String rabbitPassword;
+    private final KeyManagerConfig keyManagerConfig;
+//    private final String rabbitHost;
+//    private final int rabbitPort;
+//    private final String rabbitUsername;
+//    private final String rabbitPassword;
 
     @Bean
     public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(rabbitHost, rabbitPort);
-        connectionFactory.setUsername(rabbitUsername);
-        connectionFactory.setPassword(rabbitPassword);
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(keyManagerConfig.rabbitHost(), keyManagerConfig.rabbitPort());
+        connectionFactory.setUsername(keyManagerConfig.rabbitUsername());
+        connectionFactory.setPassword(keyManagerConfig.rabbitPassword());
         return connectionFactory;
     }
 
