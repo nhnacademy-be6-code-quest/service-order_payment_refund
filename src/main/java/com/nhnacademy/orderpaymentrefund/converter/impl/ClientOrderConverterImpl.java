@@ -14,7 +14,6 @@ public class ClientOrderConverterImpl implements ClientOrderConverter {
     public Order dtoToEntity(ClientOrderCreateForm requestDto, long clientId) {
 
         StringBuilder address = new StringBuilder();
-        address.append(requestDto.getAddressZipCode());
         address.append(", ");
         address.append(requestDto.getDeliveryAddress());
         return Order.clientOrderBuilder()

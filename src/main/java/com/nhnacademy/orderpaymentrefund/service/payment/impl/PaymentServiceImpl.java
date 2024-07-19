@@ -29,8 +29,13 @@ import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
@@ -40,6 +45,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.web.server.authentication.InvalidateLeastUsedServerMaximumSessionsExceededHandler;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -140,35 +146,37 @@ public class PaymentServiceImpl implements PaymentService {
 
             paymentRepository.save(payment);
 
-            // TODO 회원 등급변경, 포인트 사용, 쿠폰 사용, 재고처리, 장바구니 비우기(db에서)
+            // 회원 등급변경, 포인트 사용, 쿠폰 사용, 재고처리, 장바구니 비우기
             ClientUpdateGradeRequestDto clientUpdateGradeRequestDto = ClientUpdateGradeRequestDto.builder()
                 .clientId(clientId)
                 .payment(getPaymentRecordOfClient(clientId).getPaymentGradeValue())
                 .build();
             clientServiceFeignClient.updateClientGrade(clientUpdateGradeRequestDto);
 
-            // 카테고리 비우기 위한 요청 dto
+            // 장바구니 비우기 위한 요청 dto
             CartCheckoutRequestDto cartCheckoutRequestDto = CartCheckoutRequestDto.builder()
                 .clientId(clientId).build();
 
-            for (ClientOrderCreateForm.OrderDetailDtoItem orderDetailDtoItem : clientOrderCreateForm.getOrderDetailDtoItemList()) {
+            Map<Long, Long> decreaseInfo = new HashMap<>();
+            clientOrderCreateForm.getOrderDetailDtoItemList()
+                .forEach(
+                    orderDetail -> {
+                        decreaseInfo.put(orderDetail.getProductId(), orderDetail.getQuantity());
+                        if (orderDetail.getUsePackaging()) {
+                            decreaseInfo.put(orderDetail.getOptionProductId(),
+                                orderDetail.getOptionQuantity());
+                        }
+                    }
+                );
 
-                cartCheckoutRequestDto.addProductId(orderDetailDtoItem.getProductId());
+            InventoryDecreaseRequestDto inventoryDecreaseRequestDto = InventoryDecreaseRequestDto.builder()
+                .orderId(order.getOrderId()).decreaseInfo(decreaseInfo).build();
 
-                // 상품 재고처리
-                rabbitTemplate.convertAndSend(inventoryDecreaseExchangeName, cartCheckoutRoutingKey,
-                    InventoryDecreaseRequestDto.builder()
-                        .productId(orderDetailDtoItem.getProductId())
-                        .quantityToDecrease(orderDetailDtoItem.getQuantity()).build());
+            // 상품 및 옵션 상품 재고처리
+            rabbitTemplate.convertAndSend(inventoryDecreaseExchangeName,
+                inventoryDecreaseRoutingKey, inventoryDecreaseRequestDto);
 
-                // 옵션 상품 재고처리
-                rabbitTemplate.convertAndSend(inventoryDecreaseExchangeName, cartCheckoutRoutingKey,
-                    InventoryDecreaseRequestDto.builder()
-                        .productId(orderDetailDtoItem.getOptionProductId())
-                        .quantityToDecrease(orderDetailDtoItem.getOptionQuantity()).build());
-
-            }
-
+            // 구입 상품 장바구니 삭제
             rabbitTemplate.convertAndSend(cartCheckoutExchangeName, cartCheckoutRoutingKey,
                 cartCheckoutRequestDto);
 
@@ -180,7 +188,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
 
             if (usedPointDiscountAmount != null && usedPointDiscountAmount > 0) {
-                rabbitTemplate.convertAndSend(pointUseExchangeName, pointUseRoutingKey, pointUsagePaymentRequestDto);
+                rabbitTemplate.convertAndSend(pointUseExchangeName, pointUseRoutingKey,
+                    pointUsagePaymentRequestDto);
             }
 
             // 쿠폰 사용
@@ -190,9 +199,11 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
 
             if (usedCouponDiscountAmount != null && usedCouponDiscountAmount > 0) {
-                rabbitTemplate.convertAndSend(couponUseExchangeName, couponUseRoutingKey, paymentCompletedCouponResponseDto);
+                rabbitTemplate.convertAndSend(couponUseExchangeName, couponUseRoutingKey,
+                    paymentCompletedCouponResponseDto);
             }
 
+            redisTemplate.opsForHash().delete("order", clientOrderCreateForm.getTossOrderId());
 
         } else {
 
@@ -225,8 +236,9 @@ public class PaymentServiceImpl implements PaymentService {
 
             paymentRepository.save(payment);
 
-        }
+            redisTemplate.opsForHash().delete("order", nonClientOrderForm.getTossOrderId());
 
+        }
 
     }
 
