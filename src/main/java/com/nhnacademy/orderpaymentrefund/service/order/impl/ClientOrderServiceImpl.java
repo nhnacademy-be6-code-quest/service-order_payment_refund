@@ -2,13 +2,13 @@ package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
 import com.nhnacademy.orderpaymentrefund.client.TestOtherService;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ClientOrderConverterImpl;
-import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverterImpl;
+import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverter;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderFormRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
@@ -28,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
@@ -45,9 +46,11 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
     private final OrderRepository orderRepository;
 
+    private final RedisTemplate<String, Object> redisTemplate;
+
     // converter
     private final ClientOrderConverterImpl clientOrderConverter;
-    private final ProductOrderDetailConverterImpl productOrderDetailConverter;
+    private final ProductOrderDetailConverter productOrderDetailConverter;
     private final ProductOrderDetailOptionConverter productOrderDetailOptionConverter;
 
     // orderService(공통)
@@ -57,7 +60,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     private final TestOtherService testOtherService;
 
     @Override
-    public Long tryCreateOrder(HttpHeaders headers, ClientOrderFormRequestDto clientOrderForm) {
+    public Long tryCreateOrder(HttpHeaders headers, ClientOrderCreateForm clientOrderForm) {
         long clientId = getClientId(headers);
         preprocessing();
         Long orderId = createOrder(clientId, clientOrderForm);
@@ -98,7 +101,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public Long createOrder(long clientId, ClientOrderFormRequestDto requestDto) {
+    public Long createOrder(long clientId, ClientOrderCreateForm requestDto) {
 
         // 회원 Order 생성 및 저장
         Order order = clientOrderConverter.dtoToEntity(requestDto, clientId);
@@ -116,6 +119,29 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
         return order.getOrderId();
 
+    }
+
+    @Override
+    public void saveClientTemporalOrder(HttpHeaders headers, ClientOrderCreateForm requestDto) {
+        String tossOrderId = requestDto.getTossOrderId();
+        redisTemplate.opsForHash().put("order", tossOrderId, requestDto);
+    }
+
+
+    @Override
+    public ClientOrderCreateForm getClientTemporalOrder(HttpHeaders headers, String tossOrderId) {
+
+        long clientId = getClientId(headers);
+
+        ClientOrderCreateForm clientOrderCreateForm = (ClientOrderCreateForm) redisTemplate.opsForHash().get("order", tossOrderId);
+
+        assert clientOrderCreateForm != null;
+
+//        if(clientOrderFormRequestDto.getClientId() != clientId){
+//            throw new WrongClientAccessToOrder("주문 당사자가 보낸 주문 조회 요청이 아닙니다.");
+//        }
+
+        return clientOrderCreateForm;
     }
 
     @Override

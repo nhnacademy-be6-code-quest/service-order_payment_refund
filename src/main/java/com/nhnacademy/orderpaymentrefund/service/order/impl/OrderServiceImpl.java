@@ -1,9 +1,12 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
@@ -17,12 +20,15 @@ import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -33,70 +39,185 @@ import java.util.List;
 @Slf4j
 public class OrderServiceImpl implements OrderService {
 
+    private static final String ID_HEADER = "X-User-Id";
+
     private final OrderRepository orderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     @Override
-    public PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(long orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-
-        Long discountAmountByCoupon = order.getDiscountAmountByCoupon();
-        Long discountAmountByPoint = order.getDiscountAmountByPoint();
-        Long sizeProductOrderDetail = productOrderDetailRepository.getSizeByOrderId(order);
+    public PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(HttpHeaders headers, HttpServletRequest request, String tossOrderId) {
 
         StringBuilder orderHistoryTitle = new StringBuilder();
-        orderHistoryTitle.append(productOrderDetailRepository.findFirstByOrder(order).orElseThrow(OrderNotFoundException::new).getProductName());
-        if(sizeProductOrderDetail > 1){
-            orderHistoryTitle.append(String.format(" 외 %d건", sizeProductOrderDetail - 1));
+        Long orderTotalAmount = null;
+        Long discountAmountByCoupon = null;
+        Long discountAmountByPoint = null;
+        Integer sizeProductOrderDetail = null;
+        Long couponId = null;
+
+        if(isClient(headers)){
+
+            Object data = redisTemplate.opsForHash().get("order", tossOrderId);
+            ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data, ClientOrderCreateForm.class);
+
+            //ClientOrderCreateForm clientOrderCreateForm = (ClientOrderCreateForm) redisTemplate.opsForHash().get("order", tossOrderId);
+
+            if(clientOrderCreateForm == null){
+                throw new OrderNotFoundException();
+            }
+
+            orderHistoryTitle.append(clientOrderCreateForm.getOrderDetailDtoItemList().getFirst().getProductName());
+
+            sizeProductOrderDetail = clientOrderCreateForm.getOrderDetailDtoItemList().size();
+
+            if(clientOrderCreateForm.getOrderDetailDtoItemList().size() > 1){
+                orderHistoryTitle.append(String.format("외 %d개", sizeProductOrderDetail - 1));
+            }
+
+            discountAmountByCoupon = clientOrderCreateForm.getCouponDiscountAmount();
+            discountAmountByPoint = clientOrderCreateForm.getUsedPointDiscountAmount();
+            orderTotalAmount = clientOrderCreateForm.getProductTotalAmount();
+
+        }else{
+
+            Object data = redisTemplate.opsForHash().get("order", tossOrderId);
+            NonClientOrderForm nonClientOrderForm = objectMapper.convertValue(data, NonClientOrderForm.class);
+
+            if(nonClientOrderForm == null){
+                throw new OrderNotFoundException();
+            }
+
+            orderHistoryTitle.append(nonClientOrderForm.getOrderDetailDtoItemList().getFirst().getProductName());
+
+            sizeProductOrderDetail = nonClientOrderForm.getOrderDetailDtoItemList().size();
+
+            if(nonClientOrderForm.getOrderDetailDtoItemList().size() > 1){
+                orderHistoryTitle.append(String.format("외 %d개", sizeProductOrderDetail - 1));
+            }
+
         }
 
         return PaymentOrderShowRequestDto.builder()
-                .orderTotalAmount(order.getOrderTotalAmount())
+                .orderTotalAmount(orderTotalAmount == null ? 0 : orderTotalAmount)
                 .discountAmountByCoupon(discountAmountByCoupon == null ? 0 : discountAmountByCoupon)
                 .discountAmountByPoint(discountAmountByPoint == null ? 0 : discountAmountByPoint)
-                .tossOrderId(order.getTossOrderId())
+                .tossOrderId(tossOrderId)
                 .orderHistoryTitle(orderHistoryTitle.toString())
                 .build();
     }
 
     @Override
-    public PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(long orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+    public PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(HttpHeaders headers, HttpServletRequest request, String tossOrderId) {
 
-        Long discountAmountByCoupon = order.getDiscountAmountByCoupon();
-        Long discountAmountByPoint = order.getDiscountAmountByPoint();
+        Long discountAmountByCoupon = null;
+        Long discountAmountByPoint = null;
+        Long orderTotalAmount = null;
+        Long couponId = null;
+        Long accumulatedPoint = null;
 
-        List<PaymentOrderApproveRequestDto.ProductOrderDetailOptionRequestDto> productOrderDetailOptionRequestDtoList = new ArrayList<>();
+
         List<PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto> productOrderDetailList = new ArrayList<>();
 
-        productOrderDetailRepository.findAllByOrder(order).forEach(productOrderDetail -> {
+        if(isClient(headers)){
 
-            productOrderDetailOptionRepository.findByProductOrderDetail(productOrderDetail).forEach(productOrderDetailOption -> {
-                productOrderDetailOptionRequestDtoList.add(PaymentOrderApproveRequestDto.ProductOrderDetailOptionRequestDto.builder()
-                                .productId(productOrderDetailOption.getProductId())
-                                .optionProductQuantity(productOrderDetailOption.getQuantity())
-                                .build());
-            });
+            Object data = redisTemplate.opsForHash().get("order", tossOrderId);
+            ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data, ClientOrderCreateForm.class);
 
-            productOrderDetailList.add(PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto.builder()
-                    .productId(productOrderDetail.getProductId())
-                    .quantity(productOrderDetail.getQuantity())
-                    .productOrderDetailOptionRequestDtoList(productOrderDetailOptionRequestDtoList)
-                    .build());
+            discountAmountByCoupon = clientOrderCreateForm.getCouponDiscountAmount();
+            discountAmountByPoint = clientOrderCreateForm.getUsedPointDiscountAmount();
+            orderTotalAmount = clientOrderCreateForm.getProductTotalAmount();
+            couponId = clientOrderCreateForm.getCouponId();
+            accumulatedPoint = clientOrderCreateForm.getAccumulatePoint();
 
-        });
+            if(clientOrderCreateForm == null){
+                throw new OrderNotFoundException();
+            }
+
+            for(ClientOrderCreateForm.OrderDetailDtoItem orderDetailDtoItem : clientOrderCreateForm.getOrderDetailDtoItemList()){
+                PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto productOrderDetailReqeust = PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto.builder()
+                        .productId(orderDetailDtoItem.getProductId())
+                        .quantity(orderDetailDtoItem.getQuantity())
+                        .productOrderDetailOptionRequestDtoList(Boolean.TRUE.equals(orderDetailDtoItem.getUsePackaging()) ? new ArrayList<>(List.of(PaymentOrderApproveRequestDto.ProductOrderDetailOptionRequestDto.builder()
+                                .productId(orderDetailDtoItem.getOptionProductId()).optionProductQuantity(orderDetailDtoItem.getOptionQuantity()).build())) : new ArrayList<>())
+                        .build();
+                productOrderDetailList.add(productOrderDetailReqeust);
+            }
+
+        } else {
+
+            Object data = redisTemplate.opsForHash().get("order", tossOrderId);
+            NonClientOrderForm nonClientOrderForm = objectMapper.convertValue(data, NonClientOrderForm.class);
+
+            if(nonClientOrderForm == null){
+                throw new OrderNotFoundException();
+            }
+
+            orderTotalAmount = nonClientOrderForm.getProductTotalAmount();
+
+            for(NonClientOrderForm.OrderDetailDtoItem orderDetailDtoItem : nonClientOrderForm.getOrderDetailDtoItemList()){
+                PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto productOrderDetailRequest = PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto.builder()
+                        .productId(orderDetailDtoItem.getProductId())
+                        .quantity(orderDetailDtoItem.getQuantity())
+                        .productOrderDetailOptionRequestDtoList(Boolean.TRUE.equals(orderDetailDtoItem.getUsePackaging()) ? new ArrayList<>(List.of(PaymentOrderApproveRequestDto.ProductOrderDetailOptionRequestDto.builder()
+                                .productId(orderDetailDtoItem.getOptionProductId()).optionProductQuantity(orderDetailDtoItem.getOptionQuantity()).build())) : new ArrayList<>())
+                        .build();
+                productOrderDetailList.add(productOrderDetailRequest);
+            }
+
+
+
+        }
 
         return PaymentOrderApproveRequestDto.builder()
-                .orderTotalAmount(order.getOrderTotalAmount())
-                .discountAmountByCoupon(discountAmountByCoupon == null ? 0 : discountAmountByCoupon)
+                .orderTotalAmount(orderTotalAmount)
                 .discountAmountByPoint(discountAmountByPoint == null ? 0 : discountAmountByPoint)
-                .tossOrderId(order.getTossOrderId())
-                .clientId(order.getClientId())
-                .couponId(order.getCouponId())
-                .accumulatedPoint(0)
+                .discountAmountByCoupon(discountAmountByCoupon == null ? 0 : discountAmountByCoupon)
+                .tossOrderId(tossOrderId)
+                .clientId(getClientId(headers))
+                .couponId(couponId)
+                .accumulatedPoint(accumulatedPoint == null ? 0 : accumulatedPoint)
                 .productOrderDetailList(productOrderDetailList)
                 .build();
+
+//        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+//
+//        Long discountAmountByCoupon = order.getDiscountAmountByCoupon();
+//        Long discountAmountByPoint = order.getDiscountAmountByPoint();
+//
+//        List<PaymentOrderApproveRequestDto.ProductOrderDetailOptionRequestDto> productOrderDetailOptionRequestDtoList = new ArrayList<>();
+//        List<PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto> productOrderDetailList = new ArrayList<>();
+//
+//        productOrderDetailRepository.findAllByOrder(order).forEach(productOrderDetail -> {
+//
+//            productOrderDetailOptionRepository.findByProductOrderDetail(productOrderDetail).forEach(productOrderDetailOption -> {
+//                productOrderDetailOptionRequestDtoList.add(PaymentOrderApproveRequestDto.ProductOrderDetailOptionRequestDto.builder()
+//                                .productId(productOrderDetailOption.getProductId())
+//                                .optionProductQuantity(productOrderDetailOption.getQuantity())
+//                                .build());
+//            });
+//
+//            productOrderDetailList.add(PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto.builder()
+//                    .productId(productOrderDetail.getProductId())
+//                    .quantity(productOrderDetail.getQuantity())
+//                    .productOrderDetailOptionRequestDtoList(productOrderDetailOptionRequestDtoList)
+//                    .build());
+//
+//        });
+
+//        return PaymentOrderApproveRequestDto.builder()
+//                .orderTotalAmount(order.getOrderTotalAmount())
+//                .discountAmountByCoupon(discountAmountByCoupon == null ? 0 : discountAmountByCoupon)
+//                .discountAmountByPoint(discountAmountByPoint == null ? 0 : discountAmountByPoint)
+//                .tossOrderId(order.getTossOrderId())
+//                .clientId(order.getClientId())
+//                .couponId(order.getCouponId())
+//                .accumulatedPoint(0)
+//                .productOrderDetailList(productOrderDetailList)
+//                .build();
+
+//        return PaymentOrderApproveRequestDto.builder().build();
 
     }
 
@@ -267,5 +388,16 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void deleteOrder(long orderId) {
 
+    }
+
+    private boolean isClient(HttpHeaders headers){
+        return headers.getFirst(ID_HEADER) != null;
+    }
+
+    private Long getClientId(HttpHeaders headers){
+        if (headers.get(ID_HEADER) == null){
+            throw new RuntimeException("clientId is null");
+        }
+        return Long.parseLong(headers.getFirst(ID_HEADER));
     }
 }

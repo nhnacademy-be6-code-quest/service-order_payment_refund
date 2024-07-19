@@ -10,6 +10,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
@@ -19,6 +20,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor
+@Getter
 public class Payment {
 
     @Id
@@ -43,11 +45,11 @@ public class Payment {
     private String tossPaymentKey;
 
     @Builder
-    public Payment(Order order, long payAmount, LocalDateTime payTime, String paymentMethodName,
+    public Payment(Order order, long payAmount, String paymentMethodName,
         String tossPaymentKey) {
         this.order = order;
         this.payAmount = payAmount;
-        this.payTime = payTime;
+        this.payTime = LocalDateTime.now();
         this.paymentMethodName = paymentMethodName;
         this.tossPaymentKey = tossPaymentKey;
     }
