@@ -1,15 +1,17 @@
 package com.nhnacademy.orderpaymentrefund.dto.order.request;
 
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.util.List;
+import lombok.ToString;
 
 @NoArgsConstructor
 @Getter
+@ToString
 public class ClientOrderCreateForm {
 
     @NotNull
@@ -37,12 +39,6 @@ public class ClientOrderCreateForm {
     String phoneNumber; // 주문자 핸드폰 번호
 
     @NotNull
-    String addressNickname; // 배송지 별칭
-
-    @NotNull
-    String addressZipCode; // 배송지 우편번호
-
-    @NotNull
     String deliveryAddress; // 주소(주소,상세주소)
 
     Boolean useDesignatedDeliveryDate; // 배송날짜 지정 여부
@@ -61,10 +57,41 @@ public class ClientOrderCreateForm {
 //    @NotNull
 //    long clientId; // 주문한 회원 아이디
 
+    @Builder
+    public ClientOrderCreateForm(Long couponId, Integer shippingFee, Long productTotalAmount,
+        Long payAmount, Long couponDiscountAmount, Long usedPointDiscountAmount,
+        String orderedPersonName, String phoneNumber, String deliveryAddress,
+        Boolean useDesignatedDeliveryDate, LocalDate designatedDeliveryDate,
+        Integer paymentMethod, Long accumulatePoint, String tossOrderId
+    ) {
+        this.couponId = couponId;
+        this.shippingFee = shippingFee;
+        this.productTotalAmount = productTotalAmount;
+        this.payAmount = payAmount;
+        this.couponDiscountAmount = couponDiscountAmount;
+        this.usedPointDiscountAmount = usedPointDiscountAmount;
+        this.orderedPersonName = orderedPersonName;
+        this.phoneNumber = phoneNumber;
+        this.deliveryAddress = deliveryAddress;
+        this.useDesignatedDeliveryDate = useDesignatedDeliveryDate;
+        this.designatedDeliveryDate = designatedDeliveryDate;
+        this.paymentMethod = paymentMethod;
+        this.accumulatePoint = accumulatePoint;
+        this.tossOrderId = tossOrderId;
+    }
+
+    public void addOrderDetailDtoItem(OrderDetailDtoItem orderDetailDtoItem) {
+        if (orderDetailDtoItemList == null) {
+            orderDetailDtoItemList = new ArrayList<>();
+        }
+        this.orderDetailDtoItemList.add(orderDetailDtoItem);
+    }
+
     @NoArgsConstructor
     @Getter
-    public static class OrderDetailDtoItem{
-        
+    @ToString
+    public static class OrderDetailDtoItem {
+
         @NotNull
         Long productId; // 상품 아이디
 
@@ -93,7 +120,8 @@ public class ClientOrderCreateForm {
         Long optionQuantity = 1L;
 
         @Builder
-        public OrderDetailDtoItem(Long productId, String productName, Long quantity, List<Long> categoryIdList, Boolean packableProduct, Long productSinglePrice){
+        public OrderDetailDtoItem(Long productId, String productName, Long quantity,
+            List<Long> categoryIdList, Boolean packableProduct, Long productSinglePrice) {
             this.productId = productId;
             this.productName = productName;
             this.quantity = quantity;
@@ -101,6 +129,7 @@ public class ClientOrderCreateForm {
             this.packableProduct = packableProduct;
             this.productSinglePrice = productSinglePrice;
         }
+
     }
 
 }

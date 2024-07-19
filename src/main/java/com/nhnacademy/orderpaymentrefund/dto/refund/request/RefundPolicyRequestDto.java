@@ -6,7 +6,6 @@ import lombok.Getter;
 @Builder
 @Getter
 public class RefundPolicyRequestDto {
-
     String refundAndCancelPolicyReason;
     String refundAndCancelPolicyType;
     int refundShippingFee;
