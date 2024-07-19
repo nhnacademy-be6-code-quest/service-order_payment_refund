@@ -5,3 +5,7 @@ GET http://localhost:8008/api/refund?orderId=160
 
 ### post
 POST /v1/payments/{paymentKey/cancel
+
+
+### 반품요청
+GET localhost:8008/api/refund/request?orderId=267
