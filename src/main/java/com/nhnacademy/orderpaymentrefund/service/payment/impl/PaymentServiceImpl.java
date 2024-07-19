@@ -56,7 +56,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final RedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
     private final TossPaymentsClient tossPaymentsClient;
-    private final String secretKey;
+    private final String tossSecretKey;
     private final ClientServiceFeignClient clientServiceFeignClient;
 
     private final RabbitTemplate rabbitTemplate;
@@ -257,7 +257,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         // 시크릿 키를 Base64로 인코딩하여 Authorization 헤더 생성
         Base64.Encoder encoder = Base64.getEncoder();
-        byte[] encodedBytes = encoder.encode(secretKey.getBytes(StandardCharsets.UTF_8));
+        byte[] encodedBytes = encoder.encode(tossSecretKey.getBytes(StandardCharsets.UTF_8));
         String authorizations = "Basic " + new String(encodedBytes);
 
         // 승인 요청을 보내면서 + 응답을 받아 옴.

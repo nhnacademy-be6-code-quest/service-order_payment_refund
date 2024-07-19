@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @RequiredArgsConstructor
 public class RabbitConfig {
     private final String rabbitHost;
-    private final int rabbitPort;
+    private final Integer rabbitPort;
     private final String rabbitUsername;
     private final String rabbitPassword;
 

@@ -1,8 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 @RequiredArgsConstructor
 public class KeyManagerConfig {
+
     private final RestTemplate restTemplate;
 
     @Value("${key-manager.api.key}")
@@ -61,6 +60,9 @@ public class KeyManagerConfig {
 
     @Value("${secret.key.redis.password}")
     private String redisPasswordKey;
+
+    @Value("${secret.key.toss.key.id}")
+    private String tossKeyId;
 
     private static final String BASE_URL = "https://api-keymanager.nhncloudservice.com/keymanager/v1.2/appkey/";
 
@@ -139,6 +141,13 @@ public class KeyManagerConfig {
         String redisDb = getKey(getSecret(redisDbKey));
         log.info("Redis Db Key: {}", redisDb);
         return Integer.parseInt(redisDb);
+    }
+
+    @Bean
+    public String tossSecretKey() {
+        String tossKey = getKey(getSecret(tossKeyId));
+        log.info("Toss Key Key: {}", tossKey);
+        return tossKey;
     }
 
 
