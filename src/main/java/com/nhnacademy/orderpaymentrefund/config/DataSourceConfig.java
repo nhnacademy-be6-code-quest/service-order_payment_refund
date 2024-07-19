@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RequiredArgsConstructor
 public class DataSourceConfig {
-
     private final String mysqlUrl;
     private final String mysqlUsername;
     private final String mysqlPassword;
@@ -36,7 +35,6 @@ public class DataSourceConfig {
 
     @Bean
     public DataSource dataSource() {
-
         BasicDataSource dataSource = new BasicDataSource();
         dataSource.setUrl(mysqlUrl);
         dataSource.setUsername(mysqlUsername);
