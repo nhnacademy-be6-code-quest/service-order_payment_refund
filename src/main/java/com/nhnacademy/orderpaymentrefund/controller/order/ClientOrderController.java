@@ -1,7 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
@@ -25,7 +24,7 @@ public class ClientOrderController {
     // 주문 생성
     @PostMapping
     public ResponseEntity<Long> createOrder(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderCreateForm clientOrderForm){
-        return ResponseEntity.created(null).body(clientOrderService.tryCreateOrder(headers, clientOrderForm));
+        return ResponseEntity.ok().body(clientOrderService.tryCreateOrder(headers, clientOrderForm));
     }
 
     // 임시 주문 저장
