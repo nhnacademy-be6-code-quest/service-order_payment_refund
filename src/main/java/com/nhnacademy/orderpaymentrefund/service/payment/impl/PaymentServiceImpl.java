@@ -146,14 +146,14 @@ public class PaymentServiceImpl implements PaymentService {
 
             paymentRepository.save(payment);
 
-            // TODO 회원 등급변경, 포인트 사용, 쿠폰 사용, 재고처리, 장바구니 비우기(db에서)
+            // 회원 등급변경, 포인트 사용, 쿠폰 사용, 재고처리, 장바구니 비우기
             ClientUpdateGradeRequestDto clientUpdateGradeRequestDto = ClientUpdateGradeRequestDto.builder()
                 .clientId(clientId)
                 .payment(getPaymentRecordOfClient(clientId).getPaymentGradeValue())
                 .build();
             clientServiceFeignClient.updateClientGrade(clientUpdateGradeRequestDto);
 
-            // 카테고리 비우기 위한 요청 dto
+            // 장바구니 비우기 위한 요청 dto
             CartCheckoutRequestDto cartCheckoutRequestDto = CartCheckoutRequestDto.builder()
                 .clientId(clientId).build();
 

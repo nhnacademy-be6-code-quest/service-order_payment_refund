@@ -385,11 +385,6 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
-    @Override
-    public void deleteOrder(long orderId) {
-
-    }
-
     private boolean isClient(HttpHeaders headers){
         return headers.getFirst(ID_HEADER) != null;
     }
