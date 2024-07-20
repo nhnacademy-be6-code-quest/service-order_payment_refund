@@ -1,7 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.order.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -13,10 +12,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.nhnacademy.orderpaymentrefund.config.SecurityConfig;
 import com.nhnacademy.orderpaymentrefund.controller.order.OrderController;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.exception.InvalidOrderChangeAttempt;
+import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -65,6 +67,67 @@ class OrderControllerTest {
 
     }
 
+    @Test
+    @DisplayName("토스 결제 요청을 위한 데이터 조회 실패")
+    void getPaymentOrderShowRequestDtoFailTest() throws Exception {
+
+        String tossOrderId = "저장되지 않은 uuid-1234";
+
+        doThrow(new OrderNotFoundException()).when(
+            orderService).getPaymentOrderShowRequestDto(any(HttpHeaders.class),
+                any(HttpServletRequest.class), eq(tossOrderId));
+
+        mockMvc.perform(
+            get("/api/order/{tossOrderId}/payment-request", tossOrderId)
+                .header("X-User-Id", 181)
+        ).andExpect(status().isNotFound());
+
+    }
+
+    @Test
+    @DisplayName("토스 결제 승인을 위한 데이터 조회 성공")
+    void getPaymentOrderApproveRequestDtoSuccessTest() throws Exception {
+
+        String tossOrderId = "uuid-1234";
+
+        PaymentOrderApproveRequestDto resDto = PaymentOrderApproveRequestDto.builder()
+            .orderTotalAmount(10000L)
+            .discountAmountByCoupon(10000L)
+            .tossOrderId(tossOrderId)
+            .clientId(10000L)
+            .couponId(10000L)
+            .discountAmountByPoint(10000L)
+            .accumulatedPoint(10000L)
+            .productOrderDetailList(new ArrayList<>())
+            .build();
+
+        when(orderService.getPaymentOrderApproveRequestDto(any(HttpHeaders.class),
+            any(HttpServletRequest.class), eq(tossOrderId))).thenReturn(resDto);
+
+        mockMvc.perform(
+            get("/api/order/{tossOrderId}/approve-request", tossOrderId)
+                .header("X-User-Id", 181)
+        ).andExpect(status().isOk());
+
+
+    }
+
+    @Test
+    @DisplayName("토스 결제 승인을 위한 데이터 조회 실패")
+    void getPaymentOrderApproveRequestDtoFailTest() throws Exception {
+
+        String tossOrderId = "uuid-1234";
+
+//        doThrow(orderService.getPaymentOrderApproveRequestDto(any(HttpHeaders.class),
+//            any(HttpServletRequest.class), eq(tossOrderId))).thenReturn(resDto);
+
+        mockMvc.perform(
+            get("/api/order/{tossOrderId}/approve-request", tossOrderId)
+                .header("X-User-Id", 181)
+        ).andExpect(status().isOk());
+
+
+    }
 
     @Test
     @DisplayName("주문상태 실패 테스트")
