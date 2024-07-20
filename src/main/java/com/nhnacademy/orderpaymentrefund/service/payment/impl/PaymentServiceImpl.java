@@ -223,6 +223,18 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
             orderRepository.save(order);
 
+            // OrderProductDetail + OrderProductDetailOption 생성 및 저장
+            nonClientOrderForm.getOrderDetailDtoItemList().forEach((item) -> {
+                ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(
+                    item, order);
+                productOrderDetailRepository.save(productOrderDetail);
+                if (item.getUsePackaging()) {
+                    ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(
+                        item, productOrderDetail);
+                    productOrderDetailOptionRepository.save(productOrderDetailOption);
+                }
+            });
+
             // payment 저장
             Payment payment = Payment.builder()
                 .order(order)
