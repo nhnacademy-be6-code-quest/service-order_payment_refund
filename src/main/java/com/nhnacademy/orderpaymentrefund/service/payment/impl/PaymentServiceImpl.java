@@ -158,6 +158,7 @@ public class PaymentServiceImpl implements PaymentService {
             clientOrderCreateForm.getOrderDetailDtoItemList()
                 .forEach(
                     orderDetail -> {
+                        cartCheckoutRequestDto.addProductId(orderDetail.getProductId());
                         decreaseInfo.put(orderDetail.getProductId(), orderDetail.getQuantity());
                         if (orderDetail.getUsePackaging()) {
                             decreaseInfo.put(orderDetail.getOptionProductId(),
@@ -166,14 +167,15 @@ public class PaymentServiceImpl implements PaymentService {
                     }
                 );
 
+            // 재고 감소 요청을 위한 dto
             InventoryDecreaseRequestDto inventoryDecreaseRequestDto = InventoryDecreaseRequestDto.builder()
                 .orderId(order.getOrderId()).decreaseInfo(decreaseInfo).build();
 
-            // 상품 및 옵션 상품 재고처리
+            // 상품 및 옵션 상품 재고처리 - 큐로 보내기
             rabbitTemplate.convertAndSend(inventoryDecreaseExchangeName,
                 inventoryDecreaseRoutingKey, inventoryDecreaseRequestDto);
 
-            // 구입 상품 장바구니 삭제
+            // 구입 상품 장바구니 삭제 - 큐로 보내기
             rabbitTemplate.convertAndSend(cartCheckoutExchangeName, cartCheckoutRoutingKey,
                 cartCheckoutRequestDto);
 
@@ -346,6 +348,7 @@ public class PaymentServiceImpl implements PaymentService {
             order);
 
         PostProcessRequiredPaymentResponseDto postProcessRequiredPaymentResponseDto = PostProcessRequiredPaymentResponseDto.builder()
+            .orderId(order.getOrderId())
             .clientId(order.getClientId())
             .amount(payment.getPayAmount())
             .paymentMethodName(payment.getPaymentMethodName())
