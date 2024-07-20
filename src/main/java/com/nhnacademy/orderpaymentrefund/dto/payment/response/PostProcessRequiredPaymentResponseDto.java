@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class PostProcessRequiredPaymentResponseDto { // 후처리에 필요한 데이터.
+    private Long orderId;
     private Long clientId;
     private long amount; // 결제금액
     private String paymentMethodName;
@@ -23,7 +24,8 @@ public class PostProcessRequiredPaymentResponseDto { // 후처리에 필요한 �
     }
 
     @Builder
-    public PostProcessRequiredPaymentResponseDto(Long clientId, long amount, String paymentMethodName){
+    public PostProcessRequiredPaymentResponseDto(Long orderId, Long clientId, long amount, String paymentMethodName){
+        this.orderId = orderId;
         this.clientId = clientId;
         this.amount = amount;
         this.paymentMethodName = paymentMethodName;

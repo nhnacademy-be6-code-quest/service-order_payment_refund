@@ -23,7 +23,10 @@ public class ClientOrderCreateForm {
     Integer shippingFee; // 배송비
 
     @NotNull
-    Long productTotalAmount; // 상품 총 금액(포인트 및 쿠폰 할인 전)
+    Long productTotalAmount; // 상품 총 금액(배송비 포함 x, 포인트 및 쿠폰 할인 전)
+
+    @NotNull
+    Long orderTotalAmount; // productTotalAmount + shippingFee
 
     @NotNull
     Long payAmount; // 최종 결제 금액

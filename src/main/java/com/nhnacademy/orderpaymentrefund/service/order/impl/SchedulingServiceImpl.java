@@ -20,7 +20,7 @@ public class SchedulingServiceImpl implements SchedulingService {
     @Scheduled(fixedRate = 5000) // 매 5초마다 실행
     public void scheduleOrderStatusToDeliveryCompleted() {
 
-        LocalDateTime threshold = LocalDateTime.now().minusMinutes(10);
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(10); // '배송중'인 상품은 10분 후 자동으로 '배송완료 처리'
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String formattedDateTime = threshold.format(formatter);
         LocalDateTime parsedDateTime = LocalDateTime.parse(formattedDateTime, formatter);

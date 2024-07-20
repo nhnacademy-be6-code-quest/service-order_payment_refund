@@ -40,7 +40,7 @@ public class NonClientOrderController {
     }
 
     @GetMapping("/api/non-client/orders/{orderId}")
-    public ResponseEntity<NonClientOrderGetResponseDto> findNonClientOrder(@RequestHeader HttpHeaders headers, @PathVariable String orderId, @RequestParam("pwd") String orderPassword){
+    public ResponseEntity<NonClientOrderGetResponseDto> findNonClientOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId, @RequestParam("pwd") String orderPassword){
         return ResponseEntity.ok().body(nonClientOrderService.getOrder(headers, orderId, orderPassword));
     }
 
