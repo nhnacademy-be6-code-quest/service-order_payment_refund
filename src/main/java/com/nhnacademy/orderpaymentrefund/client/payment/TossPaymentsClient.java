@@ -1,7 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.client.payment;
 
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
-import com.nhnacademy.orderpaymentrefund.payment.TossPaymentsRequestDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
