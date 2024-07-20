@@ -56,7 +56,7 @@ public interface NonClientOrderService {
     String findNonClientOrderPassword(HttpHeaders headers, FindNonClientOrderPasswordRequestDto findNonClientOrderPasswordRequestDto);
 
     /**
-     * getOrders : 비회원 주문 단건 조회
+     * getOrder : 비회원 주문 단건 조회
      **/
     NonClientOrderGetResponseDto getOrder(HttpHeaders headers, String orderId, String orderPassword);
 
