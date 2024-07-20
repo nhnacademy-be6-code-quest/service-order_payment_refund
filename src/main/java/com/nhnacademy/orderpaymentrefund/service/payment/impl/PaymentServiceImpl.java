@@ -11,6 +11,7 @@ import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
 import com.nhnacademy.orderpaymentrefund.dto.client.ClientUpdateGradeRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.coupon.PaymentCompletedCouponResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.message.PointUsagePaymentMessageDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
@@ -181,8 +182,8 @@ public class PaymentServiceImpl implements PaymentService {
 
             // 포인트 사용
             Long usedPointDiscountAmount = clientOrderCreateForm.getUsedPointDiscountAmount();
-            PointUsagePaymentRequestDto pointUsagePaymentRequestDto = PointUsagePaymentRequestDto.builder()
-                .pointUsageAmount(usedPointDiscountAmount)
+            PointUsagePaymentMessageDto pointUsagePaymentRequestDto = PointUsagePaymentMessageDto.builder()
+                .pointUsagePayment(usedPointDiscountAmount)
                 .clientId(clientId)
                 .build();
 

@@ -16,3 +16,6 @@ GET localhost:8008/api/payment/grade/190
 ###
 
 http://localhost:8008/api/payment/grade/179
+
+### test
+GET http://localhost:8008/api/payment/grade/26
