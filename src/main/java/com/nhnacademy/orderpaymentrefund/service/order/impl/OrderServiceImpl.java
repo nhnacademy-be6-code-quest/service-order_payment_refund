@@ -55,14 +55,11 @@ public class OrderServiceImpl implements OrderService {
         Long discountAmountByCoupon = null;
         Long discountAmountByPoint = null;
         Integer sizeProductOrderDetail = null;
-        Long couponId = null;
 
         if(isClient(headers)){
 
             Object data = redisTemplate.opsForHash().get("order", tossOrderId);
             ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data, ClientOrderCreateForm.class);
-
-            //ClientOrderCreateForm clientOrderCreateForm = (ClientOrderCreateForm) redisTemplate.opsForHash().get("order", tossOrderId);
 
             if(clientOrderCreateForm == null){
                 throw new OrderNotFoundException();
