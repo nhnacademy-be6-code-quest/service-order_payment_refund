@@ -15,5 +15,4 @@ public interface ProductOrderDetailRepository extends JpaRepository<ProductOrder
 
     @Query(value = "select count(o) from ProductOrderDetail o where o.order = :order")
     long getSizeByOrderId(Order order);
-    
 }

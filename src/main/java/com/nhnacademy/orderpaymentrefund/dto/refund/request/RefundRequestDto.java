@@ -2,11 +2,13 @@ package com.nhnacademy.orderpaymentrefund.dto.refund.request;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @NoArgsConstructor
 @Getter
-public class PaymentCancelRequestDto {
-    private String orderStatus;
-    private long orderId;
-    private String cancelReason;
+@Setter
+public class RefundRequestDto {
+     long orderId;
+     String refundDetailReason;
+     long refundPolicyId;
 }

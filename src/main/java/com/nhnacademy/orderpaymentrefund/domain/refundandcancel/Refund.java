@@ -10,12 +10,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
  * @author 김채호
  * @version 0.0
  */
+@Getter
 @Entity
 @NoArgsConstructor
 public class Refund {
@@ -39,4 +41,13 @@ public class Refund {
 
     private String refundDetailReason;
 
+    private Long refundAmount;
+
+    public Refund(Payment payment, RefundPolicy refundPolicy, String refundDetailReason, Long refundAmount) {
+        this.payment = payment;
+        this.refundPolicy = refundPolicy;
+        this.refundDatetime = LocalDateTime.now();
+        this.refundDetailReason = refundDetailReason;
+        this.refundAmount= refundAmount;
+    }
 }

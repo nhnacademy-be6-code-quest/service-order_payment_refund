@@ -69,22 +69,17 @@ public class RefundPolicyService {
         OrderStatus orderStatus = order.getOrderStatus();
         if (deliveryStatDate != null && orderStatus == OrderStatus.DELIVERING || orderStatus == OrderStatus.DELIVERY_COMPLETE) {
             if (deliveryStatDate.isAfter(LocalDate.now().minusDays(10))) {
-                refundPolicies = refundPolicyRepository.findByRefundPolicyExpirationDateIsNotNull();
-            } else if (LocalDate.now().isEqual(deliveryStatDate.minusDays(30))) {
-                refundPolicies = refundPolicyRepository.findByRefundPolicyExpirationDateIsNotNullAndRefundPolicyTypeNotContaining("단순변심");
+                refundPolicies = refundPolicyRepository.findByRefundPolicyExpirationDateIsNull();
+                return refundPolicies.stream().map(refundPolicy -> new RefundPolicyResponseDto(refundPolicy.getRefundPolicyId(), refundPolicy.getRefundPolicyType(),
+                    refundPolicy.getRefundShippingFee())).toList();
+            } else if (deliveryStatDate.isAfter(LocalDate.now().minusDays(30))) {
+                refundPolicies = refundPolicyRepository.findByRefundPolicyExpirationDateIsNullAndRefundPolicyTypeNotContaining("단순변심");
+                return refundPolicies.stream().map(refundPolicy -> new RefundPolicyResponseDto(refundPolicy.getRefundPolicyId(), refundPolicy.getRefundPolicyType(),
+                    refundPolicy.getRefundShippingFee())).toList();
             }else{
-                //10일전ㅌㅌ
-                //30일전
                 throw new RefundImpossibleException("반품이 불가능합니다.");
-
             }
-            return refundPolicies.stream().map(refundPolicy -> {
-                RefundPolicyResponseDto dto = new RefundPolicyResponseDto();
-                dto.setRefundPolicyId(refundPolicy.getRefundPolicyId());
-                dto.setRefundPolicyType(refundPolicy.getRefundPolicyType());
-                dto.setRefundShippingFee(refundPolicy.getRefundShippingFee());
-                return dto;
-            }).toList();
+
         }
          throw new RefundImpossibleException("반품이 불가능합니다.");
     }

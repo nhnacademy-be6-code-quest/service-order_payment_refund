@@ -1,16 +1,17 @@
 package com.nhnacademy.orderpaymentrefund.dto.refund.response;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @NoArgsConstructor
+@Setter
 @Getter
 @AllArgsConstructor
-public class RefundPolicyResponseDto {
-    Long refundPolicyId;
+public class RefundAdminResponseDto {
     String refundPolicyType;
-    Integer refundShippingFee;
+    Long refundAmount;
+    String refundDateTime;
+    String refundDetailReason;
 }

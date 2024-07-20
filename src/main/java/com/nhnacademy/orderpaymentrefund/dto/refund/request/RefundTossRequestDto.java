@@ -5,10 +5,8 @@ import lombok.Getter;
 
 @Builder
 @Getter
-
-public class RefundRegisterRequestDto {
+public class RefundTossRequestDto {
     private String cancelReason;
-    private long paymentId;
-    private String orderStatus;
     private long orderId;
+
 }
