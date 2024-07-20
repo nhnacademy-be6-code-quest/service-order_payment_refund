@@ -37,7 +37,7 @@ public class ClientOrderController {
     @GetMapping("/api/client/orders")
     public ResponseEntity<Page<ClientOrderGetResponseDto>> getOrders(
             @RequestHeader HttpHeaders headers,
-            @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
             @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
             @RequestParam(value = "sortBy", defaultValue = "orderDatetime", required = false) String sortBy,
             @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir){
