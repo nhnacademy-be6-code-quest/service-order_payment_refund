@@ -5,6 +5,7 @@ import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.SchedulingService;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,7 +21,11 @@ public class SchedulingServiceImpl implements SchedulingService {
     public void scheduleOrderStatusToDeliveryCompleted() {
 
         LocalDateTime threshold = LocalDateTime.now().minusMinutes(10);
-        List<Order> orderList = orderRepository.findAllByOrderStatusAndOrderDatetimeBefore(OrderStatus.DELIVERING, threshold);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedDateTime = threshold.format(formatter);
+        LocalDateTime parsedDateTime = LocalDateTime.parse(formattedDateTime, formatter);
+
+        List<Order> orderList = orderRepository.findAllByOrderStatusAndOrderDatetimeBefore(OrderStatus.DELIVERING, parsedDateTime);
 
         for(Order order : orderList){
             order.updateOrderStatus(OrderStatus.DELIVERY_COMPLETE);

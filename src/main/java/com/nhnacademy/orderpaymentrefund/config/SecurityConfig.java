@@ -29,17 +29,17 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .addFilterBefore(new HeaderFilter(List.of(
-                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.GET.name(), List.of()),
-                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.POST.name(), List.of()),
-                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.PUT.name(), List.of()),
-                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.DELETE.name(), List.of()),
-                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.GET.name(), List.of()),
-                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.POST.name(), List.of()),
-                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.PUT.name(), List.of()),
-                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.DELETE.name(), List.of()),
-                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.GET.name(), List.of()),
-                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.POST.name(), List.of()),
-                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.PUT.name(), List.of()),
+//                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.GET.name(), List.of()),
+//                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.POST.name(), List.of()),
+//                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.PUT.name(), List.of()),
+//                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.DELETE.name(), List.of()),
+//                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.GET.name(), List.of()),
+//                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.POST.name(), List.of()),
+//                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.PUT.name(), List.of()),
+//                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.DELETE.name(), List.of()),
+//                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.GET.name(), List.of()),
+//                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.POST.name(), List.of()),
+//                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.PUT.name(), List.of()),
                 new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.DELETE.name(), List.of())
             )), UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(req ->
