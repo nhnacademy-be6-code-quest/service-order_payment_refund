@@ -126,10 +126,10 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     }
 
     @Override
-    public NonClientOrderGetResponseDto getOrder(HttpHeaders headers, String orderId, String orderPassword) {
+    public NonClientOrderGetResponseDto getOrder(HttpHeaders headers, long orderId, String orderPassword) {
         checkNonClient(headers);
 
-        Order order = orderRepository.getOrderByTossOrderId(orderId).orElseThrow(OrderNotFoundException::new);
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
         NonClientOrderGetResponseDto nonClientOrderGetResponseDto = NonClientOrderGetResponseDto.builder()
                 .orderId(order.getOrderId())

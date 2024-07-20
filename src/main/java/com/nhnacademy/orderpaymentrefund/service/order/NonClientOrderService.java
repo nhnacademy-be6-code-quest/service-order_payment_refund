@@ -58,7 +58,7 @@ public interface NonClientOrderService {
     /**
      * getOrder : 비회원 주문 단건 조회
      **/
-    NonClientOrderGetResponseDto getOrder(HttpHeaders headers, String orderId, String orderPassword);
+    NonClientOrderGetResponseDto getOrder(HttpHeaders headers, long orderId, String orderPassword);
 
     void paymentCompleteOrder(HttpHeaders headers, long orderId);
 
