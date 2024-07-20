@@ -2,7 +2,11 @@ package com.nhnacademy.orderpaymentrefund.dto.payment.response;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * 결제가 성공했을 때 사용자에게 적절한 정보를 보여줄 때, 그리고 DB 에 저장될 때 사용되는 DTO 입니다. 토스 페이먼츠에서 넘어 오는 값들을 파싱하여 만듭니다. 이 정보가
