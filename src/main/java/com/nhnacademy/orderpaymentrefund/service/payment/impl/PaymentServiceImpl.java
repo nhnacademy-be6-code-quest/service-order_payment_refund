@@ -20,6 +20,7 @@ import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsRespon
 import com.nhnacademy.orderpaymentrefund.dto.point.PointUsagePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.CartCheckoutRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.InventoryDecreaseRequestDto;
+import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
@@ -29,13 +30,10 @@ import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
@@ -45,7 +43,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.web.server.authentication.InvalidateLeastUsedServerMaximumSessionsExceededHandler;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -327,7 +324,8 @@ public class PaymentServiceImpl implements PaymentService {
     public PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(
         String tossOrderId) {
 
-        Order order = orderRepository.getOrderByTossOrderId(tossOrderId);
+        Order order = orderRepository.getOrderByTossOrderId(tossOrderId).orElseThrow(
+            OrderNotFoundException::new);
 
         Payment payment = paymentRepository.findByOrder_OrderId(order.getOrderId())
             .orElseThrow(() -> new PaymentNotFoundException(tossOrderId));
@@ -336,6 +334,7 @@ public class PaymentServiceImpl implements PaymentService {
             order);
 
         PostProcessRequiredPaymentResponseDto postProcessRequiredPaymentResponseDto = PostProcessRequiredPaymentResponseDto.builder()
+            .clientId(order.getClientId())
             .amount(payment.getPayAmount())
             .paymentMethodName(payment.getPaymentMethodName())
             .build();

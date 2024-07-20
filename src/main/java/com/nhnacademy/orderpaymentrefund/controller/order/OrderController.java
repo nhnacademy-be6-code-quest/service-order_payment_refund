@@ -19,29 +19,28 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/order")
 @RequiredArgsConstructor
 public class OrderController {
 
     private final OrderService orderService;
 
-    @GetMapping("/{tossOrderId}/payment-request")
+    @GetMapping("/api/order/{tossOrderId}/payment-request")
     public ResponseEntity<PaymentOrderShowRequestDto> getPaymentOrderShowRequestDto(@PathVariable String tossOrderId, HttpServletRequest request, @RequestHeader HttpHeaders headers){
         return ResponseEntity.ok().body(orderService.getPaymentOrderShowRequestDto(headers, request, tossOrderId));
     }
 
-    @GetMapping("/{tossOrderId}/approve-request")
+    @GetMapping("/api/order/{tossOrderId}/approve-request")
     public ResponseEntity<PaymentOrderApproveRequestDto> getPaymentOrderApproveRequestDto(@PathVariable String tossOrderId, HttpServletRequest request, @RequestHeader HttpHeaders headers){
         return ResponseEntity.ok().body(orderService.getPaymentOrderApproveRequestDto(headers, request, tossOrderId));
     }
 
-    @PutMapping("/{orderId}")
+    @PutMapping("/api/order/{orderId}")
     public ResponseEntity<String> updateOrderStatus(@PathVariable(name = "orderId") Long orderId, @RequestParam(name = "status") String status){
         orderService.changeOrderStatus(orderId, status);
         return ResponseEntity.ok().body("주문 상태가 변경되었습니다.");
     }
 
-    @GetMapping("/all")
+    @GetMapping("/api/order/all")
     public ResponseEntity<Page<OrderResponseDto>> getOrder(@RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
                                                            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
                                                            @RequestParam(value = "sortBy", defaultValue = "orderDatetime", required = false) String sortBy,
@@ -49,17 +48,17 @@ public class OrderController {
         return ResponseEntity.ok().body(orderService.getAllOrderList(pageSize, pageNo, sortBy, sortDir));
     }
 
-    @GetMapping("/{orderId}/detail")
+    @GetMapping("/api/order/{orderId}/detail")
     public ResponseEntity<List<ProductOrderDetailResponseDto>> getProductOrderDetailList(@PathVariable Long orderId){
         return ResponseEntity.ok().body(orderService.getProductOrderDetailList(orderId));
     }
 
-    @GetMapping("/{orderId}/detail/{productOrderDetailId}")
+    @GetMapping("/api/order/{orderId}/detail/{productOrderDetailId}")
     public ResponseEntity<ProductOrderDetailResponseDto> getProductOrderDetail(@PathVariable Long orderId, @PathVariable Long productOrderDetailId){
         return ResponseEntity.ok().body(orderService.getProductOrderDetail(orderId, productOrderDetailId));
     }
 
-    @GetMapping("/{orderId}/detail/{productOrderDetailId}/option")
+    @GetMapping("/api/order/{orderId}/detail/{productOrderDetailId}/option")
     public ResponseEntity<ProductOrderDetailOptionResponseDto> getProductOrderDetailOption(@PathVariable Long orderId, @PathVariable Long productOrderDetailId){
         return ResponseEntity.ok().body(orderService.getProductOrderDetailOptionResponseDto(orderId, productOrderDetailId));
     }

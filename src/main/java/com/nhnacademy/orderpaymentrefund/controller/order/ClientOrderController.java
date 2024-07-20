@@ -15,33 +15,26 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api/client/orders")
 @RequiredArgsConstructor
 public class ClientOrderController {
 
     private final ClientOrderService clientOrderService;
 
-    // 주문 생성
-    @PostMapping
-    public ResponseEntity<Long> createOrder(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderCreateForm clientOrderForm){
-        return ResponseEntity.ok().body(clientOrderService.tryCreateOrder(headers, clientOrderForm));
-    }
-
-    // 임시 주문 저장
-    @PostMapping("/temporary")
+    // 회원 임시 주문 저장
+    @PostMapping("/api/client/orders/temporary")
     public ResponseEntity<String> saveClientTemporalOrder(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderCreateForm clientOrderForm){
         clientOrderService.saveClientTemporalOrder(headers, clientOrderForm);
         return ResponseEntity.ok().body("주문이 임시저장 되었습니다");
     }
 
-    // 임시 주문 가져오기
-    @GetMapping("/temporary")
+    // 회원 임시 주문 가져오기
+    @GetMapping("/api/client/orders/temporary")
     public ResponseEntity<ClientOrderCreateForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers, String tossOrderId){
         return ResponseEntity.ok().body(clientOrderService.getClientTemporalOrder(headers, tossOrderId));
     }
 
     // 주문 내역(Page) 조회 - 모든
-    @GetMapping
+    @GetMapping("/api/client/orders")
     public ResponseEntity<Page<ClientOrderGetResponseDto>> getOrders(
             @RequestHeader HttpHeaders headers,
             @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
@@ -51,53 +44,53 @@ public class ClientOrderController {
         return ResponseEntity.ok(clientOrderService.getOrders(headers, pageSize, pageNo, sortBy, sortDir));
     }
 
-    @GetMapping("/{orderId}")
+    @GetMapping("/api/client/orders/{orderId}")
     public ResponseEntity<ClientOrderGetResponseDto> getOrder(@RequestHeader HttpHeaders headers, @PathVariable Long orderId){
         return ResponseEntity.ok(clientOrderService.getOrder(headers, orderId));
     }
 
-    @GetMapping("/{orderId}/detail")
+    @GetMapping("/api/client/orders/{orderId}/detail")
     public ResponseEntity<List<ProductOrderDetailResponseDto>> getProductOrderDetailList(@RequestHeader HttpHeaders headers, @PathVariable Long orderId){
         return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailList(headers, orderId));
     }
 
-    @GetMapping("/{orderId}/detail/{productOrderDetailId}")
+    @GetMapping("/api/client/orders/{orderId}/detail/{productOrderDetailId}")
     public ResponseEntity<ProductOrderDetailResponseDto> getProductOrderDetail(@RequestHeader HttpHeaders headers, @PathVariable Long orderId,
                                                                                @PathVariable Long productOrderDetailId){
         return ResponseEntity.ok().body(clientOrderService.getProductOrderDetail(headers, orderId, productOrderDetailId));
     }
 
-    @GetMapping("/{orderId}/detail/{productOrderDetailId}/option")
+    @GetMapping("/api/client/orders/{orderId}/detail/{productOrderDetailId}/option")
     public ResponseEntity<ProductOrderDetailOptionResponseDto> getProductOrderDetailOption(@RequestHeader HttpHeaders headers,@PathVariable Long orderId,
                                                                                            @PathVariable Long productOrderDetailId){
         return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailOptionResponseDto(headers, orderId, productOrderDetailId));
     }
 
-    @PutMapping("/{orderId}/payment-complete")
+    @PutMapping("/api/client/orders/{orderId}/payment-complete")
     public ResponseEntity<String> paymentCompleteOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
         clientOrderService.paymentCompleteOrder(headers, orderId);
         return ResponseEntity.ok("주문 결제완료 되었습니다.");
     }
 
-    @PutMapping("/{orderId}/cancel")
+    @PutMapping("/api/client/orders/{orderId}/cancel")
     public ResponseEntity<String> cancelOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
         clientOrderService.cancelOrder(headers, orderId);
         return ResponseEntity.ok("주문 취소 상태로 변경되었습니다.");
     }
 
-    @PutMapping("/{orderId}/refund")
+    @PutMapping("/api/client/orders/{orderId}/refund")
     public ResponseEntity<String> refundOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
         clientOrderService.refundOrder(headers, orderId);
         return ResponseEntity.ok("반품 상태로 변경되었습니다.");
     }
 
-    @PutMapping("/{orderId}/refund-request")
+    @PutMapping("/api/client/orders/{orderId}/refund-request")
     public ResponseEntity<String> refundRequestOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
         clientOrderService.refundOrderRequest(headers, orderId);
         return ResponseEntity.ok("반품 상태로 변경되었습니다.");
     }
 
-    @GetMapping("/{orderId}/order-status")
+    @GetMapping("/api/client/orders/{orderId}/order-status")
     public ResponseEntity<String> getOrderStatus(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
         return ResponseEntity.ok().body(clientOrderService.getOrderStatus(headers, orderId));
     }

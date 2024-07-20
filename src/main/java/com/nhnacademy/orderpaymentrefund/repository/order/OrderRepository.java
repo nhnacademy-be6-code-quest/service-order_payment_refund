@@ -45,7 +45,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         "AND o.clientId = :clientId")
     Long getTotalOptionPriceForLastThreeMonths(Long clientId, @Param("startDate") LocalDateTime localDateTime);
 
-    Order getOrderByTossOrderId(String tossOrderId);
+    Optional<Order> getOrderByTossOrderId(String tossOrderId);
 
     List<Order> findAllByOrderStatusAndOrderDatetimeBefore(OrderStatus orderStatus, LocalDateTime orderDatetime);
 }
