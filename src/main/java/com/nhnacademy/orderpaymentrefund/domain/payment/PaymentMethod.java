@@ -16,8 +16,10 @@ public class PaymentMethod {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long paymentMethodId;
-
     @NotNull
     private String paymentMethodName; // 토스 페이먼트가 제공하는 이름 - Enum 으로 해야 하는 이유가 있을까?
 
+    public void setMethodName(String methodName){
+        this.paymentMethodName=methodName;
+    }
 }
