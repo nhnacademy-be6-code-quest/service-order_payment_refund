@@ -97,6 +97,8 @@ public class OrderServiceImpl implements OrderService {
                 orderHistoryTitle.append(String.format("외 %d개", sizeProductOrderDetail - 1));
             }
 
+            orderTotalAmount = nonClientOrderForm.getProductTotalAmount();
+
         }
 
         return PaymentOrderShowRequestDto.builder()
@@ -175,7 +177,7 @@ public class OrderServiceImpl implements OrderService {
                 .discountAmountByPoint(discountAmountByPoint == null ? 0 : discountAmountByPoint)
                 .discountAmountByCoupon(discountAmountByCoupon == null ? 0 : discountAmountByCoupon)
                 .tossOrderId(tossOrderId)
-                .clientId(getClientId(headers))
+                .clientId(isClient(headers) ? getClientId(headers) : null)
                 .couponId(couponId)
                 .accumulatedPoint(accumulatedPoint == null ? 0 : accumulatedPoint)
                 .productOrderDetailList(productOrderDetailList)
