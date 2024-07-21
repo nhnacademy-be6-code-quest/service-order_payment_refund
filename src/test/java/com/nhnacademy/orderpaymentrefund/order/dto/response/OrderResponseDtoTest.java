@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 class OrderResponseDtoTest {
     @Test
-    public void testOrderResponseDtoBuilder() {
+    void testOrderResponseDtoBuilder() {
         // Given
         OrderResponseDto.OrderListItem item1 = OrderResponseDto.OrderListItem.builder()
             .productOrderDetailId(1L)
@@ -85,7 +85,7 @@ class OrderResponseDtoTest {
     }
 
     @Test
-    public void testAddClientOrderListItem() {
+    void testAddClientOrderListItem() {
         // Given
         OrderResponseDto dto = new OrderResponseDto();
         OrderResponseDto.OrderListItem item = OrderResponseDto.OrderListItem.builder()

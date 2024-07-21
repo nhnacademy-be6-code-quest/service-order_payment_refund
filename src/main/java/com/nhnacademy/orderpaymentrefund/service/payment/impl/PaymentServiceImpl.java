@@ -14,6 +14,7 @@ import com.nhnacademy.orderpaymentrefund.dto.coupon.PaymentCompletedCouponRespon
 import com.nhnacademy.orderpaymentrefund.dto.message.PointUsagePaymentMessageDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.UserUpdateGradeRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
@@ -34,6 +35,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
@@ -77,11 +79,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${rabbit.inventory.decrease.routing.key}")
     private String inventoryDecreaseRoutingKey;
 
-    @Value("${rabbit.inventory.increase.exchange.name}")
-    private String inventoryIncreaseExchangeName;
-    @Value("${rabbit.inventory.increase.routing.key}")
-    private String inventoryIncreaseRoutingKey;
-
     @Value("${rabbit.use.point.exchange.name}")
     private String pointUseExchangeName;
     @Value("${rabbit.use.point.routing.key}")
@@ -94,169 +91,216 @@ public class PaymentServiceImpl implements PaymentService {
 
     private static final String ORDER = "order";
 
-    // Order Enum Type -> String, 배송 상태 -> tinyInt
     @Override
     public void savePayment(HttpHeaders headers, TossPaymentsResponseDto tossPaymentsResponseDto) {
 
         Long clientId = getClientId(headers);
 
+        Object data = redisTemplate.opsForHash()
+            .get(ORDER, tossPaymentsResponseDto.getOrderId());
+
         if (clientId != null) {
-            Object data = redisTemplate.opsForHash()
-                .get(ORDER, tossPaymentsResponseDto.getOrderId());
-            ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
-                ClientOrderCreateForm.class);
-
-            // order 저장
-            Order order = Order.clientOrderBuilder()
-                .clientId(clientId)
-                .couponId(clientOrderCreateForm.getCouponId())
-                .tossOrderId(clientOrderCreateForm.getTossOrderId())
-                .productTotalAmount(clientOrderCreateForm.getProductTotalAmount())
-                .shippingFee(clientOrderCreateForm.getShippingFee())
-                .designatedDeliveryDate(clientOrderCreateForm.getDesignatedDeliveryDate())
-                .phoneNumber(clientOrderCreateForm.getPhoneNumber())
-                .deliveryAddress(clientOrderCreateForm.getDeliveryAddress())
-                .discountAmountByPoint(clientOrderCreateForm.getUsedPointDiscountAmount())
-                .discountAmountByCoupon(clientOrderCreateForm.getCouponDiscountAmount())
-                .accumulatedPoint(clientOrderCreateForm.getAccumulatePoint())
-                .build();
-            orderRepository.save(order);
-
-            // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-            clientOrderCreateForm.getOrderDetailDtoItemList().forEach(item -> {
-                ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(
-                    item, order);
-                productOrderDetailRepository.save(productOrderDetail);
-                if (Boolean.TRUE.equals(item.getUsePackaging())) {
-                    ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(
-                        item, productOrderDetail);
-                    productOrderDetailOptionRepository.save(productOrderDetailOption);
-                }
-            });
-
-            // payment 저장
-            Payment payment = Payment.builder()
-                .order(order)
-                .payAmount(tossPaymentsResponseDto.getTotalAmount())
-                .paymentMethodName(tossPaymentsResponseDto.getMethod())
-                .tossPaymentKey(tossPaymentsResponseDto.getPaymentKey())
-                .build();
-
-            paymentRepository.save(payment);
-
-            // 회원 등급변경, 포인트 사용, 쿠폰 사용, 재고처리, 장바구니 비우기
-
-
-            // 장바구니 비우기 위한 요청 dto
-            CartCheckoutRequestDto cartCheckoutRequestDto = CartCheckoutRequestDto.builder()
-                .clientId(clientId).build();
-
-            Map<Long, Long> decreaseInfo = new HashMap<>();
-            clientOrderCreateForm.getOrderDetailDtoItemList()
-                .forEach(
-                    orderDetail -> {
-                        cartCheckoutRequestDto.addProductId(orderDetail.getProductId());
-                        decreaseInfo.put(orderDetail.getProductId(), orderDetail.getQuantity());
-                        if (Boolean.TRUE.equals(orderDetail.getUsePackaging())) {
-                            decreaseInfo.put(orderDetail.getOptionProductId(),
-                                orderDetail.getOptionQuantity());
-                        }
-                    }
-                );
-
-            // 재고 감소 요청을 위한 dto
-            InventoryDecreaseRequestDto inventoryDecreaseRequestDto = InventoryDecreaseRequestDto.builder()
-                .orderId(order.getOrderId()).decreaseInfo(decreaseInfo).build();
-
-            // 상품 및 옵션 상품 재고처리 - 큐로 보내기
-            rabbitTemplate.convertAndSend(inventoryDecreaseExchangeName,
-                inventoryDecreaseRoutingKey, inventoryDecreaseRequestDto);
-
-            // 구입 상품 장바구니 삭제 - 큐로 보내기
-            rabbitTemplate.convertAndSend(cartCheckoutExchangeName, cartCheckoutRoutingKey,
-                cartCheckoutRequestDto);
-
-            // 포인트 사용
-            Long usedPointDiscountAmount = clientOrderCreateForm.getUsedPointDiscountAmount();
-            PointUsagePaymentMessageDto pointUsagePaymentRequestDto = PointUsagePaymentMessageDto.builder()
-                .pointUsagePayment(usedPointDiscountAmount)
-                .clientId(clientId)
-                .build();
-
-            if (usedPointDiscountAmount != null && usedPointDiscountAmount > 0) {
-                rabbitTemplate.convertAndSend(pointUseExchangeName, pointUseRoutingKey,
-                    pointUsagePaymentRequestDto);
-            }
-
-            // 쿠폰 사용
-            Long usedCouponDiscountAmount = clientOrderCreateForm.getCouponDiscountAmount();
-            PaymentCompletedCouponResponseDto paymentCompletedCouponResponseDto = PaymentCompletedCouponResponseDto.builder()
-                .couponId(clientOrderCreateForm.getCouponId())
-                .build();
-
-            if (usedCouponDiscountAmount != null && usedCouponDiscountAmount > 0) {
-                rabbitTemplate.convertAndSend(couponUseExchangeName, couponUseRoutingKey,
-                    paymentCompletedCouponResponseDto);
-            }
-
-            redisTemplate.opsForHash().delete(ORDER, clientOrderCreateForm.getTossOrderId());
-
+            processClientOrderAndPayment(clientId, data, tossPaymentsResponseDto);
         } else {
-
-            Object data = redisTemplate.opsForHash()
-                .get(ORDER, tossPaymentsResponseDto.getOrderId());
-            NonClientOrderForm nonClientOrderForm = objectMapper.convertValue(data,
-                NonClientOrderForm.class);
-
-            // order 저장
-            Order order = Order.nonClientOrderBuilder()
-                .tossOrderId(nonClientOrderForm.getTossOrderId())
-                .productTotalAmount(nonClientOrderForm.getProductTotalAmount())
-                .shippingFee(nonClientOrderForm.getShippingFee())
-                .designatedDeliveryDate(nonClientOrderForm.getDesignatedDeliveryDate())
-                .phoneNumber(nonClientOrderForm.getPhoneNumber())
-                .deliveryAddress(nonClientOrderForm.getDeliveryAddress())
-                .nonClientOrdererName(nonClientOrderForm.getOrderedPersonName())
-                .nonClientOrdererEmail(nonClientOrderForm.getEmail())
-                .nonClientOrderPassword(nonClientOrderForm.getOrderPassword())
-                .build();
-            orderRepository.save(order);
-
-            // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-            nonClientOrderForm.getOrderDetailDtoItemList().forEach(item -> {
-                ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(
-                    item, order);
-                productOrderDetailRepository.save(productOrderDetail);
-                if (Boolean.TRUE.equals(item.getUsePackaging())) {
-                    ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(
-                        item, productOrderDetail);
-                    productOrderDetailOptionRepository.save(productOrderDetailOption);
-                }
-            });
-
-            // payment 저장
-            Payment payment = Payment.builder()
-                .order(order)
-                .payAmount(tossPaymentsResponseDto.getTotalAmount())
-                .paymentMethodName(tossPaymentsResponseDto.getMethod())
-                .tossPaymentKey(tossPaymentsResponseDto.getPaymentKey())
-                .build();
-
-            paymentRepository.save(payment);
-
-            redisTemplate.opsForHash().delete(ORDER, nonClientOrderForm.getTossOrderId());
-
+            processNonClientOrderAndPayment(data, tossPaymentsResponseDto);
         }
 
     }
+
+    // 회원 주문 및 결제 생성 및 후처리 프로세스
+    private void processClientOrderAndPayment(Long clientId, Object data,
+        TossPaymentsResponseDto tossPaymentsResponseDto) {
+
+        ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
+            ClientOrderCreateForm.class);
+
+        saveClientOrderEntity(clientId, clientOrderCreateForm);
+
+        // order 저장
+        Order order = saveClientOrderEntity(clientId, clientOrderCreateForm);
+
+        // OrderProductDetail + OrderProductDetailOption 저장
+        saveOrderProductDetailAndOrderProductDetailOption(order, clientOrderCreateForm.getOrderDetailDtoItemList());
+
+        // payment 저장
+        savePaymentEntity(order, tossPaymentsResponseDto);
+
+        // 후처리 - 회원 장바구니 비우기
+        postProcessingClientCartCheckout(clientId, clientOrderCreateForm);
+
+        // 후처리 - 포인트 사용
+        postProcessingUsingPoint(clientId, clientOrderCreateForm);
+
+        // 후처리 - 쿠폰 사용
+        postProcessingUsingCoupon(clientOrderCreateForm);
+
+        // 후처리 - 재고감소
+        postProcessingInventoryDecrease(order.getOrderId(), clientOrderCreateForm.getOrderDetailDtoItemList());
+
+        redisTemplate.opsForHash().delete(ORDER, clientOrderCreateForm.getTossOrderId());
+
+    }
+
+    // 비회원 주문 및 결제 생성 및 후처리 프로세스
+    private void processNonClientOrderAndPayment(Object data,
+        TossPaymentsResponseDto tossPaymentsResponseDto) {
+
+        NonClientOrderForm nonClientOrderForm = objectMapper.convertValue(data,
+            NonClientOrderForm.class);
+
+        // order 저장
+        Order order = saveNonClientOrderEntity(nonClientOrderForm);
+
+        // OrderProductDetail + OrderProductDetailOption 생성 및 저장
+        saveOrderProductDetailAndOrderProductDetailOption(order, nonClientOrderForm.getOrderDetailDtoItemList());
+
+        // payment 저장
+        savePaymentEntity(order, tossPaymentsResponseDto);
+
+        // 후처리 - 재고감소
+        postProcessingInventoryDecrease(order.getOrderId(), nonClientOrderForm.getOrderDetailDtoItemList());
+
+        redisTemplate.opsForHash().delete(ORDER, nonClientOrderForm.getTossOrderId());
+
+    }
+
+    // 후처리 - 쿠폰 사용
+    private void postProcessingUsingCoupon(ClientOrderCreateForm clientOrderCreateForm) {
+        // 쿠폰 사용
+        Long usedCouponDiscountAmount = clientOrderCreateForm.getCouponDiscountAmount();
+        PaymentCompletedCouponResponseDto paymentCompletedCouponResponseDto = PaymentCompletedCouponResponseDto.builder()
+            .couponId(clientOrderCreateForm.getCouponId())
+            .build();
+
+        if (usedCouponDiscountAmount != null && usedCouponDiscountAmount > 0) {
+            rabbitTemplate.convertAndSend(couponUseExchangeName, couponUseRoutingKey,
+                paymentCompletedCouponResponseDto);
+        }
+    }
+
+    // 후처리 - 포인트 사용
+    private void postProcessingUsingPoint(Long clientId,
+        ClientOrderCreateForm clientOrderCreateForm) {
+        Long usedPointDiscountAmount = clientOrderCreateForm.getUsedPointDiscountAmount();
+        PointUsagePaymentMessageDto pointUsagePaymentRequestDto = PointUsagePaymentMessageDto.builder()
+            .pointUsagePayment(usedPointDiscountAmount)
+            .clientId(clientId)
+            .build();
+
+        if (usedPointDiscountAmount != null && usedPointDiscountAmount > 0) {
+            rabbitTemplate.convertAndSend(pointUseExchangeName, pointUseRoutingKey,
+                pointUsagePaymentRequestDto);
+        }
+
+    }
+
+    private void postProcessingInventoryDecrease(Long orderId, List<OrderDetailDtoItem> orderDetailDtoItemList) {
+
+        Map<Long, Long> decreaseInfo = new HashMap<>();
+
+        for(OrderDetailDtoItem orderDetailDtoItem : orderDetailDtoItemList){
+            decreaseInfo.put(orderDetailDtoItem.getProductId(), orderDetailDtoItem.getQuantity());
+            if (orderDetailDtoItem.getUsePackaging()) {
+                decreaseInfo.put(orderDetailDtoItem.getOptionProductId(), orderDetailDtoItem.getOptionQuantity());
+            }
+        }
+
+        InventoryDecreaseRequestDto inventoryDecreaseRequestDto = InventoryDecreaseRequestDto.builder()
+            .orderId(orderId).decreaseInfo(decreaseInfo).build();
+
+        rabbitTemplate.convertAndSend(inventoryDecreaseExchangeName,
+            inventoryDecreaseRoutingKey, inventoryDecreaseRequestDto);
+
+    }
+
+
+    // 후처리 - 회원 장바구니 데이터베이스에서 비우기
+    private void postProcessingClientCartCheckout(Long clientId,
+        ClientOrderCreateForm clientOrderCreateForm) {
+
+        CartCheckoutRequestDto cartCheckoutRequestDto = CartCheckoutRequestDto.builder()
+            .clientId(clientId).build();
+
+        clientOrderCreateForm.getOrderDetailDtoItemList()
+            .forEach(
+                orderDetail ->
+                    cartCheckoutRequestDto.addProductId(orderDetail.getProductId())
+            );
+
+        // 구입 상품 장바구니 삭제 - 큐로 보내기
+        rabbitTemplate.convertAndSend(cartCheckoutExchangeName, cartCheckoutRoutingKey,
+            cartCheckoutRequestDto);
+
+    }
+
+    private Order saveClientOrderEntity(Long clientId,
+        ClientOrderCreateForm clientOrderCreateForm) {
+        Order order = Order.clientOrderBuilder()
+            .clientId(clientId)
+            .couponId(clientOrderCreateForm.getCouponId())
+            .tossOrderId(clientOrderCreateForm.getTossOrderId())
+            .productTotalAmount(clientOrderCreateForm.getProductTotalAmount())
+            .shippingFee(clientOrderCreateForm.getShippingFee())
+            .designatedDeliveryDate(clientOrderCreateForm.getDesignatedDeliveryDate())
+            .phoneNumber(clientOrderCreateForm.getPhoneNumber())
+            .deliveryAddress(clientOrderCreateForm.getDeliveryAddress())
+            .discountAmountByPoint(clientOrderCreateForm.getUsedPointDiscountAmount())
+            .discountAmountByCoupon(clientOrderCreateForm.getCouponDiscountAmount())
+            .accumulatedPoint(clientOrderCreateForm.getAccumulatePoint())
+            .build();
+        return orderRepository.save(order);
+    }
+
+    private Order saveNonClientOrderEntity(NonClientOrderForm nonClientOrderForm) {
+        Order order = Order.nonClientOrderBuilder()
+            .tossOrderId(nonClientOrderForm.getTossOrderId())
+            .productTotalAmount(nonClientOrderForm.getProductTotalAmount())
+            .shippingFee(nonClientOrderForm.getShippingFee())
+            .designatedDeliveryDate(nonClientOrderForm.getDesignatedDeliveryDate())
+            .phoneNumber(nonClientOrderForm.getPhoneNumber())
+            .deliveryAddress(nonClientOrderForm.getDeliveryAddress())
+            .nonClientOrdererName(nonClientOrderForm.getOrderedPersonName())
+            .nonClientOrdererEmail(nonClientOrderForm.getEmail())
+            .nonClientOrderPassword(nonClientOrderForm.getOrderPassword())
+            .build();
+        return orderRepository.save(order);
+    }
+
+    private void savePaymentEntity(Order order, TossPaymentsResponseDto tossPaymentsResponseDto) {
+        Payment payment = Payment.builder()
+            .order(order)
+            .payAmount(tossPaymentsResponseDto.getTotalAmount())
+            .paymentMethodName(tossPaymentsResponseDto.getMethod())
+            .tossPaymentKey(tossPaymentsResponseDto.getPaymentKey())
+            .build();
+        paymentRepository.save(payment);
+    }
+
+    private void saveOrderProductDetailAndOrderProductDetailOption(Order order,
+        List<OrderDetailDtoItem> orderDetailDtoItemList) {
+
+        for(OrderDetailDtoItem item : orderDetailDtoItemList){
+            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(
+                item, order);
+            productOrderDetailRepository.save(productOrderDetail);
+            if (Boolean.TRUE.equals(item.getUsePackaging())) {
+                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(
+                    item, productOrderDetail);
+                productOrderDetailOptionRepository.save(productOrderDetailOption);
+            }
+        }
+    }
+
     @Override
-    public void updateUserGrade(UserUpdateGradeRequestDto userUpdateGradeRequestDto){
+    public void updateUserGrade(UserUpdateGradeRequestDto userUpdateGradeRequestDto) {
         ClientUpdateGradeRequestDto clientUpdateGradeRequestDto = ClientUpdateGradeRequestDto.builder()
             .clientId(userUpdateGradeRequestDto.getClientId())
-            .payment(getPaymentRecordOfClient(userUpdateGradeRequestDto.getClientId()).getPaymentGradeValue())
+            .payment(getPaymentRecordOfClient(
+                userUpdateGradeRequestDto.getClientId()).getPaymentGradeValue())
             .build();
         clientServiceFeignClient.updateClientGrade(clientUpdateGradeRequestDto);
     }
+
     @Override
     public PaymentGradeResponseDto getPaymentRecordOfClient(Long clientId) {
         Long totalOptionPriceForLastThreeMonth = orderRepository.getTotalOptionPriceForLastThreeMonths(
@@ -335,7 +379,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (headers.get(ID_HEADER) == null) {
             return null;
         }
-        return Long.parseLong(headers.getFirst(ID_HEADER));
+        return Long.parseLong(Objects.requireNonNull(headers.getFirst(ID_HEADER)));
     }
 
     @Override

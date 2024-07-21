@@ -51,13 +51,13 @@ public class ClientOrderController {
 
     @GetMapping("/api/client/orders/{orderId}/detail")
     public ResponseEntity<List<ProductOrderDetailResponseDto>> getProductOrderDetailList(@RequestHeader HttpHeaders headers, @PathVariable Long orderId){
-        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailList(headers, orderId));
+        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailResponseDtoList(headers, orderId));
     }
 
     @GetMapping("/api/client/orders/{orderId}/detail/{productOrderDetailId}")
     public ResponseEntity<ProductOrderDetailResponseDto> getProductOrderDetail(@RequestHeader HttpHeaders headers, @PathVariable Long orderId,
                                                                                @PathVariable Long productOrderDetailId){
-        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetail(headers, orderId, productOrderDetailId));
+        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailResponseDto(headers, orderId, productOrderDetailId));
     }
 
     @GetMapping("/api/client/orders/{orderId}/detail/{productOrderDetailId}/option")

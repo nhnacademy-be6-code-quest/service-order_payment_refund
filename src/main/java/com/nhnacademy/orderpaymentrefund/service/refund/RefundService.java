@@ -15,14 +15,11 @@ import com.nhnacademy.orderpaymentrefund.dto.product.InventoryIncreaseRequestDto
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.PaymentCancelRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundAfterRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.refund.response.PaymentCancelResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.refund.response.PaymentRefundResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundAdminResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.refund.request.TossRefundRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundResultResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundSuccessResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.CannotCancelPaymentCancel;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
-import com.nhnacademy.orderpaymentrefund.exception.PaymentNotCompletedException;
 import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
@@ -32,7 +29,6 @@ import com.nhnacademy.orderpaymentrefund.repository.refund.RefundPolicyRepositor
 import com.nhnacademy.orderpaymentrefund.repository.refund.RefundRepository;
 import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Base64.Encoder;
@@ -42,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import com.nhnacademy.orderpaymentrefund.dto.refund.request.TossRefundRequestDto;
 
 @Service
 @RequiredArgsConstructor
@@ -87,21 +82,6 @@ public class RefundService {
         if (tossSecretKey.isEmpty()) {
             log.error("secretKey is empty");
         }
-    }
-
-    public PaymentCancelResponseDto findOrderStatusByOrderId(long orderId) {
-
-        Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new OrderNotFoundException(NO_ORDER));
-
-        if (order.getOrderStatus() == OrderStatus.PAYED) {
-            Payment payment = paymentRepository.findByOrder_OrderId(orderId)
-                .orElseThrow(() -> new PaymentNotFoundException("결재 정보를 찾을수 없습니다."));
-            return new PaymentCancelResponseDto(
-            payment.getPaymentId(), payment.getTossPaymentKey(), payment.getOrder()
-                .getOrderStatus().toString());
-        }
-        throw new PaymentNotCompletedException("주문을 취소/반품을 처리가 불가능합니다.");
     }
 
     public RefundSuccessResponseDto saveRefund(RefundRequestDto requestDto) {
@@ -161,7 +141,6 @@ public class RefundService {
                 }
             }
 
-            // 모든 ProductOrderDetail을 처리한 후 한 번만 전송
             if (!inventoryIncreaseRequestDtos.isEmpty()) {
                 rabbitTemplate.convertAndSend(increasesExchange, increaseKey,
                     inventoryIncreaseRequestDtos);
@@ -186,23 +165,6 @@ public class RefundService {
         } else {
             throw new CannotCancelPaymentCancel("주문 취소에 실패하였습니다.");
         }
-    }
-
-    public PaymentRefundResponseDto findRefundData(long orderId) {
-        PaymentRefundResponseDto dto = new PaymentRefundResponseDto();
-        Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new OrderNotFoundException(NO_ORDER));
-        if (order.getOrderStatus() == OrderStatus.DELIVERING
-            || order.getOrderStatus() == OrderStatus.DELIVERY_COMPLETE) {
-            Payment payment = paymentRepository.findByOrder_OrderId(orderId)
-                .orElseThrow(() -> new PaymentNotFoundException("결재 정보를 찾을수 없습니다."));
-            dto.setTossPaymentKey(payment.getTossPaymentKey());
-            dto.setPaymentId(payment.getPaymentId());
-            dto.setOrderStatus(order.getOrderStatus().toString());
-        } else {
-            throw new CannotCancelPaymentCancel("주문 반품에 실패하였습니다.");
-        }
-        return dto;
     }
 
     public void tossRefund(long orderId, String cancelReason) {
@@ -260,14 +222,5 @@ public class RefundService {
             orderRepository.save(order);
         }
         return new RefundResultResponseDto(refund.getRefundDetailReason());
-    }
-    public RefundAdminResponseDto findUserRefund(long orderId) {
-        Payment payment = paymentRepository.findByOrder_OrderId(orderId)
-            .orElseThrow(() -> new PaymentNotFoundException("결제가 존재하지 않습니다."));
-        Refund refund = refundRepository.findByPayment(payment);
-        RefundPolicy refundPolicy = refundPolicyRepository.findByRefundPolicyId(refund.getRefundPolicy().getRefundPolicyId());
-
-        return new RefundAdminResponseDto(refundPolicy.getRefundPolicyType(), refund.getRefundAmount(), String.valueOf(refund.getRefundDatetime()), refund.getRefundDetailReason());
-
     }
 }

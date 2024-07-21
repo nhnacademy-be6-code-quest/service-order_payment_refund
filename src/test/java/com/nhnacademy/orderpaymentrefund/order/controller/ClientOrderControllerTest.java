@@ -132,7 +132,7 @@ class ClientOrderControllerTest {
         List<ProductOrderDetailResponseDto> productOrderDetailResponseDtoList = new ArrayList<>();
         Long orderId = 1L;
 
-        when(clientOrderService.getProductOrderDetailList(any(HttpHeaders.class),
+        when(clientOrderService.getProductOrderDetailResponseDtoList(any(HttpHeaders.class),
             eq(orderId))).thenReturn(productOrderDetailResponseDtoList);
 
         mockMvc.perform(
@@ -150,7 +150,7 @@ class ClientOrderControllerTest {
         Long orderId = 1L;
         Long productOrderDetailId = 2L;
 
-        when(clientOrderService.getProductOrderDetail(any(HttpHeaders.class), eq(orderId),
+        when(clientOrderService.getProductOrderDetailResponseDto(any(HttpHeaders.class), eq(orderId),
             eq(productOrderDetailId))).thenReturn(productOrderDetailResponseDto);
 
         mockMvc.perform(

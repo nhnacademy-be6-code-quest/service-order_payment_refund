@@ -1,6 +1,5 @@
 package com.nhnacademy.orderpaymentrefund.domain.order;
 
-import lombok.Getter;
 
 /**
  * 주문 상태 ENUM
@@ -8,7 +7,6 @@ import lombok.Getter;
  * @version 2.0
  **/
 
-@Getter
 public enum OrderStatus
 {
     WAIT_PAYMENT("결제대기", 0), PAYED("결제완료", 1), DELIVERING("배송중", 2), DELIVERY_COMPLETE("배송완료", 3),
