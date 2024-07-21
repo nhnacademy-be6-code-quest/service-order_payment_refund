@@ -85,11 +85,10 @@ class ShippingServiceTest {
                 .shippingPolicyType(shippingPolicyType)
                 .build();
 
-        // origin
+
         when(shippingPolicyRepository.findByShippingPolicyType(shippingPolicyType))
                 .thenReturn(Optional.of(shippingPolicy));
 
-        // update
         shippingPolicyService.updateShippingPolicy(requestDto);
 
         // 검증
@@ -123,7 +122,7 @@ class ShippingServiceTest {
 
     @Test
     void testGetAllShippingPolicies() {
-        // Given
+
         ShippingPolicy policy1 = ShippingPolicy.builder()
             .description("회원 배송 정책")
             .shippingFee(5000)

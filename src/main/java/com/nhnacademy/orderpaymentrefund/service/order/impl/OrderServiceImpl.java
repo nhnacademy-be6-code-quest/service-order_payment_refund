@@ -43,7 +43,7 @@ import java.util.List;
 public class OrderServiceImpl implements OrderService {
 
     private static final String ID_HEADER = "X-User-Id";
-    private static final String REDIS_ORDER_KEY = "X-Order-Id";
+    private static final String REDIS_ORDER_KEY = "order";
 
     private final OrderRepository orderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;

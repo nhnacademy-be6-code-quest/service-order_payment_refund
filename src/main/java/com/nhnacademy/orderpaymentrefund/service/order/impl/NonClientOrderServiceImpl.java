@@ -1,6 +1,5 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
-import com.nhnacademy.orderpaymentrefund.client.TestOtherService;
 import com.nhnacademy.orderpaymentrefund.converter.impl.NonClientOrderConverterImpl;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverter;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
@@ -42,19 +41,13 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    // converter
-    private final NonClientOrderConverterImpl nonClientOrderConverter;
-    private final ProductOrderDetailConverter productOrderDetailConverter;
-    private final ProductOrderDetailOptionConverter productOrderDetailOptionConverter;
-
-    // testOtherService
-    private final TestOtherService testOtherService;
-
     @Override
     public void saveNonClientTemporalOrder(HttpHeaders headers, NonClientOrderForm requestDto) {
         checkNonClient(headers);
         String tossOrderId = requestDto.getTossOrderId();
         redisTemplate.opsForHash().put("order", tossOrderId, requestDto);
+        Object data = redisTemplate.opsForHash().get("order", tossOrderId);
+        log.info("data: {}", data);
     }
 
     @Override
@@ -66,7 +59,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     @Override
     public Page<FindNonClientOrderIdInfoResponseDto> findNonClientOrderId(HttpHeaders headers, FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, Pageable pageable) {
         checkNonClient(headers);
-        return orderRepository.findNonClientOrderIdList(findNonClientOrderIdRequestDto, pageable).map((order) ->
+        return orderRepository.findNonClientOrderIdList(findNonClientOrderIdRequestDto, pageable).map(order ->
             FindNonClientOrderIdInfoResponseDto.builder()
                     .orderDateTime(order.getOrderDatetime())
                     .orderId(order.getOrderId())

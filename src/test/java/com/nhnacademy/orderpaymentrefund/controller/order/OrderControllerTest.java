@@ -1,4 +1,4 @@
-package com.nhnacademy.orderpaymentrefund.order.controller;
+package com.nhnacademy.orderpaymentrefund.controller.order;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -14,7 +14,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.nhnacademy.orderpaymentrefund.config.SecurityConfig;
-import com.nhnacademy.orderpaymentrefund.controller.order.OrderController;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
