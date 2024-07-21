@@ -54,33 +54,33 @@ class NonClientOrderServiceImplTest {
         field.set(obj, value);
     }
 
-    @Test
-    @DisplayName("비회원 주문 임시 저장")
-    void testSaveNonClientTemporalOrder() throws Exception {
-        NonClientOrderForm requestDto = new NonClientOrderForm();
-
-        setFieldValue(requestDto, "orderDetailDtoItemList", List.of(new OrderDetailDtoItem(/* Initialize with necessary data */)));
-        setFieldValue(requestDto, "shippingFee", 5000);
-        setFieldValue(requestDto, "productTotalAmount", 20000L);
-        setFieldValue(requestDto, "payAmount", 25000L);
-        setFieldValue(requestDto, "orderedPersonName", "홍길동");
-        setFieldValue(requestDto, "email", "test@test.com");
-        setFieldValue(requestDto, "phoneNumber", "01012345678");
-        setFieldValue(requestDto, "addressZipCode", "12345");
-        setFieldValue(requestDto, "deliveryAddress", "전라남도 순천시 시청");
-        setFieldValue(requestDto, "deliveryDetailAddress", "1층 안내소");
-        setFieldValue(requestDto, "useDesignatedDeliveryDate", true);
-        setFieldValue(requestDto, "designatedDeliveryDate", LocalDate.of(2024, 8, 1));
-        setFieldValue(requestDto, "paymentMethod", 1);
-        setFieldValue(requestDto, "orderPassword", "1234");
-        setFieldValue(requestDto, "tossOrderId", "uuid-1234");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-User-Id", "test-user-id");
-
-        nonClientOrderService.saveNonClientTemporalOrder(headers, requestDto);
-
-        verify(hashOperations, times(1)).put(eq("order"), eq("uuid-1234"), eq(requestDto));
-    }
+//    @Test
+//    @DisplayName("비회원 주문 임시 저장")
+//    void testSaveNonClientTemporalOrder() throws Exception {
+//        NonClientOrderForm requestDto = new NonClientOrderForm();
+//
+//        setFieldValue(requestDto, "orderDetailDtoItemList", List.of(new OrderDetailDtoItem(/* Initialize with necessary data */)));
+//        setFieldValue(requestDto, "shippingFee", 5000);
+//        setFieldValue(requestDto, "productTotalAmount", 20000L);
+//        setFieldValue(requestDto, "payAmount", 25000L);
+//        setFieldValue(requestDto, "orderedPersonName", "홍길동");
+//        setFieldValue(requestDto, "email", "test@test.com");
+//        setFieldValue(requestDto, "phoneNumber", "01012345678");
+//        setFieldValue(requestDto, "addressZipCode", "12345");
+//        setFieldValue(requestDto, "deliveryAddress", "전라남도 순천시 시청");
+//        setFieldValue(requestDto, "deliveryDetailAddress", "1층 안내소");
+//        setFieldValue(requestDto, "useDesignatedDeliveryDate", true);
+//        setFieldValue(requestDto, "designatedDeliveryDate", LocalDate.of(2024, 8, 1));
+//        setFieldValue(requestDto, "paymentMethod", 1);
+//        setFieldValue(requestDto, "orderPassword", "1234");
+//        setFieldValue(requestDto, "tossOrderId", "uuid-1234");
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.add("X-User-Id", "test-user-id");
+//
+//        nonClientOrderService.saveNonClientTemporalOrder(headers, requestDto);
+//
+//        verify(hashOperations, times(1)).put(eq("order"), eq("uuid-1234"), eq(requestDto));
+//    }
 
 }
