@@ -19,8 +19,8 @@ public interface ClientOrderService {
     void refundOrder(HttpHeaders headers, long orderId);
     void refundOrderRequest(HttpHeaders headers, long orderId);
     String getOrderStatus(HttpHeaders headers, long orderId);
-    List<ProductOrderDetailResponseDto> getProductOrderDetailList(HttpHeaders headers, Long orderId);
-    ProductOrderDetailResponseDto getProductOrderDetail(HttpHeaders headers, Long orderId, Long productOrderDetailId);
+    List<ProductOrderDetailResponseDto> getProductOrderDetailResponseDtoList(HttpHeaders headers, Long orderId);
+    ProductOrderDetailResponseDto getProductOrderDetailResponseDto(HttpHeaders headers, Long orderId, Long productOrderDetailId);
     ProductOrderDetailOptionResponseDto getProductOrderDetailOptionResponseDto(HttpHeaders headers, long orderId, long detailId);
 
 }
