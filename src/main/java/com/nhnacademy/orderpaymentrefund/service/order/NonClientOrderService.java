@@ -17,28 +17,6 @@ import org.springframework.http.HttpHeaders;
 
 public interface NonClientOrderService {
 
-    /**
-     * tryCreateOrder : 주문 생성을 위한 메서드. preprocessing(), createOrder(), postprocessing()이 호출됨.
-     * @param requestDto 비회원 주문을 생성하기 위한 요청 dto
-     **/
-    Long tryCreateOrder(HttpHeaders headers, NonClientOrderForm requestDto);
-
-    /**
-     * preprocessing : 주문 생성 전 '전처리'를 위한 메서드
-     **/
-    void preprocessing();
-
-    /**
-     * postprocessing : 주문 생성 전 '전처리'를 위한 메서드
-     **/
-    void postprocessing();
-
-    /**
-     * createOrder : 주문생성 메서드
-     * @param requestDto 주문 생성에 필요한 데이가 담긴 요청 Dto
-     **/
-    Long createOrder(NonClientOrderForm requestDto);
-
     void saveNonClientTemporalOrder(HttpHeaders headers, NonClientOrderForm requestDto);
 
     NonClientOrderForm getNonClientTemporalOrder(HttpHeaders headers, String tossOrderId);

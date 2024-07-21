@@ -1,6 +1,9 @@
 package com.nhnacademy.orderpaymentrefund.order.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -14,18 +17,24 @@ import com.nhnacademy.orderpaymentrefund.config.SecurityConfig;
 import com.nhnacademy.orderpaymentrefund.controller.order.OrderController;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.InvalidOrderChangeAttempt;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -38,10 +47,6 @@ class OrderControllerTest {
 
     @MockBean
     private OrderService orderService;
-
-    @BeforeEach
-    void setup() {
-    }
 
     @Test
     @DisplayName("토스 결제 요청을 위한 데이터 조회 성공")
@@ -75,11 +80,10 @@ class OrderControllerTest {
 
         doThrow(new OrderNotFoundException()).when(
             orderService).getPaymentOrderShowRequestDto(any(HttpHeaders.class),
-                any(HttpServletRequest.class), eq(tossOrderId));
+            any(HttpServletRequest.class), eq(tossOrderId));
 
         mockMvc.perform(
             get("/api/order/{tossOrderId}/payment-request", tossOrderId)
-                .header("X-User-Id", 181)
         ).andExpect(status().isNotFound());
 
     }
@@ -106,7 +110,6 @@ class OrderControllerTest {
 
         mockMvc.perform(
             get("/api/order/{tossOrderId}/approve-request", tossOrderId)
-                .header("X-User-Id", 181)
         ).andExpect(status().isOk());
 
 
@@ -118,19 +121,18 @@ class OrderControllerTest {
 
         String tossOrderId = "uuid-1234";
 
-//        doThrow(orderService.getPaymentOrderApproveRequestDto(any(HttpHeaders.class),
-//            any(HttpServletRequest.class), eq(tossOrderId))).thenReturn(resDto);
+        doThrow(new OrderNotFoundException()).when(orderService)
+            .getPaymentOrderApproveRequestDto(any(HttpHeaders.class),
+                any(HttpServletRequest.class), eq(tossOrderId));
 
         mockMvc.perform(
             get("/api/order/{tossOrderId}/approve-request", tossOrderId)
-                .header("X-User-Id", 181)
-        ).andExpect(status().isOk());
-
+        ).andExpect(status().isNotFound());
 
     }
 
     @Test
-    @DisplayName("주문상태 실패 테스트")
+    @DisplayName("주문 상태변경 실패 테스트")
     void updateOrderStatusFailTest() throws Exception {
         long orderId = 1L;
         String status = "올바르지 않은 주문 상태 변경";
@@ -139,13 +141,12 @@ class OrderControllerTest {
             .changeOrderStatus(orderId, status);
 
         mockMvc.perform(put("/api/order/{orderId}", orderId)
-                .param("status", status)
-                .header("X-User-Id", 181))
+                .param("status", status))
             .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("주문상태 성공 테스트")
+    @DisplayName("주문 상태변경 성공 테스트")
     void updateOrderStatusSuccessTest() throws Exception {
 
         long orderId = 1L;
@@ -154,10 +155,83 @@ class OrderControllerTest {
         doNothing().when(orderService).changeOrderStatus(orderId, status);
 
         mockMvc.perform(put("/api/order/{orderId}", orderId)
-                .param("status", status)
-                .header("X-User-Id", 181))
+                .param("status", status))
             .andExpect(status().isOk())
             .andExpect(content().string("주문 상태가 변경되었습니다."));
+
+    }
+
+    @Test
+    @DisplayName("주문 정보 페이지 조회 테스트")
+    void getOrderPageSuccessTest() throws Exception {
+
+        Page<OrderResponseDto> orderPage = new PageImpl<>(
+            Collections.singletonList(new OrderResponseDto()));
+        when(orderService.getAllOrderList(anyInt(), anyInt(), anyString(), anyString())).thenReturn(
+            orderPage);
+
+        mockMvc.perform(
+                get("/api/order/all")
+                    .param("pageSize", "10")
+                    .param("pageNo", "10")
+                    .param("sortBy", "current")
+                    .param("sortDir", "asc"))
+            .andExpect(status().isOk());
+
+    }
+
+    @Test
+    @DisplayName("주문한 상품 상세 조회 테스트")
+    void getOrderProductDetailResponseDtoListTest() throws Exception {
+
+        List<ProductOrderDetailResponseDto> productOrderDetailResponseDtoList = new ArrayList<>();
+        long orderId = 1L;
+
+        when(orderService.getProductOrderDetailList(anyLong())).thenReturn(
+            productOrderDetailResponseDtoList);
+
+        mockMvc.perform(
+                get("/api/order/{orderId}/detail", orderId))
+            .andExpect(status().isOk());
+
+
+    }
+
+    @Test
+    @DisplayName("주문한 상품 상세 조회 테스트 - 주문상품 상세 아이디로 조회")
+    void getOrderProductDetailResponseDtoByProductOrderDetailIdTest() throws Exception {
+
+        ProductOrderDetailResponseDto productOrderDetailResponseDto = new ProductOrderDetailResponseDto();
+        long orderId = 1L;
+        long productOrderDetailId = 1L;
+
+        when(orderService.getProductOrderDetail(anyLong(), anyLong())).thenReturn(
+            productOrderDetailResponseDto);
+
+        mockMvc.perform(
+                get("/api/order/{orderId}/detail/{productOrderDetailId}", orderId,
+                    productOrderDetailId))
+            .andExpect(status().isOk());
+
+    }
+
+    @Test
+    @DisplayName("주문한 상품의 옵션상품 상세 조회 테스트 - 주문 상품 상세 아이디로 조회")
+    void productOrderDetailResponseDtoTest() throws Exception {
+
+        ProductOrderDetailOptionResponseDto productOrderDetailOptionResponseDto = new ProductOrderDetailOptionResponseDto();
+
+        long orderId = 1L;
+        long productOrderDetailId = 1L;
+
+        when(orderService.getProductOrderDetailOptionResponseDto(anyLong(), anyLong())).thenReturn(
+            productOrderDetailOptionResponseDto);
+
+        mockMvc.perform(
+                get("/api/order/{orderId}/detail/{productOrderDetailId}/option", orderId,
+                    productOrderDetailId)
+                    .header("X-User-Id", 181))
+            .andExpect(status().isOk());
 
     }
 

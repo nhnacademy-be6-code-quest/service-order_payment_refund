@@ -141,6 +141,10 @@ public class OrderServiceImpl implements OrderService {
         ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
             ClientOrderCreateForm.class);
 
+        if (clientOrderCreateForm == null) {
+            throw new OrderNotFoundException();
+        }
+
         discountAmountByCoupon = clientOrderCreateForm.getCouponDiscountAmount();
         discountAmountByPoint = clientOrderCreateForm.getUsedPointDiscountAmount();
         orderTotalAmount = clientOrderCreateForm.getOrderTotalAmount();

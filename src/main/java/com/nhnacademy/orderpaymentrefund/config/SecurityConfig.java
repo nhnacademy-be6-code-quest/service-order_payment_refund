@@ -3,6 +3,7 @@ package com.nhnacademy.orderpaymentrefund.config;
 import com.nhnacademy.orderpaymentrefund.filter.HeaderFilter;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,18 +30,18 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .addFilterBefore(new HeaderFilter(List.of(
-//                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.GET.name(), List.of()),
-//                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.POST.name(), List.of()),
-//                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.PUT.name(), List.of()),
-//                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.DELETE.name(), List.of()),
-//                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.GET.name(), List.of()),
-//                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.POST.name(), List.of()),
-//                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.PUT.name(), List.of()),
-//                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.DELETE.name(), List.of()),
-//                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.GET.name(), List.of()),
-//                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.POST.name(), List.of()),
-//                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.PUT.name(), List.of()),
-                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.DELETE.name(), List.of())
+                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.GET.name(), Collections.emptyList()),
+                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.POST.name(), Collections.emptyList()),
+                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.PUT.name(), Collections.emptyList()),
+                new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.DELETE.name(), Collections.emptyList()),
+                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.GET.name(), Collections.emptyList()),
+                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.POST.name(), Collections.emptyList()),
+                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.PUT.name(), Collections.emptyList()),
+                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.DELETE.name(), Collections.emptyList()),
+                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.GET.name(), Collections.emptyList()),
+                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.POST.name(), Collections.emptyList()),
+                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.PUT.name(), Collections.emptyList()),
+                new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.DELETE.name(), Collections.emptyList())
             )), UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(req ->
                 req.anyRequest().permitAll()
