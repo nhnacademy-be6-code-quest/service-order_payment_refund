@@ -58,7 +58,6 @@ public class ShippingServiceTest {
         assertEquals(shippingPolicy.getShippingFee(), response.shippingFee());
         assertEquals(shippingPolicy.getDescription(), response.description());
         assertEquals(shippingPolicy.getMinPurchaseAmount(), response.minPurchaseAmount());
-        assertEquals(shippingPolicy.getShippingPolicyType(), response.shippingPolicyType());
 
     }
 

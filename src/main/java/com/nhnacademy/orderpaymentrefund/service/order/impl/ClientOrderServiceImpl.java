@@ -1,6 +1,5 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
-import com.nhnacademy.orderpaymentrefund.client.TestOtherService;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ClientOrderConverterImpl;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverter;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
@@ -22,6 +21,10 @@ import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOpti
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,9 +34,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @Slf4j
@@ -75,68 +75,86 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     @Override
     public Page<ClientOrderGetResponseDto> getOrders(HttpHeaders headers, int pageSize, int pageNo, String sortBy, String sortDir) {
-
         long clientId = getClientId(headers);
+        Sort sort = getSortOrder(sortBy, sortDir);
+        Page<Order> orderPage = fetchOrders(clientId, pageSize, pageNo, sort);
 
-        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ?
-                Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-
-        Page<Order> orderPage = orderRepository.findByClientId(clientId, PageRequest.of(pageNo, pageSize, sort));
-
-        List<ClientOrderGetResponseDto> responseDtoList = new ArrayList<>();
-
-        for(Order order : orderPage.getContent()){
-
-            if(!order.getClientId().equals(clientId)) throw new WrongClientAccessToOrder();
-
-            ClientOrderGetResponseDto clientOrderGetResponseDto = ClientOrderGetResponseDto.builder()
-                    .orderId(order.getOrderId())
-                    .clientId(order.getClientId())
-                    .couponId(order.getCouponId())
-                    .tossOrderId(order.getTossOrderId())
-                    .orderDatetime(order.getOrderDatetime().toString().split("T")[0])
-                    .orderStatus(order.getOrderStatus().kor)
-                    .productTotalAmount(order.getProductTotalAmount())
-                    .shippingFee(order.getShippingFee())
-                    .orderTotalAmount(order.getOrderTotalAmount())
-                    .designatedDeliveryDate(order.getDesignatedDeliveryDate() == null ? null : order.getDesignatedDeliveryDate().toString())
-                    .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
-                    .phoneNumber(order.getPhoneNumber())
-                    .deliveryAddress(order.getDeliveryAddress())
-                    .discountAmountByCoupon(order.getDiscountAmountByCoupon())
-                    .discountAmountByPoint(order.getDiscountAmountByPoint())
-                    .accumulatedPoint(order.getAccumulatedPoint())
-                    .build();
-
-            List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(order);
-
-            for(ProductOrderDetail productOrderDetail : orderDetailList){
-
-                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
-
-                ClientOrderGetResponseDto.ClientProductOrderDetailListItem clientProductOrderDetailListItem =
-                        ClientOrderGetResponseDto.ClientProductOrderDetailListItem.builder()
-                                .productOrderDetailId(productOrderDetail.getProductOrderDetailId())
-                                .productId(productOrderDetail.getProductId())
-                                .productName(productOrderDetail.getProductName())
-                                .productQuantity(productOrderDetail.getQuantity())
-                                .productSinglePrice(productOrderDetail.getPricePerProduct())
-                                .optionProductId(productOrderDetailOption == null ? null : productOrderDetailOption.getProductId())
-                                .optionProductName(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductName())
-                                .optionProductQuantity(productOrderDetailOption == null ? null : productOrderDetailOption.getQuantity())
-                                .optionProductSinglePrice(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductPrice())
-                                .build();
-
-                clientOrderGetResponseDto.addClientProductOrderDetailListItem(clientProductOrderDetailListItem);
-
-            }
-
-            responseDtoList.add(clientOrderGetResponseDto);
-
-        }
+        List<ClientOrderGetResponseDto> responseDtoList = orderPage.getContent().stream()
+            .filter(order -> validateOrderClient(order, clientId))
+            .map(order -> mapToClientOrderGetResponseDto(order))
+            .collect(Collectors.toList());
 
         return new PageImpl<>(responseDtoList, PageRequest.of(pageNo, pageSize, sort), orderPage.getTotalElements());
+    }
 
+    private Sort getSortOrder(String sortBy, String sortDir) {
+        return sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
+            ? Sort.by(sortBy).ascending()
+            : Sort.by(sortBy).descending();
+    }
+
+    private Page<Order> fetchOrders(long clientId, int pageSize, int pageNo, Sort sort) {
+        return orderRepository.findByClientId(clientId, PageRequest.of(pageNo, pageSize, sort));
+    }
+
+    private boolean validateOrderClient(Order order, long clientId) {
+        if (!order.getClientId().equals(clientId)) {
+            throw new WrongClientAccessToOrder();
+        }
+        return true;
+    }
+
+    private ClientOrderGetResponseDto mapToClientOrderGetResponseDto(Order order) {
+        ClientOrderGetResponseDto dto = ClientOrderGetResponseDto.builder()
+            .orderId(order.getOrderId())
+            .clientId(order.getClientId())
+            .couponId(order.getCouponId())
+            .tossOrderId(order.getTossOrderId())
+            .orderDatetime(String.valueOf(order.getOrderDatetime()))
+            .orderStatus(order.getOrderStatus().kor)
+            .productTotalAmount(order.getProductTotalAmount())
+            .shippingFee(order.getShippingFee())
+            .orderTotalAmount(order.getOrderTotalAmount())
+            .designatedDeliveryDate(formatDate(order.getDesignatedDeliveryDate()))
+            .deliveryStartDate(formatDate(order.getDeliveryStartDate()))
+            .phoneNumber(order.getPhoneNumber())
+            .deliveryAddress(order.getDeliveryAddress())
+            .discountAmountByCoupon(order.getDiscountAmountByCoupon())
+            .discountAmountByPoint(order.getDiscountAmountByPoint())
+            .accumulatedPoint(order.getAccumulatedPoint())
+            .build();
+
+        List<ClientOrderGetResponseDto.ClientProductOrderDetailListItem> detailListItems = getOrderDetails(order);
+        detailListItems.forEach(dto::addClientProductOrderDetailListItem);
+
+        return dto;
+    }
+
+    private String formatDate(LocalDate date) {
+        return date == null ? null : date.toString();
+    }
+
+    private List<ClientOrderGetResponseDto.ClientProductOrderDetailListItem> getOrderDetails(Order order) {
+        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(order);
+        return orderDetailList.stream()
+            .map(this::mapToClientProductOrderDetailListItem)
+            .toList();
+    }
+
+    private ClientOrderGetResponseDto.ClientProductOrderDetailListItem mapToClientProductOrderDetailListItem(ProductOrderDetail productOrderDetail) {
+        ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+
+        return ClientOrderGetResponseDto.ClientProductOrderDetailListItem.builder()
+            .productOrderDetailId(productOrderDetail.getProductOrderDetailId())
+            .productId(productOrderDetail.getProductId())
+            .productName(productOrderDetail.getProductName())
+            .productQuantity(productOrderDetail.getQuantity())
+            .productSinglePrice(productOrderDetail.getPricePerProduct())
+            .optionProductId(option == null ? null : option.getProductId())
+            .optionProductName(option == null ? null : option.getOptionProductName())
+            .optionProductQuantity(option == null ? null : option.getQuantity())
+            .optionProductSinglePrice(option == null ? null : option.getOptionProductPrice())
+            .build();
     }
 
     @Override

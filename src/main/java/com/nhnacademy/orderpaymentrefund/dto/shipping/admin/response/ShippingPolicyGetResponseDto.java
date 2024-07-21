@@ -1,6 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.dto.shipping.admin.response;
 
-import com.nhnacademy.orderpaymentrefundx.domain.shipping.ShippingPolicyType;
+import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicyType;
 import lombok.Builder;
 
 @Builder

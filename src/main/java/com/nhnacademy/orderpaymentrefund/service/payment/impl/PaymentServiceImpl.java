@@ -19,7 +19,6 @@ import com.nhnacademy.orderpaymentrefund.dto.payment.request.UserUpdateGradeRequ
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.point.PointUsagePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.CartCheckoutRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.InventoryDecreaseRequestDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
@@ -29,7 +28,6 @@ import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOpti
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
-import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Base64;
