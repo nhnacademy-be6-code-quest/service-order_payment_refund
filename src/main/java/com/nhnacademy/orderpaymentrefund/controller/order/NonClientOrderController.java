@@ -55,28 +55,16 @@ public class NonClientOrderController {
         return ResponseEntity.ok().body(nonClientOrderService.findNonClientOrderId(headers, findNonClientOrderIdRequestDto, PageRequest.of(pageNo, pageSize, sort)));
     }
 
-    @GetMapping("/find-password")
+    @GetMapping("/api/non-client/orders/find-password")
     public ResponseEntity<String> findNonClientOrderPassword(@RequestHeader HttpHeaders headers,
                                                              FindNonClientOrderPasswordRequestDto findNonClientOrderPasswordRequestDto){
         return ResponseEntity.ok().body(nonClientOrderService.findNonClientOrderPassword(headers, findNonClientOrderPasswordRequestDto));
     }
 
-    @PutMapping("/{orderId}/payment-complete")
+    @PutMapping("/api/non-client/orders/{orderId}/payment-complete")
     public ResponseEntity<String> paymentCompleteOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
         nonClientOrderService.paymentCompleteOrder(headers, orderId);
         return ResponseEntity.ok("주문 결제완료 되었습니다.");
-    }
-
-    @PutMapping("/{orderId}/cancel")
-    public ResponseEntity<String> cancelOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
-        nonClientOrderService.cancelOrder(headers, orderId);
-        return ResponseEntity.ok("주문 취소 상태로 변경되었습니다.");
-    }
-
-    @PutMapping("/{orderId}/refund")
-    public ResponseEntity<String> refundOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
-        nonClientOrderService.refundOrder(headers, orderId);
-        return ResponseEntity.ok("반품 상태로 변경되었습니다.");
     }
 
 }
