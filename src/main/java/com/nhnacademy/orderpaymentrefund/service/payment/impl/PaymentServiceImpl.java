@@ -15,6 +15,7 @@ import com.nhnacademy.orderpaymentrefund.dto.message.PointUsagePaymentMessageDto
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
+import com.nhnacademy.orderpaymentrefund.dto.payment.request.UserUpdateGradeRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
@@ -95,8 +96,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     // Order Enum Type -> String, 배송 상태 -> tinyInt
     @Override
-    public void savePayment(HttpHeaders headers, TossPaymentsResponseDto tossPaymentsResponseDto,
-        HttpServletResponse response) {
+    public void savePayment(HttpHeaders headers, TossPaymentsResponseDto tossPaymentsResponseDto) {
 
         Long clientId = getClientId(headers);
 
@@ -145,11 +145,7 @@ public class PaymentServiceImpl implements PaymentService {
             paymentRepository.save(payment);
 
             // 회원 등급변경, 포인트 사용, 쿠폰 사용, 재고처리, 장바구니 비우기
-            ClientUpdateGradeRequestDto clientUpdateGradeRequestDto = ClientUpdateGradeRequestDto.builder()
-                .clientId(clientId)
-                .payment(getPaymentRecordOfClient(clientId).getPaymentGradeValue())
-                .build();
-            clientServiceFeignClient.updateClientGrade(clientUpdateGradeRequestDto);
+
 
             // 장바구니 비우기 위한 요청 dto
             CartCheckoutRequestDto cartCheckoutRequestDto = CartCheckoutRequestDto.builder()
@@ -253,7 +249,14 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
     }
-
+    @Override
+    public void updateUserGrade(UserUpdateGradeRequestDto userUpdateGradeRequestDto){
+        ClientUpdateGradeRequestDto clientUpdateGradeRequestDto = ClientUpdateGradeRequestDto.builder()
+            .clientId(userUpdateGradeRequestDto.getClientId())
+            .payment(getPaymentRecordOfClient(userUpdateGradeRequestDto.getClientId()).getPaymentGradeValue())
+            .build();
+        clientServiceFeignClient.updateClientGrade(clientUpdateGradeRequestDto);
+    }
     @Override
     public PaymentGradeResponseDto getPaymentRecordOfClient(Long clientId) {
         Long totalOptionPriceForLastThreeMonth = orderRepository.getTotalOptionPriceForLastThreeMonths(

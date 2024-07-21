@@ -1,46 +1,106 @@
 package com.nhnacademy.orderpaymentrefund.controller.payment;
 
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
+import com.nhnacademy.orderpaymentrefund.dto.payment.request.UserUpdateGradeRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
-import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
- * 결제 정보를 저장하고, 조회하는 컨트롤러입니다. 결제 정보는 수정되거나 삭제되지 않습니다.
+ * 결제 정보를 저장하는 컨트롤러 인터페이스입니다. 결제 정보는 수정되거나 삭제되지 않습니다.
  *
  * @author 김채호
  * @version 1.0
  */
-@RestController
-@RequiredArgsConstructor
-public class PaymentController {
+@Tag(name = "Payment", description = "결제 관련 API")
+public interface PaymentController {
 
-    private final PaymentService paymentService;
-
+    @Operation(
+        summary = "결재 승인",
+        description = "Toss - 결재 승인",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "결재 정보"
+            )
+        }
+    )
     @PostMapping("/api/order/payment/approve")
-    public TossPaymentsResponseDto approvePayment(@RequestBody TossApprovePaymentRequest tossApprovePaymentRequest) throws ParseException {
-        return paymentService.approvePayment(tossApprovePaymentRequest);
-    }
+    TossPaymentsResponseDto approvePayment(
+        @Parameter(description = "결재승인 요청에 필요한 정보")
+        @RequestBody TossApprovePaymentRequest tossApprovePaymentRequest)
+        throws ParseException;
 
+    @Operation(
+        summary = "결재 저장",
+        description = "Payment - 사용자 결재정보 저장",
+        responses = {
+            @ApiResponse(
+                responseCode = "200"
+            )
+        }
+    )
     @PostMapping("/api/order/payment/save")
-    public void savePayment(@RequestBody TossPaymentsResponseDto tossPaymentsResponseDto, @RequestHeader HttpHeaders headers, HttpServletResponse response) {
-        paymentService.savePayment(headers, tossPaymentsResponseDto, response);
-    }
+    void savePayment(
+        @Parameter(description = "결재정보 저장 정보")
+        @RequestBody TossPaymentsResponseDto tossPaymentsResponseDto,
+        @Parameter(description = "회원 정보")
+        @RequestHeader HttpHeaders headers);
 
+    @Operation(
+        summary = "3개월 결재금액",
+        description = "Client - 3개월 순수결재금액 총합",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "3개월 순수 결재금액"
+            )
+        }
+    )
     @GetMapping("/api/payment/grade/{clientId}")
-    public PaymentGradeResponseDto getPaymentRecordOfClient(@PathVariable Long clientId) {
-        return paymentService.getPaymentRecordOfClient(clientId);
-    }
+    PaymentGradeResponseDto getPaymentRecordOfClient(
+        @Parameter(description = "회원 아이디")
+        @PathVariable Long clientId);
 
+    @Operation(
+        summary = "결재 후처리 정보",
+        description = "Payment - 결재 후 처리를 위한 정보",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "결재 후처리 정보"
+            )
+        }
+    )
     @GetMapping("/api/order/payment/post-process")
-    public PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(@RequestParam("tossOrderId") String tossOrderId){
-        return paymentService.getPostProcessRequiredPaymentResponseDto(tossOrderId);
-    }
+    PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(
+        @Parameter(description = "결재주문아이디")
+        @RequestParam("tossOrderId") String tossOrderId);
 
+    @Operation(
+        summary = "결재 후처리",
+        description = "Payment - 결재 후 회원 등급변경",
+        responses = {
+            @ApiResponse(
+                responseCode = "200"
+            )
+        }
+    )
+    @PostMapping("/api/order/update/user")
+    void updateUser(
+        @Parameter(description = "등급 변경을위한 정보")
+        @RequestBody UserUpdateGradeRequestDto userUpdateGradeRequestDto);
 }
