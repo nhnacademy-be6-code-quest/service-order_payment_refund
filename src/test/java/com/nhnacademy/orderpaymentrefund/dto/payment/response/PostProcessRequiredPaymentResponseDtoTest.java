@@ -13,7 +13,7 @@ class PostProcessRequiredPaymentResponseDtoTest {
         assertThat(dto).isNotNull();
         assertThat(dto.getOrderId()).isNull();
         assertThat(dto.getClientId()).isNull();
-        assertThat(dto.getAmount()).isEqualTo(0);
+        assertThat(dto.getAmount()).isZero();
         assertThat(dto.getPaymentMethodName()).isNull();
         assertThat(dto.getProductIdList()).isNull();
     }

@@ -80,6 +80,8 @@ public class RefundService {
     @Value("${rabbit.inventory.increase.routing.key}")
     private String increaseKey;
 
+    private static final String NO_ORDER = "주문이 존재하지 않습니다.";
+
     @PostConstruct
     public void init() {
         if (tossSecretKey.isEmpty()) {
@@ -90,7 +92,7 @@ public class RefundService {
     public PaymentCancelResponseDto findOrderStatusByOrderId(long orderId) {
 
         Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new OrderNotFoundException("주문을 찾을수 없습니다."));
+            .orElseThrow(() -> new OrderNotFoundException(NO_ORDER));
 
         if (order.getOrderStatus() == OrderStatus.PAYED) {
             Payment payment = paymentRepository.findByOrder_OrderId(orderId)
@@ -104,9 +106,9 @@ public class RefundService {
 
     public RefundSuccessResponseDto saveRefund(RefundRequestDto requestDto) {
         Order order = orderRepository.findById(requestDto.getOrderId())
-            .orElseThrow(() -> new OrderNotFoundException("주문이 존재하지 않습니다."));
+            .orElseThrow(() -> new OrderNotFoundException(NO_ORDER));
         long optionProductFee = 0L;
-        long refundAmount = 0L;
+        long refundAmount;
         List<ProductOrderDetail> productOrderDetails = productOrderDetailRepository.findAllByOrder(
             order);
         for (ProductOrderDetail productOrderDetail : productOrderDetails) {
@@ -137,7 +139,7 @@ public class RefundService {
     }
     public void saveCancel(PaymentCancelRequestDto requestDto) {
         Order order = orderRepository.findById(requestDto.getOrderId())
-            .orElseThrow(() -> new OrderNotFoundException("주문을 찾을 수 없습니다."));
+            .orElseThrow(() -> new OrderNotFoundException(NO_ORDER));
         List<InventoryIncreaseRequestDto> inventoryIncreaseRequestDtos = new ArrayList<>();
 
         if (requestDto.getOrderStatus().equals(OrderStatus.PAYED.toString())) {
@@ -189,7 +191,7 @@ public class RefundService {
     public PaymentRefundResponseDto findRefundData(long orderId) {
         PaymentRefundResponseDto dto = new PaymentRefundResponseDto();
         Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new OrderNotFoundException("주문을 찾을 수 없습니다."));
+            .orElseThrow(() -> new OrderNotFoundException(NO_ORDER));
         if (order.getOrderStatus() == OrderStatus.DELIVERING
             || order.getOrderStatus() == OrderStatus.DELIVERY_COMPLETE) {
             Payment payment = paymentRepository.findByOrder_OrderId(orderId)

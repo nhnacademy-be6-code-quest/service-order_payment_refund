@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 class NonClientOrderGetResponseDtoTest {
     @Test
-    public void testNonClientOrderGetResponseDtoBuilder() {
+    void testNonClientOrderGetResponseDtoBuilder() {
         // Given
         Long orderId = 1L;
         String tossOrderId = "toss-1234";
@@ -92,7 +92,7 @@ class NonClientOrderGetResponseDtoTest {
     }
 
     @Test
-    public void testNonClientOrderGetResponseDtoNoArgsConstructor() {
+    void testNonClientOrderGetResponseDtoNoArgsConstructor() {
         // When
         NonClientOrderGetResponseDto dto = new NonClientOrderGetResponseDto();
 
@@ -115,7 +115,7 @@ class NonClientOrderGetResponseDtoTest {
     }
 
     @Test
-    public void testNonClientOrderGetResponseDtoAllArgsConstructor() {
+    void testNonClientOrderGetResponseDtoAllArgsConstructor() {
         // Given
         Long orderId = 1L;
         String tossOrderId = "toss-1234";
@@ -157,7 +157,7 @@ class NonClientOrderGetResponseDtoTest {
     }
 
     @Test
-    public void testNonClientProductOrderDetailListItemBuilder() {
+    void testNonClientProductOrderDetailListItemBuilder() {
         // Given
         Long productId = 1L;
         String productName = "Product Name";

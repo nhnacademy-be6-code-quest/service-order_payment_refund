@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 class FindNonClientOrderPasswordRequestDtoTest {
     @Test
-    public void testFindNonClientOrderPasswordRequestDto() {
+    void testFindNonClientOrderPasswordRequestDto() {
         // Given
         long orderId = 123456L;
         String ordererName = "홍길동";

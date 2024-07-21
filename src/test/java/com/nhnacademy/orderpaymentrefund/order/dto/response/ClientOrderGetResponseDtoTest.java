@@ -68,7 +68,7 @@ class ClientOrderGetResponseDtoTest {
     }
 
     @Test
-    public void testAddClientProductOrderDetailListItem() {
+    void testAddClientProductOrderDetailListItem() {
         // Given
         ClientOrderGetResponseDto.ClientProductOrderDetailListItem item1 = ClientOrderGetResponseDto.ClientProductOrderDetailListItem.builder()
             .productOrderDetailId(1L)
@@ -94,8 +94,6 @@ class ClientOrderGetResponseDtoTest {
 
         // Then
         List<ClientProductOrderDetailListItem> items = dto.getClientProductOrderDetailList();
-        assertThat(items).isNotNull();
-        assertThat(items).hasSize(2);
-        assertThat(items).containsExactly(item1, item2);
+        assertThat(items).isNotNull().hasSize(2).containsExactly(item1, item2);
     }
 }

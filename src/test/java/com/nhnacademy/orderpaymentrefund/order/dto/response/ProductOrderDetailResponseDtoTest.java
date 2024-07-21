@@ -5,10 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import org.junit.jupiter.api.Test;
 
-public class ProductOrderDetailResponseDtoTest {
+class ProductOrderDetailResponseDtoTest {
 
     @Test
-    public void testProductOrderDetailResponseDtoBuilder() {
+    void testProductOrderDetailResponseDtoBuilder() {
         // Given
         Long productOrderDetailId = 1L;
         Long orderId = 1L;
@@ -37,7 +37,7 @@ public class ProductOrderDetailResponseDtoTest {
     }
 
     @Test
-    public void testProductOrderDetailResponseDtoNoArgsConstructor() {
+    void testProductOrderDetailResponseDtoNoArgsConstructor() {
         // When
         ProductOrderDetailResponseDto dto = new ProductOrderDetailResponseDto();
 
@@ -51,7 +51,7 @@ public class ProductOrderDetailResponseDtoTest {
     }
 
     @Test
-    public void testProductOrderDetailResponseDtoAllArgsConstructor() {
+    void testProductOrderDetailResponseDtoAllArgsConstructor() {
         // Given
         Long productOrderDetailId = 1L;
         Long orderId = 1L;

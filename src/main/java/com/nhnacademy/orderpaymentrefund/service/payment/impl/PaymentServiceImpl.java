@@ -56,7 +56,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderRepository orderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate<String, ?> redisTemplate;
     private final ObjectMapper objectMapper;
     private final TossPaymentsClient tossPaymentsClient;
     private final String tossSecretKey;
@@ -92,6 +92,8 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${rabbit.use.coupon.roting.key}")
     private String couponUseRoutingKey;
 
+    private static final String ORDER = "order";
+
     // Order Enum Type -> String, 배송 상태 -> tinyInt
     @Override
     public void savePayment(HttpHeaders headers, TossPaymentsResponseDto tossPaymentsResponseDto) {
@@ -100,7 +102,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         if (clientId != null) {
             Object data = redisTemplate.opsForHash()
-                .get("order", tossPaymentsResponseDto.getOrderId());
+                .get(ORDER, tossPaymentsResponseDto.getOrderId());
             ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
                 ClientOrderCreateForm.class);
 
@@ -121,11 +123,11 @@ public class PaymentServiceImpl implements PaymentService {
             orderRepository.save(order);
 
             // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-            clientOrderCreateForm.getOrderDetailDtoItemList().forEach((item) -> {
+            clientOrderCreateForm.getOrderDetailDtoItemList().forEach(item -> {
                 ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(
                     item, order);
                 productOrderDetailRepository.save(productOrderDetail);
-                if (item.getUsePackaging()) {
+                if (Boolean.TRUE.equals(item.getUsePackaging())) {
                     ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(
                         item, productOrderDetail);
                     productOrderDetailOptionRepository.save(productOrderDetailOption);
@@ -155,7 +157,7 @@ public class PaymentServiceImpl implements PaymentService {
                     orderDetail -> {
                         cartCheckoutRequestDto.addProductId(orderDetail.getProductId());
                         decreaseInfo.put(orderDetail.getProductId(), orderDetail.getQuantity());
-                        if (orderDetail.getUsePackaging()) {
+                        if (Boolean.TRUE.equals(orderDetail.getUsePackaging())) {
                             decreaseInfo.put(orderDetail.getOptionProductId(),
                                 orderDetail.getOptionQuantity());
                         }
@@ -197,12 +199,12 @@ public class PaymentServiceImpl implements PaymentService {
                     paymentCompletedCouponResponseDto);
             }
 
-            redisTemplate.opsForHash().delete("order", clientOrderCreateForm.getTossOrderId());
+            redisTemplate.opsForHash().delete(ORDER, clientOrderCreateForm.getTossOrderId());
 
         } else {
 
             Object data = redisTemplate.opsForHash()
-                .get("order", tossPaymentsResponseDto.getOrderId());
+                .get(ORDER, tossPaymentsResponseDto.getOrderId());
             NonClientOrderForm nonClientOrderForm = objectMapper.convertValue(data,
                 NonClientOrderForm.class);
 
@@ -221,11 +223,11 @@ public class PaymentServiceImpl implements PaymentService {
             orderRepository.save(order);
 
             // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-            nonClientOrderForm.getOrderDetailDtoItemList().forEach((item) -> {
+            nonClientOrderForm.getOrderDetailDtoItemList().forEach(item -> {
                 ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(
                     item, order);
                 productOrderDetailRepository.save(productOrderDetail);
-                if (item.getUsePackaging()) {
+                if (Boolean.TRUE.equals(item.getUsePackaging())) {
                     ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(
                         item, productOrderDetail);
                     productOrderDetailOptionRepository.save(productOrderDetailOption);
@@ -242,7 +244,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             paymentRepository.save(payment);
 
-            redisTemplate.opsForHash().delete("order", nonClientOrderForm.getTossOrderId());
+            redisTemplate.opsForHash().delete(ORDER, nonClientOrderForm.getTossOrderId());
 
         }
 
