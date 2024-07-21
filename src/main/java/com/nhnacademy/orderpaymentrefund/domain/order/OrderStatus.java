@@ -1,6 +1,5 @@
 package com.nhnacademy.orderpaymentrefund.domain.order;
 
-import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicyType;
 import lombok.Getter;
 
 /**

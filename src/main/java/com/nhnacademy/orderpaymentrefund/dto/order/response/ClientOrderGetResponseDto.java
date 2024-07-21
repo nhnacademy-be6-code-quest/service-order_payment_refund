@@ -37,6 +37,7 @@ public class ClientOrderGetResponseDto {
     }
 
     @Builder
+    @SuppressWarnings("java:S107") //be sure this construct
     public ClientOrderGetResponseDto(Long orderId, Long clientId, Long couponId, String tossOrderId, String orderDatetime, String orderStatus, Long productTotalAmount,
                                           Integer shippingFee, Long orderTotalAmount, String designatedDeliveryDate, String deliveryStartDate, String phoneNumber,
                                           String deliveryAddress, Long discountAmountByCoupon, Long discountAmountByPoint, Long accumulatedPoint){

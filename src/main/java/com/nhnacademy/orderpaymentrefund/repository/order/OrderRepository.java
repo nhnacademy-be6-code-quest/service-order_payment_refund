@@ -6,8 +6,6 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdR
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,7 +23,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         "AND o.nonClientOrdererEmail = :#{#req.email}")
     Page<Order> findNonClientOrderIdList(@Param("req") FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, @Param("pageable") Pageable pageable);
 
-    Optional<Order> findByOrderIdAndNonClientOrderPassword(Long orderId, String ordererPassword);
+    Optional<Order> findByOrderIdAndNonClientOrderPassword(Long orderId, String orderPassword);
 
     Page<Order> findByClientId(long clientId, Pageable pageable);
 

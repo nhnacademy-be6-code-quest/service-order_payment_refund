@@ -35,6 +35,7 @@ public class NonClientOrderGetResponseDto {
     }
 
     @Builder
+    @SuppressWarnings("java:S107") //be sure this construct
     public NonClientOrderGetResponseDto(Long orderId, String tossOrderId, String orderDatetime, String orderStatus, Long productTotalAmount,
                                      Integer shippingFee, Long orderTotalAmount, String designatedDeliveryDate, String deliveryStartDate, String phoneNumber,
                                      String deliveryAddress, String nonClientOrderPassword, String nonClientOrdererName, String nonClientOrdererEmail){

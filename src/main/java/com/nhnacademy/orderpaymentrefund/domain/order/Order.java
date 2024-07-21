@@ -118,6 +118,7 @@ public class Order {
      * @param accumulatedPoint 적립 포인트.
      *
      **/
+    @SuppressWarnings("java:S107") // be sure this construct
     @Builder(builderMethodName = "clientOrderBuilder", builderClassName = "clientOrderBuilder")
     public Order(@NotNull Long clientId, @Nullable Long couponId, @NotNull String tossOrderId, @NotNull Long productTotalAmount, @NotNull Integer shippingFee, @Nullable LocalDate designatedDeliveryDate,
                  @NotNull String phoneNumber, @NotNull String deliveryAddress, Long discountAmountByCoupon, Long discountAmountByPoint, Long accumulatedPoint){
@@ -151,6 +152,7 @@ public class Order {
      * @param nonClientOrdererEmail 비회원 주문자 이메일. 추후 조회용으로 사용됨.
      *
      **/
+    @SuppressWarnings("java:S107")// be sure this construct
     @Builder(builderMethodName = "nonClientOrderBuilder", builderClassName = "nonClientOrderBuilder")
     public Order(String tossOrderId, long productTotalAmount, int shippingFee, @Nullable LocalDate designatedDeliveryDate, String phoneNumber,
                  String deliveryAddress, @NotNull String nonClientOrderPassword, @NotNull String nonClientOrdererName, @NotNull String nonClientOrdererEmail){
