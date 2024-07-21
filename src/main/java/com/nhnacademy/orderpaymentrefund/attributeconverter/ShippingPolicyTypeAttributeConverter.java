@@ -1,4 +1,4 @@
-package com.nhnacademy.orderpaymentrefund.attributeConverter;
+package com.nhnacademy.orderpaymentrefund.attributeconverter;
 
 import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicyType;
 import jakarta.persistence.AttributeConverter;
