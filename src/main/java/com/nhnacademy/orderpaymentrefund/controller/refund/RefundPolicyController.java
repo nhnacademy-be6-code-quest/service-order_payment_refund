@@ -4,7 +4,8 @@ import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundPolicyRequestD
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 
-public interface RefundPolicyController {
+public interface
+RefundPolicyController {
 
     @GetMapping("/api/refund/refund-policy")
     List<RefundPolicyRequestDto> findAllRefundPolicyRequestDtoList();

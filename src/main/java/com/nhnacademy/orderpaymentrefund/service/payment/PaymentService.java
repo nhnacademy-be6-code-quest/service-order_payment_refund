@@ -5,7 +5,6 @@ import com.nhnacademy.orderpaymentrefund.dto.payment.request.UserUpdateGradeRequ
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
-import jakarta.servlet.http.HttpServletResponse;
 import org.json.simple.parser.ParseException;
 import org.springframework.http.HttpHeaders;
 
