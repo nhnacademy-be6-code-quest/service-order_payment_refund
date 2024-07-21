@@ -32,9 +32,9 @@ class ProductOrderDetailResponseDtoTest {
         ProductOrderDetailResponseDto dto = ProductOrderDetailResponseDto.builder().build();
 
         assertThat(dto).isNotNull();
-        assertThat(dto.getProductId()).isEqualTo(0L);
-        assertThat(dto.getQuantity()).isEqualTo(0L);
-        assertThat(dto.getPricePerProduct()).isEqualTo(0L);
-        assertThat(dto.getProductCategoryId()).isEqualTo(0L);
+        assertThat(dto.getProductId()).isZero();
+        assertThat(dto.getQuantity()).isZero();
+        assertThat(dto.getPricePerProduct()).isZero();
+        assertThat(dto.getProductCategoryId()).isZero();
     }
 }

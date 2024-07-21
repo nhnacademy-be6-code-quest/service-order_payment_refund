@@ -30,7 +30,7 @@ class PaymentMethodTest {
         PaymentMethod savedPaymentMethod = entityManager.persistFlushFind(paymentMethod);
 
         assertThat(savedPaymentMethod).isNotNull();
-        assertThat(savedPaymentMethod.getPaymentMethodId()).isGreaterThan(0);
+        assertThat(savedPaymentMethod.getPaymentMethodId()).isPositive();
         assertThat(savedPaymentMethod.getPaymentMethodName()).isEqualTo("Credit Card");
     }
 }

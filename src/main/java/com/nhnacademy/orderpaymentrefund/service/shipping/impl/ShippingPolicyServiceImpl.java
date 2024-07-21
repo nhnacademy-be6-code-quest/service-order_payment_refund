@@ -47,13 +47,13 @@ public class ShippingPolicyServiceImpl implements ShippingPolicyService {
 
     @Override
     public List<ShippingPolicyGetResponseDto> getAllShippingPolicies() {
-        return shippingPolicyRepository.findAll().stream().map((shippingPolicy) -> {
-            return ShippingPolicyGetResponseDto.builder()
-                    .description(shippingPolicy.getDescription())
-                    .shippingFee(shippingPolicy.getShippingFee())
-                    .minPurchaseAmount(shippingPolicy.getMinPurchaseAmount())
-                    .shippingPolicyType(shippingPolicy.getShippingPolicyType())
-                    .build();
-        }).toList();
+        return shippingPolicyRepository.findAll().stream()
+            .map(shippingPolicy -> ShippingPolicyGetResponseDto.builder()
+                .description(shippingPolicy.getDescription())
+                .shippingFee(shippingPolicy.getShippingFee())
+                .minPurchaseAmount(shippingPolicy.getMinPurchaseAmount())
+                .shippingPolicyType(shippingPolicy.getShippingPolicyType())
+                .build())
+            .toList();
     }
 }

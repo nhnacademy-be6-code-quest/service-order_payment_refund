@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 class FindNonClientOrderIdInfoResponseDtoTest {
     @Test
-    public void testFindNonClientOrderIdInfoResponseDtoBuilder() {
+    void testFindNonClientOrderIdInfoResponseDtoBuilder() {
 
         long orderId = 12345L;
         LocalDateTime orderDateTime = LocalDateTime.of(2024, 7, 21, 12, 34, 56);
@@ -25,7 +25,7 @@ class FindNonClientOrderIdInfoResponseDtoTest {
     }
 
     @Test
-    public void testFindNonClientOrderIdInfoResponseDtoConstructor() {
+    void testFindNonClientOrderIdInfoResponseDtoConstructor() {
         // Given
         long orderId = 12345L;
         LocalDateTime orderDateTime = LocalDateTime.of(2024, 7, 21, 12, 34, 56);

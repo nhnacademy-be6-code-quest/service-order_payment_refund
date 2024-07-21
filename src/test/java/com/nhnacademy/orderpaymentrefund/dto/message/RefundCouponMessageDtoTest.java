@@ -10,7 +10,7 @@ class RefundCouponMessageDtoTest {
     void testDefaultConstructor() {
         RefundCouponMessageDto dto = new RefundCouponMessageDto();
         assertThat(dto).isNotNull();
-        assertThat(dto.getCouponId()).isEqualTo(0L); // 기본값은 0으로 초기화됩니다.
+        assertThat(dto.getCouponId()).isZero(); // 기본값은 0으로 초기화됩니다.
     }
 
     @Test

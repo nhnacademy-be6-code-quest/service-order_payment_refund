@@ -52,7 +52,7 @@ class TossPaymentsResponseDtoTest {
 
         assertThat(dto).isNotNull();
         assertThat(dto.getOrderName()).isNull();
-        assertThat(dto.getTotalAmount()).isEqualTo(0L);
+        assertThat(dto.getTotalAmount()).isZero();
         assertThat(dto.getMethod()).isNull();
         assertThat(dto.getPaymentKey()).isNull();
         assertThat(dto.getCardNumber()).isNull();
