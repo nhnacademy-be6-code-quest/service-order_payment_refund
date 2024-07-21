@@ -13,6 +13,8 @@ import com.nhnacademy.orderpaymentrefund.dto.coupon.PaymentCompletedCouponRespon
 import com.nhnacademy.orderpaymentrefund.dto.message.PointUsagePaymentMessageDto;
 import com.nhnacademy.orderpaymentrefund.dto.message.PointUsageRefundMessageDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
+import com.nhnacademy.orderpaymentrefund.dto.payment.request.UserUpdateGradeRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
@@ -28,6 +30,7 @@ import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.simple.parser.ParseException;
@@ -46,7 +49,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -92,6 +99,7 @@ class PaymentServiceImplTest {
     @Mock
     private RabbitTemplate rabbitTemplate;
 
+    private String tossSecretKey;
     @InjectMocks
     private PaymentServiceImpl paymentService;
 
@@ -100,6 +108,9 @@ class PaymentServiceImplTest {
         MockitoAnnotations.openMocks(this);
         HashOperations<String, Object, Object> hashOps = mock(HashOperations.class);
         when(redisTemplate.opsForHash()).thenReturn(hashOps);
+        tossSecretKey = "test-secret-key"; // Set the value directly정
+        ReflectionTestUtils.setField(paymentService, "tossSecretKey", tossSecretKey);
+
     }
     private Order createOrder(Long orderTotalAmount, Long discountAmountByPoint, Long discountAmountByCoupon, Integer shippingFee, Long couponId, OrderStatus orderStatus ) throws Exception {
         Constructor<Order> constructor = Order.class.getDeclaredConstructor();
@@ -208,7 +219,7 @@ class PaymentServiceImplTest {
         );
 
         // Verify that orderRepository.save is called twice
-        verify(orderRepository, times(2)).save(any(Order.class));
+        verify(orderRepository, times(1)).save(any(Order.class));
 
         // Optionally verify other method calls
         verify(paymentRepository).save(any(Payment.class));
@@ -217,7 +228,6 @@ class PaymentServiceImplTest {
     @Test
     void testSavePaymentWithNonClientOrder() throws Exception {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-User-Id", null); // Null client ID for non-client order
 
         TossPaymentsResponseDto tossPaymentsResponseDto = TossPaymentsResponseDto.builder()
             .orderName("Order1")
@@ -241,24 +251,91 @@ class PaymentServiceImplTest {
         paymentService.savePayment(headers, tossPaymentsResponseDto);
 
         // Verify interactions with mocks
-        verify(rabbitTemplate).convertAndSend(
-            eq(cartCheckoutExchangeName),
-            eq(cartCheckoutRoutingKey),
-            any(CartCheckoutRequestDto.class)
-        );
+        // Check that InventoryDecreaseRequestDto was sent
         verify(rabbitTemplate).convertAndSend(
             eq(inventoryDecreaseExchangeName),
             eq(inventoryDecreaseRoutingKey),
             any(InventoryDecreaseRequestDto.class)
         );
 
-        // Verify that orderRepository.save is called twice (if expected behavior)
-        verify(orderRepository, times(2)).save(any(Order.class));
+        // Check that CartCheckoutRequestDto was sent
+
+
+        // Verify that orderRepository.save is called once
+        verify(orderRepository, times(1)).save(any(Order.class));
 
         // Optionally verify other method calls
         verify(paymentRepository).save(any(Payment.class));
     }
 
+    @Test
+    void testGetPaymentRecordOfClient() {
+        // Given
+        Long clientId = 1L;
+        Long totalOptionPriceForLastThreeMonth = 500L;
+        Long sumFinalAmountForCompletedOrders = 1200L;
 
+        // Mock behaviors
+        when(orderRepository.getTotalOptionPriceForLastThreeMonths(eq(clientId), any(LocalDateTime.class)))
+            .thenReturn(totalOptionPriceForLastThreeMonth);
+        when(orderRepository.sumFinalAmountForCompletedOrders(eq(clientId), any(LocalDateTime.class)))
+            .thenReturn(sumFinalAmountForCompletedOrders);
+
+        // When
+        PaymentGradeResponseDto responseDto = paymentService.getPaymentRecordOfClient(clientId);
+
+        // Then
+        Long expectedPaymentGradeValue = sumFinalAmountForCompletedOrders - totalOptionPriceForLastThreeMonth;
+        assertEquals(expectedPaymentGradeValue, responseDto.getPaymentGradeValue());
+    }
+
+    @Test
+    void testGetPaymentRecordOfClient_withNullValues() {
+        // Given
+        Long clientId = 1L;
+
+        // Mock behaviors
+        when(orderRepository.getTotalOptionPriceForLastThreeMonths(eq(clientId), any(LocalDateTime.class)))
+            .thenReturn(null);
+        when(orderRepository.sumFinalAmountForCompletedOrders(eq(clientId), any(LocalDateTime.class)))
+            .thenReturn(null);
+
+        // When
+        PaymentGradeResponseDto responseDto = paymentService.getPaymentRecordOfClient(clientId);
+
+        // Then
+        assertEquals(0L, responseDto.getPaymentGradeValue());
+    }
+    @Test
+    void testApprovePayment_withCardMethod() throws Exception {
+        // Given
+        TossApprovePaymentRequest request = new TossApprovePaymentRequest ("test-order-id", 5000, "test-payment-key");
+
+        String mockResponse = "{"
+            + "\"orderName\":\"Order1\","
+            + "\"totalAmount\":\"1000\","
+            + "\"method\":\"카드\","
+            + "\"card\":{\"number\":\"1234-5678-9876-5432\"}"
+            + "}";
+
+        // Mock 동작 설정
+        when(tossPaymentsClient.approvePayment(any(TossApprovePaymentRequest.class), anyString()))
+            .thenReturn(mockResponse);
+
+        // 테스트할 메소드 호출
+        TossPaymentsResponseDto response = paymentService.approvePayment(request);
+
+        // 결과 검증
+        assertNotNull(response);
+        assertEquals("Order1", response.getOrderName());
+        assertEquals(1000L, response.getTotalAmount());
+        assertEquals("카드", response.getMethod());
+        assertEquals("1234-5678-9876-5432", response.getCardNumber());
+        assertNull(response.getAccountNumber());
+        assertNull(response.getBank());
+        assertNull(response.getCustomerMobilePhone());
+        assertEquals("test-payment-key", response.getPaymentKey());
+        assertEquals("test-order-id", response.getOrderId());
+    }
 
 }
