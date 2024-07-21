@@ -1,11 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.domain.shipping;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonToken;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * 배송 정책 상태 ENUM

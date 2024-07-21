@@ -37,6 +37,7 @@ public class NonClientOrderForm {
         this.payAmount = payAmount;
         this.orderedPersonName = orderedPersonName;
         this.email = email;
+        this.phoneNumber = phoneNumber;
         this.addressZipCode = addressZipCode;
         this.deliveryAddress = deliveryAddress;
         this.deliveryDetailAddress = deliveryDetailAddress;

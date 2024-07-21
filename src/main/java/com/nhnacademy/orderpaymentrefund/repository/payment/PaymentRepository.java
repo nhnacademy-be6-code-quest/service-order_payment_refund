@@ -1,10 +1,8 @@
 package com.nhnacademy.orderpaymentrefund.repository.payment;
 
-import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * @author Virtus_Chae
