@@ -56,71 +56,6 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     // orderService(공통)
     private final OrderService orderService;
 
-    // TODO 임의
-    private final TestOtherService testOtherService;
-
-    @Override
-    public Long tryCreateOrder(HttpHeaders headers, ClientOrderCreateForm clientOrderForm) {
-        long clientId = getClientId(headers);
-        preprocessing();
-        Long orderId = createOrder(clientId, clientOrderForm);
-        //tryPay();
-        postprocessing();
-        return orderId;
-    }
-
-    @Override
-    public void preprocessing() {
-        // TODO 구현
-        /*
-        * 1. 재고확인(메인 상품 + 옵션 상품) 물량 확보하기.
-        * 2. 포인트 사용 가능 여부 체크
-        * 3. 쿠폰 유효성 체크
-        * 4. 적립금 유효성 체크
-        * */
-        testOtherService.checkStock(true);
-        testOtherService.checkCouponAvailability(true);
-        testOtherService.checkPointAvailability(true);
-        testOtherService.checkAccumulatePointAvailability(true);
-    }
-
-    @Override
-    public void postprocessing() {
-        // TODO 구현
-        /*
-         * 1. 재고 감소
-         * 2. 포인트 감소
-         * 3. 주문, 결제데이터 저장 (?)
-         * 4. 적립금 부여
-         * 5. 쿠폰 사용 처리
-         * */
-        testOtherService.processDroppingStock(true);
-        testOtherService.processUsedCoupon(true);
-        testOtherService.processUsedPoint(true);
-        testOtherService.processAccumulatePoint(true);
-    }
-
-    @Override
-    public Long createOrder(long clientId, ClientOrderCreateForm requestDto) {
-
-        // 회원 Order 생성 및 저장
-        Order order = clientOrderConverter.dtoToEntity(requestDto, clientId);
-        orderRepository.save(order);
-
-        // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-        requestDto.getOrderDetailDtoItemList().forEach((item) -> {
-            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(item, order);
-            productOrderDetailRepository.save(productOrderDetail);
-            if(item.getUsePackaging()){
-                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(item, productOrderDetail);
-                productOrderDetailOptionRepository.save(productOrderDetailOption);
-            }
-        });
-
-        return order.getOrderId();
-
-    }
-
     @Override
     public void saveClientTemporalOrder(HttpHeaders headers, ClientOrderCreateForm requestDto) {
         String tossOrderId = requestDto.getTossOrderId();
@@ -131,15 +66,9 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     @Override
     public ClientOrderCreateForm getClientTemporalOrder(HttpHeaders headers, String tossOrderId) {
 
-        long clientId = getClientId(headers);
-
         ClientOrderCreateForm clientOrderCreateForm = (ClientOrderCreateForm) redisTemplate.opsForHash().get("order", tossOrderId);
 
         assert clientOrderCreateForm != null;
-
-//        if(clientOrderFormRequestDto.getClientId() != clientId){
-//            throw new WrongClientAccessToOrder("주문 당사자가 보낸 주문 조회 요청이 아닙니다.");
-//        }
 
         return clientOrderCreateForm;
     }

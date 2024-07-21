@@ -10,10 +10,6 @@ import org.springframework.http.HttpHeaders;
 
 
 public interface ClientOrderService {
-    Long tryCreateOrder(HttpHeaders headers, ClientOrderCreateForm clientOrderForm);
-    void preprocessing();
-    void postprocessing();
-    Long createOrder(long clientId, ClientOrderCreateForm clientOrderForm);
     void saveClientTemporalOrder(HttpHeaders headers, ClientOrderCreateForm clientOrderForm);
     ClientOrderCreateForm getClientTemporalOrder(HttpHeaders headers, String tossOrderId);
     Page<ClientOrderGetResponseDto> getOrders(HttpHeaders headers, int pageSize, int pageNo, String sortBy, String sortDir);

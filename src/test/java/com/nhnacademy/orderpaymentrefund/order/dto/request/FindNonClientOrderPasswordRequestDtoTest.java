@@ -23,9 +23,9 @@ class FindNonClientOrderPasswordRequestDtoTest {
             .build();
 
         // Then
-        assertThat(dto.orderId()).isEqualTo(orderId);
-        assertThat(dto.ordererName()).isEqualTo(ordererName);
-        assertThat(dto.phoneNumber()).isEqualTo(phoneNumber);
-        assertThat(dto.email()).isEqualTo(email);
+        assertThat(dto.getOrderId()).isEqualTo(orderId);
+        assertThat(dto.getOrdererName()).isEqualTo(ordererName);
+        assertThat(dto.getPhoneNumber()).isEqualTo(phoneNumber);
+        assertThat(dto.getEmail()).isEqualTo(email);
     }
 }

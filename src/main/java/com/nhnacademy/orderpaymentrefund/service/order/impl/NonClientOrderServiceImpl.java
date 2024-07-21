@@ -78,10 +78,10 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     @Override
     public String findNonClientOrderPassword(HttpHeaders headers, FindNonClientOrderPasswordRequestDto requestDto) {
         checkNonClient(headers);
-        Order order = orderRepository.findNonClientOrderPassword(requestDto.orderId(),
-                requestDto.ordererName(),
-                requestDto.ordererName(),
-                requestDto.email()).orElseThrow(OrderNotFoundException::new);
+        Order order = orderRepository.findNonClientOrderPassword(requestDto.getOrderId(),
+                requestDto.getOrdererName(),
+                requestDto.getOrdererName(),
+                requestDto.getEmail()).orElseThrow(OrderNotFoundException::new);
         return order.getNonClientOrderPassword();
     }
 
