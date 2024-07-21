@@ -10,6 +10,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class NonClientOrderForm {
+
     List<OrderDetailDtoItem> orderDetailDtoItemList; // 상품-옵션 리스트
     Integer shippingFee; // 배송비
     Long productTotalAmount; // 상품 총 금액
@@ -26,9 +27,31 @@ public class NonClientOrderForm {
     String orderPassword; // 주문 비밀번호
     String tossOrderId; // 토스 주문
 
+    @Builder
+    @SuppressWarnings("java:S107") //be sure this construct
+    public NonClientOrderForm(Integer shippingFee, Long productTotalAmount, Long payAmount,
+        String orderedPersonName, String email, String phoneNumber, String addressZipCode, String deliveryAddress,
+        String deliveryDetailAddress, Boolean useDesignatedDeliveryDate, LocalDate designatedDeliveryDate,
+        Integer paymentMethod, String orderPassword, String tossOrderId) {
+        this.shippingFee = shippingFee;
+        this.productTotalAmount = productTotalAmount;
+        this.payAmount = payAmount;
+        this.orderedPersonName = orderedPersonName;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.addressZipCode = addressZipCode;
+        this.deliveryAddress = deliveryAddress;
+        this.deliveryDetailAddress = deliveryDetailAddress;
+        this.useDesignatedDeliveryDate = useDesignatedDeliveryDate;
+        this.paymentMethod = paymentMethod;
+        this.orderPassword = orderPassword;
+        this.tossOrderId = tossOrderId;
+    }
+
     @NoArgsConstructor
     @Getter
-    public static class OrderDetailDtoItem{
+    public static class OrderDetailDtoItem {
+
         Long productId; // 상품 아이디
         String productName; // 상품 이름
         Long quantity; // 수량
@@ -42,7 +65,8 @@ public class NonClientOrderForm {
         Long optionQuantity = 1L;
 
         @Builder
-        public OrderDetailDtoItem(Long productId, String productName, Long quantity, Long productSinglePrice, Boolean packableProduct){
+        public OrderDetailDtoItem(Long productId, String productName, Long quantity,
+            Long productSinglePrice, Boolean packableProduct) {
             this.productId = productId;
             this.productName = productName;
             this.quantity = quantity;

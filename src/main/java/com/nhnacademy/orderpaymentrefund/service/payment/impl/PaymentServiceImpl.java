@@ -15,10 +15,10 @@ import com.nhnacademy.orderpaymentrefund.dto.message.PointUsagePaymentMessageDto
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
+import com.nhnacademy.orderpaymentrefund.dto.payment.request.UserUpdateGradeRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.point.PointUsagePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.CartCheckoutRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.InventoryDecreaseRequestDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
@@ -28,7 +28,6 @@ import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOpti
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
-import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -57,7 +56,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderRepository orderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate<String, ?> redisTemplate;
     private final ObjectMapper objectMapper;
     private final TossPaymentsClient tossPaymentsClient;
     private final String tossSecretKey;
@@ -93,16 +92,17 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${rabbit.use.coupon.roting.key}")
     private String couponUseRoutingKey;
 
+    private static final String ORDER = "order";
+
     // Order Enum Type -> String, 배송 상태 -> tinyInt
     @Override
-    public void savePayment(HttpHeaders headers, TossPaymentsResponseDto tossPaymentsResponseDto,
-        HttpServletResponse response) {
+    public void savePayment(HttpHeaders headers, TossPaymentsResponseDto tossPaymentsResponseDto) {
 
         Long clientId = getClientId(headers);
 
         if (clientId != null) {
             Object data = redisTemplate.opsForHash()
-                .get("order", tossPaymentsResponseDto.getOrderId());
+                .get(ORDER, tossPaymentsResponseDto.getOrderId());
             ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
                 ClientOrderCreateForm.class);
 
@@ -123,11 +123,11 @@ public class PaymentServiceImpl implements PaymentService {
             orderRepository.save(order);
 
             // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-            clientOrderCreateForm.getOrderDetailDtoItemList().forEach((item) -> {
+            clientOrderCreateForm.getOrderDetailDtoItemList().forEach(item -> {
                 ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(
                     item, order);
                 productOrderDetailRepository.save(productOrderDetail);
-                if (item.getUsePackaging()) {
+                if (Boolean.TRUE.equals(item.getUsePackaging())) {
                     ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(
                         item, productOrderDetail);
                     productOrderDetailOptionRepository.save(productOrderDetailOption);
@@ -145,11 +145,7 @@ public class PaymentServiceImpl implements PaymentService {
             paymentRepository.save(payment);
 
             // 회원 등급변경, 포인트 사용, 쿠폰 사용, 재고처리, 장바구니 비우기
-            ClientUpdateGradeRequestDto clientUpdateGradeRequestDto = ClientUpdateGradeRequestDto.builder()
-                .clientId(clientId)
-                .payment(getPaymentRecordOfClient(clientId).getPaymentGradeValue())
-                .build();
-            clientServiceFeignClient.updateClientGrade(clientUpdateGradeRequestDto);
+
 
             // 장바구니 비우기 위한 요청 dto
             CartCheckoutRequestDto cartCheckoutRequestDto = CartCheckoutRequestDto.builder()
@@ -161,7 +157,7 @@ public class PaymentServiceImpl implements PaymentService {
                     orderDetail -> {
                         cartCheckoutRequestDto.addProductId(orderDetail.getProductId());
                         decreaseInfo.put(orderDetail.getProductId(), orderDetail.getQuantity());
-                        if (orderDetail.getUsePackaging()) {
+                        if (Boolean.TRUE.equals(orderDetail.getUsePackaging())) {
                             decreaseInfo.put(orderDetail.getOptionProductId(),
                                 orderDetail.getOptionQuantity());
                         }
@@ -203,12 +199,12 @@ public class PaymentServiceImpl implements PaymentService {
                     paymentCompletedCouponResponseDto);
             }
 
-            redisTemplate.opsForHash().delete("order", clientOrderCreateForm.getTossOrderId());
+            redisTemplate.opsForHash().delete(ORDER, clientOrderCreateForm.getTossOrderId());
 
         } else {
 
             Object data = redisTemplate.opsForHash()
-                .get("order", tossPaymentsResponseDto.getOrderId());
+                .get(ORDER, tossPaymentsResponseDto.getOrderId());
             NonClientOrderForm nonClientOrderForm = objectMapper.convertValue(data,
                 NonClientOrderForm.class);
 
@@ -227,11 +223,11 @@ public class PaymentServiceImpl implements PaymentService {
             orderRepository.save(order);
 
             // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-            nonClientOrderForm.getOrderDetailDtoItemList().forEach((item) -> {
+            nonClientOrderForm.getOrderDetailDtoItemList().forEach(item -> {
                 ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(
                     item, order);
                 productOrderDetailRepository.save(productOrderDetail);
-                if (item.getUsePackaging()) {
+                if (Boolean.TRUE.equals(item.getUsePackaging())) {
                     ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(
                         item, productOrderDetail);
                     productOrderDetailOptionRepository.save(productOrderDetailOption);
@@ -248,12 +244,19 @@ public class PaymentServiceImpl implements PaymentService {
 
             paymentRepository.save(payment);
 
-            redisTemplate.opsForHash().delete("order", nonClientOrderForm.getTossOrderId());
+            redisTemplate.opsForHash().delete(ORDER, nonClientOrderForm.getTossOrderId());
 
         }
 
     }
-
+    @Override
+    public void updateUserGrade(UserUpdateGradeRequestDto userUpdateGradeRequestDto){
+        ClientUpdateGradeRequestDto clientUpdateGradeRequestDto = ClientUpdateGradeRequestDto.builder()
+            .clientId(userUpdateGradeRequestDto.getClientId())
+            .payment(getPaymentRecordOfClient(userUpdateGradeRequestDto.getClientId()).getPaymentGradeValue())
+            .build();
+        clientServiceFeignClient.updateClientGrade(clientUpdateGradeRequestDto);
+    }
     @Override
     public PaymentGradeResponseDto getPaymentRecordOfClient(Long clientId) {
         Long totalOptionPriceForLastThreeMonth = orderRepository.getTotalOptionPriceForLastThreeMonths(

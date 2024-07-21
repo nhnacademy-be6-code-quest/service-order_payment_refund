@@ -3,69 +3,78 @@ package com.nhnacademy.orderpaymentrefund.controller.refund;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.PaymentCancelRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundAfterRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.refund.response.PaymentCancelResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.refund.response.PaymentRefundResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundAdminResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundPolicyResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundResultResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundSuccessResponseDto;
-import com.nhnacademy.orderpaymentrefund.service.refund.RefundPolicyService;
-import com.nhnacademy.orderpaymentrefund.service.refund.RefundService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Refund", description = "환불 관련 API")
+public interface RefundController {
 
-/**
- * 환불 정보를 저장하고, 조회하는 컨트롤러입니다. 환불 정보는 수정되거나 삭제되지 않습니다.
- *
- * @author Virtus_Chae
- * @version 0.0
- */
-@RestController()
-@RequiredArgsConstructor
-public class RefundController {
-
-    private final RefundService refundService;
-    private final RefundPolicyService refundPolicyService;
-
-
-//    @GetMapping("/api/refund")
-//    public ResponseEntity<PaymentCancelResponseDto> findPaymentKey(@RequestParam long orderId){
-//        return ResponseEntity.ok(refundService.findOrderStatusByOrderId(orderId));
-//    }
-
+    @Operation(
+        summary = "주문 취소",
+        description = "Order - 사용자 주문취소",
+        responses = {
+            @ApiResponse(
+                responseCode = "200"
+            )
+        }
+    )
     @PostMapping("/api/refund/cancel")
-    public void paymentCancel(@RequestBody PaymentCancelRequestDto paymentCancelRequestDto){
-        refundService.tossRefund(paymentCancelRequestDto.getOrderId(),
-            paymentCancelRequestDto.getCancelReason());
-        refundService.saveCancel(paymentCancelRequestDto);
+    void paymentCancel(
+        @Parameter(description = "주문취소에 필요한 정보")
+        @RequestBody PaymentCancelRequestDto paymentCancelRequestDto);
 
-    }
 
+    @Operation(
+        summary = "상품 반품",
+        description = "Refund - 사용자 반품요청",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "환불정책정보"
+            )
+        }
+    )
     @GetMapping("/api/refund/request")
-    public ResponseEntity<List<RefundPolicyResponseDto>> refundRequest(@RequestParam long orderId){
-        return ResponseEntity.ok(refundPolicyService.findRefundPolicy(orderId));
-    }
+    ResponseEntity<List<RefundPolicyResponseDto>> refundRequest(
+        @Parameter(description = "주문아이디")
+        @RequestParam long orderId);
+
+    @Operation(
+        summary = "상품 반품",
+        description = "Refund - 사용자 반품요청",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "환불금액"
+            )
+        }
+    )
     @PostMapping("/api/refund/request")
-    public RefundSuccessResponseDto refundRequest(@RequestBody RefundRequestDto requestDto){
-        return refundService.saveRefund(requestDto);
-    }
-    @GetMapping("/api/refund/admin/refund")
-    public RefundAdminResponseDto refundAccessView(@RequestParam long orderId) {
-        return refundService.findUserRefund(orderId);
-    }
+    RefundSuccessResponseDto refundRequest(
+        @Parameter(description = "반품 저장을 위한 정보")
+        @RequestBody RefundRequestDto requestDto);
 
+    @Operation(
+        summary = "상품 반품",
+        description = "Refund - 사용자 반품요청수락",
+        responses = {
+            @ApiResponse(
+                responseCode = "200"
+            )
+        }
+    )
     @PostMapping("/api/refund/admin/refund")
-    public void refundAccess(@RequestBody RefundAfterRequestDto refundAfterRequestDto){
-
-        RefundResultResponseDto result = refundService.refundUser(refundAfterRequestDto);
-        refundService.tossRefund(refundAfterRequestDto.getOrderId(), result.getCancelReason());
-    }
-
+    void refundAccess(
+        @Parameter(description = "반품요청 수락에 필요한 정보")
+        @RequestBody RefundAfterRequestDto refundAfterRequestDto);
 }

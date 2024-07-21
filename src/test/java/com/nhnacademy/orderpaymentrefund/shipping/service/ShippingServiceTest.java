@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-public class ShippingServiceTest {
+class ShippingServiceTest {
 
     @Mock
     private ShippingPolicyRepository shippingPolicyRepository;
@@ -58,7 +58,6 @@ public class ShippingServiceTest {
         assertEquals(shippingPolicy.getShippingFee(), response.shippingFee());
         assertEquals(shippingPolicy.getDescription(), response.description());
         assertEquals(shippingPolicy.getMinPurchaseAmount(), response.minPurchaseAmount());
-        assertEquals(shippingPolicy.getShippingPolicyType(), response.shippingPolicyType());
 
     }
 

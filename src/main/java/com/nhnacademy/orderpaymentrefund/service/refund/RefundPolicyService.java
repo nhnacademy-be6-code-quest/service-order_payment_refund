@@ -2,9 +2,7 @@ package com.nhnacademy.orderpaymentrefund.service.refund;
 
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
-import com.nhnacademy.orderpaymentrefund.domain.refundandcancel.Refund;
 import com.nhnacademy.orderpaymentrefund.domain.refundandcancel.RefundPolicy;
-import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundPolicyRegisterRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundPolicyRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundPolicyResponseDto;

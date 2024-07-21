@@ -1,6 +1,5 @@
 package com.nhnacademy.orderpaymentrefund.repository.refund;
 
-import com.nhnacademy.orderpaymentrefund.domain.refundandcancel.Refund;
 import com.nhnacademy.orderpaymentrefund.domain.refundandcancel.RefundPolicy;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;

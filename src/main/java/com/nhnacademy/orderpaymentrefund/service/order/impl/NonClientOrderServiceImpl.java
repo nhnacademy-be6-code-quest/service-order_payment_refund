@@ -53,46 +53,6 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     private final TestOtherService testOtherService;
 
     @Override
-    public Long tryCreateOrder(HttpHeaders headers, NonClientOrderForm requestDto) {
-        checkNonClient(headers);
-        Long orderId = createOrder(requestDto);
-        return orderId;
-    }
-
-    @Override
-    public void preprocessing() {
-        // TODO 구현 --
-        testOtherService.checkStock(true);
-    }
-
-    @Override
-    public void postprocessing() {
-        // TODO 구현
-        // TODO 비회원일때 쿠키 초기화.
-        testOtherService.processDroppingStock(true);
-    }
-
-    @Override
-    public Long createOrder(NonClientOrderForm requestDto) {
-
-        // 비회원 Order 생성
-        Order order = nonClientOrderConverter.dtoToEntity(requestDto);
-        orderRepository.save(order);
-
-        // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-        requestDto.getOrderDetailDtoItemList().forEach((item) -> {
-            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(item, order);
-            productOrderDetailRepository.save(productOrderDetail);
-            if(Objects.nonNull(item.getPackableProduct()) || item.getUsePackaging().booleanValue() == true){
-                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(item, productOrderDetail);
-                productOrderDetailOptionRepository.save(productOrderDetailOption);
-            }
-        });
-
-        return order.getOrderId();
-    }
-
-    @Override
     public void saveNonClientTemporalOrder(HttpHeaders headers, NonClientOrderForm requestDto) {
         checkNonClient(headers);
         String tossOrderId = requestDto.getTossOrderId();
@@ -118,10 +78,10 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     @Override
     public String findNonClientOrderPassword(HttpHeaders headers, FindNonClientOrderPasswordRequestDto requestDto) {
         checkNonClient(headers);
-        Order order = orderRepository.findNonClientOrderPassword(requestDto.orderId(),
-                requestDto.ordererName(),
-                requestDto.ordererName(),
-                requestDto.email()).orElseThrow(OrderNotFoundException::new);
+        Order order = orderRepository.findNonClientOrderPassword(requestDto.getOrderId(),
+                requestDto.getOrdererName(),
+                requestDto.getOrdererName(),
+                requestDto.getEmail()).orElseThrow(OrderNotFoundException::new);
         return order.getNonClientOrderPassword();
     }
 

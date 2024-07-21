@@ -1,19 +1,23 @@
 package com.nhnacademy.orderpaymentrefund.domain.order;
 
 import jakarta.annotation.Nullable;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Order 엔티티
@@ -114,6 +118,7 @@ public class Order {
      * @param accumulatedPoint 적립 포인트.
      *
      **/
+    @SuppressWarnings("java:S107") // be sure this construct
     @Builder(builderMethodName = "clientOrderBuilder", builderClassName = "clientOrderBuilder")
     public Order(@NotNull Long clientId, @Nullable Long couponId, @NotNull String tossOrderId, @NotNull Long productTotalAmount, @NotNull Integer shippingFee, @Nullable LocalDate designatedDeliveryDate,
                  @NotNull String phoneNumber, @NotNull String deliveryAddress, Long discountAmountByCoupon, Long discountAmountByPoint, Long accumulatedPoint){
@@ -147,6 +152,7 @@ public class Order {
      * @param nonClientOrdererEmail 비회원 주문자 이메일. 추후 조회용으로 사용됨.
      *
      **/
+    @SuppressWarnings("java:S107")// be sure this construct
     @Builder(builderMethodName = "nonClientOrderBuilder", builderClassName = "nonClientOrderBuilder")
     public Order(String tossOrderId, long productTotalAmount, int shippingFee, @Nullable LocalDate designatedDeliveryDate, String phoneNumber,
                  String deliveryAddress, @NotNull String nonClientOrderPassword, @NotNull String nonClientOrdererName, @NotNull String nonClientOrdererEmail){
