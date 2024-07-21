@@ -7,6 +7,7 @@ import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
@@ -151,7 +152,7 @@ public class OrderServiceImpl implements OrderService {
         couponId = clientOrderCreateForm.getCouponId();
         accumulatedPoint = clientOrderCreateForm.getAccumulatePoint();
 
-        for (ClientOrderCreateForm.OrderDetailDtoItem orderDetailDtoItem : clientOrderCreateForm.getOrderDetailDtoItemList()) {
+        for (OrderDetailDtoItem orderDetailDtoItem : clientOrderCreateForm.getOrderDetailDtoItemList()) {
             productOrderDetailList.add(
                 getProductOrderDetailRequestDto(orderDetailDtoItem.getProductId(),
                     orderDetailDtoItem.getQuantity(), orderDetailDtoItem.getUsePackaging(),
@@ -188,7 +189,7 @@ public class OrderServiceImpl implements OrderService {
 
         orderTotalAmount = nonClientOrderForm.getProductTotalAmount();
 
-        for (NonClientOrderForm.OrderDetailDtoItem orderDetailDtoItem : nonClientOrderForm.getOrderDetailDtoItemList()) {
+        for (OrderDetailDtoItem orderDetailDtoItem : nonClientOrderForm.getOrderDetailDtoItemList()) {
             PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto productOrderDetailRequest = PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto.builder()
                 .productId(orderDetailDtoItem.getProductId())
                 .quantity(orderDetailDtoItem.getQuantity())
