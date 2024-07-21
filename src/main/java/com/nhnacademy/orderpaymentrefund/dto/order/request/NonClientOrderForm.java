@@ -28,6 +28,7 @@ public class NonClientOrderForm {
     String tossOrderId; // 토스 주문
 
     @Builder
+    @SuppressWarnings("java:S107") //be sure this construct
     public NonClientOrderForm(Integer shippingFee, Long productTotalAmount, Long payAmount,
         String orderedPersonName, String email, String phoneNumber, String addressZipCode, String deliveryAddress,
         String deliveryDetailAddress, Boolean useDesignatedDeliveryDate, LocalDate designatedDeliveryDate,

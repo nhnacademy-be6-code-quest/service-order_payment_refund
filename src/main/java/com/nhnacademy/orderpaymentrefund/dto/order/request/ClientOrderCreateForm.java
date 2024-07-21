@@ -61,6 +61,7 @@ public class ClientOrderCreateForm {
 //    long clientId; // 주문한 회원 아이디
 
     @Builder
+    @SuppressWarnings("java:S107") // be sure this construct
     public ClientOrderCreateForm(Long couponId, Integer shippingFee, Long productTotalAmount,
         Long payAmount, Long couponDiscountAmount, Long usedPointDiscountAmount,
         String orderedPersonName, String phoneNumber, String deliveryAddress,
