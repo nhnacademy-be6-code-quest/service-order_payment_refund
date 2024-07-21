@@ -1,4 +1,4 @@
-package com.nhnacademy.orderpaymentrefund.order.dto.response;
+package com.nhnacademy.orderpaymentrefund.dto.order.response;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -7,6 +7,7 @@ import com.nhnacademy.orderpaymentrefund.dto.shipping.admin.response.ShippingPol
 import com.nhnacademy.orderpaymentrefund.exception.ShippingPolicyNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.shipping.ShippingPolicyRepository;
 import com.nhnacademy.orderpaymentrefund.service.shipping.impl.ShippingPolicyServiceImpl;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,8 +20,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ShippingServiceTest {
@@ -33,7 +37,6 @@ class ShippingServiceTest {
 
     private ShippingPolicy shippingPolicy;
     private ShippingPolicyType shippingPolicyType;
-    private ShippingPolicyGetResponseDto shippingPolicyGetResponseDto;
 
     @BeforeEach
     void setUp(){
@@ -50,7 +53,7 @@ class ShippingServiceTest {
     @DisplayName("배송 정책 단건 조회 - 성공")
     void getShippingPolicyTest(){
 
-        Mockito.when(shippingPolicyRepository.findByShippingPolicyType(shippingPolicyType))
+        when(shippingPolicyRepository.findByShippingPolicyType(shippingPolicyType))
                 .thenReturn(Optional.of(shippingPolicy));
 
         ShippingPolicyGetResponseDto response = shippingPolicyService.getShippingPolicy(shippingPolicyType);
@@ -64,7 +67,7 @@ class ShippingServiceTest {
     @Test
     @DisplayName("배송정책 단건 조회 실패 - 정책 없음")
     void getShippingPolicyNotFoundTest() {
-        Mockito.when(shippingPolicyRepository.findByShippingPolicyType(shippingPolicyType))
+        when(shippingPolicyRepository.findByShippingPolicyType(shippingPolicyType))
                 .thenReturn(Optional.empty());
 
         assertThrows(ShippingPolicyNotFoundException.class, () -> {
@@ -82,11 +85,10 @@ class ShippingServiceTest {
                 .shippingPolicyType(shippingPolicyType)
                 .build();
 
-        // origin
-        Mockito.when(shippingPolicyRepository.findByShippingPolicyType(shippingPolicyType))
+
+        when(shippingPolicyRepository.findByShippingPolicyType(shippingPolicyType))
                 .thenReturn(Optional.of(shippingPolicy));
 
-        // update
         shippingPolicyService.updateShippingPolicy(requestDto);
 
         // 검증
@@ -110,12 +112,50 @@ class ShippingServiceTest {
                 .shippingPolicyType(shippingPolicyType)
                 .build();
 
-        // origin
-        Mockito.when(shippingPolicyRepository.findByShippingPolicyType(shippingPolicyType))
+        when(shippingPolicyRepository.findByShippingPolicyType(shippingPolicyType))
                 .thenReturn(Optional.empty());
 
         assertThrows(ShippingPolicyNotFoundException.class, () -> {
             shippingPolicyService.updateShippingPolicy(requestDto);
         });
+    }
+
+    @Test
+    void testGetAllShippingPolicies() {
+
+        ShippingPolicy policy1 = ShippingPolicy.builder()
+            .description("회원 배송 정책")
+            .shippingFee(5000)
+            .minPurchaseAmount(10000)
+            .shippingPolicyType(ShippingPolicyType.CLIENT_SHIPPING)
+            .build();
+
+        ShippingPolicy policy2 = ShippingPolicy.builder()
+            .description("비회원 배송 정책")
+            .shippingFee(10000)
+            .minPurchaseAmount(20000)
+            .shippingPolicyType(ShippingPolicyType.NON_CLIENT_SHIPPING)
+            .build();
+
+        when(shippingPolicyRepository.findAll()).thenReturn(List.of(policy1, policy2));
+
+        List<ShippingPolicyGetResponseDto> responseDtoList = shippingPolicyService.getAllShippingPolicies();
+
+        assertNotNull(responseDtoList);
+        assertEquals(2, responseDtoList.size());
+
+        ShippingPolicyGetResponseDto dto1 = responseDtoList.getFirst();
+        assertEquals("회원 배송 정책", dto1.description());
+        assertEquals(5000, dto1.shippingFee());
+        assertEquals(10000, dto1.minPurchaseAmount());
+        assertEquals(ShippingPolicyType.CLIENT_SHIPPING, dto1.shippingPolicyType());
+
+        ShippingPolicyGetResponseDto dto2 = responseDtoList.get(1);
+        assertEquals("비회원 배송 정책", dto2.description());
+        assertEquals(10000, dto2.shippingFee());
+        assertEquals(20000, dto2.minPurchaseAmount());
+        assertEquals(ShippingPolicyType.NON_CLIENT_SHIPPING, dto2.shippingPolicyType());
+
+        verify(shippingPolicyRepository, times(1)).findAll();
     }
 }

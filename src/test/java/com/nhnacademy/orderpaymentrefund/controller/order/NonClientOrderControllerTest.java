@@ -57,7 +57,7 @@
 //
 //        // Prepare the headers
 //        HttpHeaders headers = new HttpHeaders();
-//        headers.add("X-User-Id", "비회원"); // Ensure this header name matches with ID_HEADER in your code
+//        headers.add("X-User-Id", "비회원");
 //
 //        // Prepare the NonClientOrderForm object
 //        NonClientOrderForm nonClientOrderForm = new NonClientOrderForm();

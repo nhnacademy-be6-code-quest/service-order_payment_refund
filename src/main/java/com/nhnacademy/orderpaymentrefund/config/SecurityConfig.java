@@ -20,7 +20,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private static final URI clientOrderURI = URI.create("/api/client/orders/**");
-    private static final URI nonClientOrderURI = URI.create("/api/non-client/orders/**");
     private static final URI commonOrderURI = URI.create("/api/orders/**");
 
     @Bean
@@ -34,7 +33,7 @@ public class SecurityConfig {
             .sessionManagement(
                 session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(new HeaderFilter(List.of(
-
+                // 회원이나 롤 있는거만 헤더 걸기.
                 new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.GET.name(),
                     Collections.emptyList()),
                 new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.POST.name(),
@@ -42,14 +41,6 @@ public class SecurityConfig {
                 new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.PUT.name(),
                     Collections.emptyList()),
                 new HeaderFilter.RouteConfig(clientOrderURI, HttpMethod.DELETE.name(),
-                    Collections.emptyList()),
-                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.GET.name(),
-                    Collections.emptyList()),
-                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.POST.name(),
-                    Collections.emptyList()),
-                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.PUT.name(),
-                    Collections.emptyList()),
-                new HeaderFilter.RouteConfig(nonClientOrderURI, HttpMethod.DELETE.name(),
                     Collections.emptyList()),
                 new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.GET.name(),
                     Collections.emptyList()),

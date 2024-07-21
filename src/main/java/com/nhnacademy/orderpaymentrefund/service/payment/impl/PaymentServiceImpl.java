@@ -114,8 +114,6 @@ public class PaymentServiceImpl implements PaymentService {
         ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
             ClientOrderCreateForm.class);
 
-        saveClientOrderEntity(clientId, clientOrderCreateForm);
-
         // order 저장
         Order order = saveClientOrderEntity(clientId, clientOrderCreateForm);
 
@@ -293,12 +291,14 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public void updateUserGrade(UserUpdateGradeRequestDto userUpdateGradeRequestDto) {
-        ClientUpdateGradeRequestDto clientUpdateGradeRequestDto = ClientUpdateGradeRequestDto.builder()
-            .clientId(userUpdateGradeRequestDto.getClientId())
-            .payment(getPaymentRecordOfClient(
-                userUpdateGradeRequestDto.getClientId()).getPaymentGradeValue())
-            .build();
-        clientServiceFeignClient.updateClientGrade(clientUpdateGradeRequestDto);
+        if(Objects.nonNull(userUpdateGradeRequestDto.getClientId())){
+            ClientUpdateGradeRequestDto clientUpdateGradeRequestDto = ClientUpdateGradeRequestDto.builder()
+                .clientId(userUpdateGradeRequestDto.getClientId())
+                .payment(getPaymentRecordOfClient(
+                    userUpdateGradeRequestDto.getClientId()).getPaymentGradeValue())
+                .build();
+            clientServiceFeignClient.updateClientGrade(clientUpdateGradeRequestDto);
+        }
     }
 
     @Override
