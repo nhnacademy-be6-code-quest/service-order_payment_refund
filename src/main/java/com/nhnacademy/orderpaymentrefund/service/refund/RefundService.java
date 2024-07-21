@@ -210,8 +210,7 @@ public class RefundService {
                 rabbitTemplate.convertAndSend(refundCouponExchangeName, refundCouponRoutingKey,
                     new RefundCouponMessageDto(couponId));
             }
-            Long payment = order.getOrderTotalAmount() - order.getDiscountAmountByPoint()
-                - order.getDiscountAmountByCoupon();
+            Long payment = refund.getRefundAmount();
             rabbitTemplate.convertAndSend(refundPointExchangeName, refundPointRoutingKey,
                 new PointRewardRefundMessageDto(order.getClientId(), payment,
                     order.getDiscountAmountByPoint()));

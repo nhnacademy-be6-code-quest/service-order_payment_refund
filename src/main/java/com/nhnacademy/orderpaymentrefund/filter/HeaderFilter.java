@@ -42,6 +42,7 @@ public class HeaderFilter extends OncePerRequestFilter {
             if (pathMatcher.match(routeConfig.path, request.getRequestURI()) && request.getMethod().equalsIgnoreCase(routeConfig.method)) {
                 log.info("{}:{} header filter start", routeConfig.method, request.getRequestURI());
                 try {
+                    log.info("X-User-Id{}", request.getHeader("X-User-Id"));
                     Long.valueOf(request.getHeader("X-User-Id"));
                 } catch ( NumberFormatException e ) {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "id header is missing or invalid");
