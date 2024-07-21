@@ -77,11 +77,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${rabbit.inventory.decrease.routing.key}")
     private String inventoryDecreaseRoutingKey;
 
-    @Value("${rabbit.inventory.increase.exchange.name}")
-    private String inventoryIncreaseExchangeName;
-    @Value("${rabbit.inventory.increase.routing.key}")
-    private String inventoryIncreaseRoutingKey;
-
     @Value("${rabbit.use.point.exchange.name}")
     private String pointUseExchangeName;
     @Value("${rabbit.use.point.routing.key}")
