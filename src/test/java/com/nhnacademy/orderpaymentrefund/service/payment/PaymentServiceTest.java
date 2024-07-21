@@ -1,0 +1,264 @@
+package com.nhnacademy.orderpaymentrefund.service.payment.impl;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nhnacademy.orderpaymentrefund.client.client.ClientServiceFeignClient;
+import com.nhnacademy.orderpaymentrefund.client.payment.TossPaymentsClient;
+import com.nhnacademy.orderpaymentrefund.domain.order.Order;
+import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
+import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
+import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
+import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
+import com.nhnacademy.orderpaymentrefund.dto.client.ClientUpdateGradeRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.coupon.PaymentCompletedCouponResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.message.PointUsagePaymentMessageDto;
+import com.nhnacademy.orderpaymentrefund.dto.message.PointUsageRefundMessageDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
+import com.nhnacademy.orderpaymentrefund.dto.product.CartCheckoutRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.product.InventoryDecreaseRequestDto;
+import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
+import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
+import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
+import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
+import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
+import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import org.json.simple.parser.ParseException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
+
+class PaymentServiceImplTest {
+
+    @Value("${rabbit.cart.checkout.exchange.name}")
+    private String cartCheckoutExchangeName;
+    @Value("${rabbit.cart.checkout.routing.key}")
+    private String cartCheckoutRoutingKey;
+
+    @Value("${rabbit.inventory.decrease.exchange.name}")
+    private String inventoryDecreaseExchangeName;
+    @Value("${rabbit.inventory.decrease.routing.key}")
+    private String inventoryDecreaseRoutingKey;
+
+    @Value("${rabbit.use.point.exchange.name}")
+    private String pointUseExchangeName;
+    @Value("${rabbit.use.point.routing.key}")
+    private String pointUseRoutingKey;
+
+    @Value("${rabbit.use.coupon.exchange.name}")
+    private String couponUseExchangeName;
+    @Value("${rabbit.use.coupon.roting.key}")
+    private String couponUseRoutingKey;
+    @Mock
+    private PaymentRepository paymentRepository;
+    @Mock
+    private OrderRepository orderRepository;
+    @Mock
+    private ProductOrderDetailRepository productOrderDetailRepository;
+    @Mock
+    private ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+    @Mock
+    private ObjectMapper objectMapper;
+    @Mock
+    private TossPaymentsClient tossPaymentsClient;
+    @Mock
+    private ClientServiceFeignClient clientServiceFeignClient;
+    @Mock
+    private RabbitTemplate rabbitTemplate;
+
+    @InjectMocks
+    private PaymentServiceImpl paymentService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        HashOperations<String, Object, Object> hashOps = mock(HashOperations.class);
+        when(redisTemplate.opsForHash()).thenReturn(hashOps);
+    }
+    private Order createOrder(Long orderTotalAmount, Long discountAmountByPoint, Long discountAmountByCoupon, Integer shippingFee, Long couponId, OrderStatus orderStatus ) throws Exception {
+        Constructor<Order> constructor = Order.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        Order order = constructor.newInstance();
+        setField(order, "orderTotalAmount", orderTotalAmount);
+        setField(order, "discountAmountByPoint", discountAmountByPoint);
+        setField(order, "discountAmountByCoupon", discountAmountByCoupon);
+        setField(order, "shippingFee", shippingFee);
+        setField(order, "couponId", couponId);
+        setField(order, "orderStatus", orderStatus);
+        return order;
+    }
+    private ClientOrderCreateForm createClientOrderCreateForm(String tossOrderId, List<OrderDetailDtoItem> orderDetailDtoItemList) throws Exception {
+        Constructor<ClientOrderCreateForm> constructor = ClientOrderCreateForm.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        ClientOrderCreateForm form = constructor.newInstance();
+        setField(form, "tossOrderId", tossOrderId); // Set the tossOrderId
+        setField(form, "orderDetailDtoItemList", orderDetailDtoItemList); // Set the orderDetailDtoItemList
+        setField(form, "productTotalAmount", 1000L); // Example value, replace as needed
+        setField(form, "orderTotalAmount", 1050L); // Example value, replace as needed
+        setField(form, "payAmount", 1000L); // Example value, replace as needed
+        setField(form, "shippingFee", 50); // Example value, replace as needed
+        setField(form, "couponId", 1L); // Example value, replace as needed
+        setField(form, "couponDiscountAmount", 50L); // Example value, replace as needed
+        setField(form, "usedPointDiscountAmount", 50L); // Example value, replace as needed
+        setField(form, "orderedPersonName", "John Doe"); // Example value, replace as needed
+        setField(form, "phoneNumber", "1234567890"); // Example value, replace as needed
+        setField(form, "deliveryAddress", "123 Main St"); // Example value, replace as needed
+        setField(form, "useDesignatedDeliveryDate", true); // Example value, replace as needed
+        setField(form, "designatedDeliveryDate", LocalDate.now()); // Example value, replace as needed
+        setField(form, "paymentMethod", 1); // Example value, replace as needed
+        setField(form, "accumulatePoint", 100L); // Example value, replace as needed
+
+        return form;
+    }
+
+    private NonClientOrderForm createNonClientOrderForm(String tossOrderId, List<OrderDetailDtoItem> orderDetailDtoItemList) throws Exception {
+        Constructor<NonClientOrderForm> constructor = NonClientOrderForm.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        NonClientOrderForm form = constructor.newInstance();
+        setField(form, "tossOrderId", tossOrderId); // Set the tossOrderId
+        setField(form, "orderDetailDtoItemList", orderDetailDtoItemList); // Set the orderDetailDtoItemList
+        setField(form, "productTotalAmount", 1000L); // Example value, replace as needed
+        setField(form, "payAmount", 1000L); // Example value, replace as needed
+        setField(form, "shippingFee", 50); // Example value, replace as needed
+        setField(form, "orderedPersonName", "John Doe"); // Example value, replace as needed
+        setField(form, "phoneNumber", "1234567890"); // Example value, replace as needed
+        setField(form, "deliveryAddress", "123 Main St"); // Example value, replace as needed
+        setField(form, "useDesignatedDeliveryDate", true); // Example value, replace as needed
+        setField(form, "designatedDeliveryDate", LocalDate.now()); // Example value, replace as needed
+        setField(form, "paymentMethod", 1); // Example value, replace as needed
+
+        return form;
+    }
+
+    private void setField(Object target, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true); // Make private fields accessible
+        field.set(target, value);
+    }
+
+
+    @Test
+    void testSavePaymentWithClientOrder() throws Exception {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-User-Id", "1");
+
+        TossPaymentsResponseDto tossPaymentsResponseDto = TossPaymentsResponseDto.builder()
+            .orderName("Order1")
+            .totalAmount(1000)
+            .method("카드")
+            .paymentKey("payment-key")
+            .orderId("order-id")
+            .build();
+
+        List<OrderDetailDtoItem> orderDetailDtoItemList = new ArrayList<>();
+        ClientOrderCreateForm clientOrderCreateForm = createClientOrderCreateForm("order-id", orderDetailDtoItemList);
+        Order order = createOrder(1000L, 500L, 500L, 50, 1L, OrderStatus.PAYED);
+
+        // Mock behaviors
+        when(redisTemplate.opsForHash().get(eq("order"), eq("order-id"))).thenReturn(clientOrderCreateForm);
+        when(objectMapper.convertValue(any(), eq(ClientOrderCreateForm.class))).thenReturn(clientOrderCreateForm);
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(new Payment());
+
+        // Call the method under test
+        paymentService.savePayment(headers, tossPaymentsResponseDto);
+
+        // Verify interactions with mocks
+        verify(rabbitTemplate).convertAndSend(
+            eq(cartCheckoutExchangeName),
+            eq(cartCheckoutRoutingKey),
+            any(CartCheckoutRequestDto.class)
+        );
+        verify(rabbitTemplate).convertAndSend(
+            eq(inventoryDecreaseExchangeName),
+            eq(inventoryDecreaseRoutingKey),
+            any(InventoryDecreaseRequestDto.class)
+        );
+        verify(rabbitTemplate).convertAndSend(
+            eq(pointUseExchangeName),
+            eq(pointUseRoutingKey),
+            any(PointUsagePaymentMessageDto.class)
+        );
+
+        // Verify that orderRepository.save is called twice
+        verify(orderRepository, times(2)).save(any(Order.class));
+
+        // Optionally verify other method calls
+        verify(paymentRepository).save(any(Payment.class));
+    }
+
+    @Test
+    void testSavePaymentWithNonClientOrder() throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-User-Id", null); // Null client ID for non-client order
+
+        TossPaymentsResponseDto tossPaymentsResponseDto = TossPaymentsResponseDto.builder()
+            .orderName("Order1")
+            .totalAmount(1000)
+            .method("카드")
+            .paymentKey("payment-key")
+            .orderId("order-id")
+            .build();
+
+        List<OrderDetailDtoItem> orderDetailDtoItemList = new ArrayList<>();
+        NonClientOrderForm nonClientOrderForm = createNonClientOrderForm("order-id", orderDetailDtoItemList);
+        Order order = createOrder(1000L, 500L, 500L, 50, 1L, OrderStatus.PAYED);
+
+        // Mock behaviors
+        when(redisTemplate.opsForHash().get(eq("order"), eq("order-id"))).thenReturn(nonClientOrderForm);
+        when(objectMapper.convertValue(any(), eq(NonClientOrderForm.class))).thenReturn(nonClientOrderForm);
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(new Payment());
+
+        // Call the method under test
+        paymentService.savePayment(headers, tossPaymentsResponseDto);
+
+        // Verify interactions with mocks
+        verify(rabbitTemplate).convertAndSend(
+            eq(cartCheckoutExchangeName),
+            eq(cartCheckoutRoutingKey),
+            any(CartCheckoutRequestDto.class)
+        );
+        verify(rabbitTemplate).convertAndSend(
+            eq(inventoryDecreaseExchangeName),
+            eq(inventoryDecreaseRoutingKey),
+            any(InventoryDecreaseRequestDto.class)
+        );
+
+        // Verify that orderRepository.save is called twice (if expected behavior)
+        verify(orderRepository, times(2)).save(any(Order.class));
+
+        // Optionally verify other method calls
+        verify(paymentRepository).save(any(Payment.class));
+    }
+
+
+
+}

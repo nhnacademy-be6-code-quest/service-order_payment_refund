@@ -2,9 +2,9 @@ package com.nhnacademy.orderpaymentrefund.service.refund;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.anyLong;
@@ -14,9 +14,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.RequestEntity.post;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.nhnacademy.orderpaymentrefund.dto.refund.response.TossPaymentRefundResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.payment.impl.PaymentServiceImpl;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
@@ -33,7 +31,6 @@ import com.nhnacademy.orderpaymentrefund.domain.refundandcancel.RefundPolicy;
 import com.nhnacademy.orderpaymentrefund.dto.message.PointRewardRefundMessageDto;
 import com.nhnacademy.orderpaymentrefund.dto.message.PointUsageRefundMessageDto;
 import com.nhnacademy.orderpaymentrefund.dto.message.RefundCouponMessageDto;
-import com.nhnacademy.orderpaymentrefund.dto.product.InventoryIncreaseRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.PaymentCancelRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundAfterRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundRequestDto;
@@ -57,13 +54,15 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.test.util.ReflectionTestUtils;
 
 class RefundServiceTest {
 
     @InjectMocks
     private RefundService refundService;
+
+    @InjectMocks
+    private PaymentServiceImpl paymentService;
 
     @Mock
     private RefundRepository refundRepository;
@@ -166,14 +165,9 @@ class RefundServiceTest {
         constructor.setAccessible(true);
         Refund refund = constructor.newInstance();
         setField(refund, "payment",payment);
-        setField(refund, "cancelReason", cancelReason);
+        setField(refund, "refundDetailReason", cancelReason);
         return refund;
     }
-
-
-
-
-
 
     @Test
     void testSaveRefund() throws Exception {
@@ -268,50 +262,45 @@ class RefundServiceTest {
     }
 
 
+    @Test
+    void testRefundUser() throws Exception {
+        // Arrange
+        long orderId = 1L;
+        Order order = createOrder(10000L, 500L, 200L, null, 1L, OrderStatus.REFUND_REQUEST);
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
-//    @Test
-//    void testRefundUser() throws Exception {
-//        // Arrange
-//        long orderId = 1L;
-//        Order order = createOrder(10000L, 500L, 200L, null, 1L, OrderStatus.REFUND_REQUEST);
-//        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-//
-//        // Mock repositories for product details
-//        List<ProductOrderDetail> productOrderDetails = new ArrayList<>();
-//        ProductOrderDetail productOrderDetail = createProductOrderDetail(1L, 10L);
-//        productOrderDetails.add(productOrderDetail);
-//        when(productOrderDetailRepository.findAllByOrder(order)).thenReturn(productOrderDetails);
-//
-//        List<ProductOrderDetailOption> options = new ArrayList<>();
-//        ProductOrderDetailOption option = createProductOrderDetailOption(1L, 5L);
-//        options.add(option);
-//        when(productOrderDetailOptionRepository.findByProductOrderDetail(productOrderDetail)).thenReturn(options);
-//
-//        Payment payment = createPayment("tossPaymentKey");
-//        when(paymentRepository.findByOrder_OrderId(orderId)).thenReturn(Optional.of(payment));
-//
-//        Refund refund = createRefund(payment, "cancel");
-//        when(refundRepository.findByPayment(payment)).thenReturn(refund);
-//
-//        RefundAfterRequestDto requestDto = new RefundAfterRequestDto();
-//        requestDto.setOrderId(orderId);
-//
-//        // Act
-//        RefundResultResponseDto result = refundService.refundUser(requestDto); // Call the method under test
-//
-//        // Assert
-//        assertNotNull(result);
-//
-//        verify(orderRepository, times(1)).save(any(Order.class)); // Verify save was called
-//
-//        // Verify messages sent to RabbitMQ
-//        verify(rabbitTemplate, times(1))
-//            .convertAndSend(eq(increasesExchange), eq(increaseKey), anyList());
-//        verify(rabbitTemplate, times(1))
-//            .convertAndSend(eq(refundCouponExchangeName), eq(refundCouponRoutingKey), any(RefundCouponMessageDto.class));
-//        verify(rabbitTemplate, times(1))
-//            .convertAndSend(eq(refundPointExchangeName), eq(refundPointRoutingKey), any(PointRewardRefundMessageDto.class));
-//        verify(rabbitTemplate, times(1))
-//            .convertAndSend(eq(refundUsedPointExchangeName), eq(refundUsedPointRoutingKey), any(PointUsageRefundMessageDto.class));
-//    }
+        // Mock repositories for product details
+        List<ProductOrderDetail> productOrderDetails = new ArrayList<>();
+        ProductOrderDetail productOrderDetail = createProductOrderDetail(1L, 10L);
+        productOrderDetails.add(productOrderDetail);
+        when(productOrderDetailRepository.findAllByOrder(order)).thenReturn(productOrderDetails);
+
+        Payment payment = createPayment("tossPaymentKey");
+        when(paymentRepository.findByOrder_OrderId(orderId)).thenReturn(Optional.of(payment));
+
+        Refund refund = createRefund(payment, "cancel");
+        when(refundRepository.findByPayment(payment)).thenReturn(refund);
+
+        RefundAfterRequestDto requestDto = new RefundAfterRequestDto();
+        requestDto.setOrderId(orderId);
+
+        // Act
+        RefundResultResponseDto result = refundService.refundUser(requestDto); // Call the method under test
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("cancel", result.getCancelReason());
+
+        verify(orderRepository, times(1)).save(any(Order.class)); // Verify save was called
+
+        // Verify messages sent to RabbitMQ
+        verify(rabbitTemplate, times(1))
+            .convertAndSend(eq(increasesExchange), eq(increaseKey), anyList());
+        verify(rabbitTemplate, times(1))
+            .convertAndSend(eq(refundCouponExchangeName), eq(refundCouponRoutingKey), any(RefundCouponMessageDto.class));
+        verify(rabbitTemplate, times(1))
+            .convertAndSend(eq(refundPointExchangeName), eq(refundPointRoutingKey), any(PointRewardRefundMessageDto.class));
+        verify(rabbitTemplate, times(1))
+            .convertAndSend(eq(refundUsedPointExchangeName), eq(refundUsedPointRoutingKey), any(PointUsageRefundMessageDto.class));
+    }
 }
