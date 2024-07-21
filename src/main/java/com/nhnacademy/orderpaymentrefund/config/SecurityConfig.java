@@ -42,13 +42,7 @@ public class SecurityConfig {
                 new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.POST.name(), Collections.emptyList()),
                 new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.PUT.name(), Collections.emptyList()),
                 new HeaderFilter.RouteConfig(commonOrderURI, HttpMethod.DELETE.name(), Collections.emptyList())
-            )), UsernamePasswordAuthenticationFilter.class)
-            .authorizeHttpRequests(req ->
-                req.anyRequest().permitAll()
-            )
-            .headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
+            )), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
