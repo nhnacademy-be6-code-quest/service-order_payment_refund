@@ -99,7 +99,7 @@ class NonClientOrderControllerTest {
         mockMvc.perform(
             get("/api/non-client/orders/{orderId}", orderId)
                 .param("pwd", pwd)
-                .headers(headers)
+
         ).andExpect(status().isOk());
 
     }

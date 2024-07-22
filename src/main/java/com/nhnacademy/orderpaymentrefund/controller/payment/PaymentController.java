@@ -28,8 +28,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface PaymentController {
 
     @Operation(
-        summary = "결재 승인",
-        description = "Toss - 결재 승인",
+        summary = "결제 승인",
+        description = "Toss - 결제 승인",
         responses = {
             @ApiResponse(
                 responseCode = "200",
@@ -39,12 +39,12 @@ public interface PaymentController {
     )
     @PostMapping("/api/order/payment/approve")
     TossPaymentsResponseDto approvePayment(
-        @Parameter(description = "결재승인 요청에 필요한 정보")
+        @Parameter(description = "결제승인 요청에 필요한 정보")
         @RequestBody TossApprovePaymentRequest tossApprovePaymentRequest)
         throws ParseException;
 
     @Operation(
-        summary = "결재 저장",
+        summary = "결제 저장",
         description = "Payment - 사용자 결재정보 저장",
         responses = {
             @ApiResponse(
@@ -54,7 +54,7 @@ public interface PaymentController {
     )
     @PostMapping("/api/order/payment/save")
     void savePayment(
-        @Parameter(description = "결재정보 저장 정보")
+        @Parameter(description = "결제정보 저장 정보")
         @RequestBody TossPaymentsResponseDto tossPaymentsResponseDto,
         @Parameter(description = "회원 정보")
         @RequestHeader HttpHeaders headers);
@@ -75,23 +75,23 @@ public interface PaymentController {
         @PathVariable Long clientId);
 
     @Operation(
-        summary = "결재 후처리 정보",
-        description = "Payment - 결재 후 처리를 위한 정보",
+        summary = "결제 후처리 정보",
+        description = "Payment - 결제 후 처리를 위한 정보",
         responses = {
             @ApiResponse(
                 responseCode = "200",
-                description = "결재 후처리 정보"
+                description = "결제 후처리 정보"
             )
         }
     )
     @GetMapping("/api/order/payment/post-process")
     PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(
-        @Parameter(description = "결재주문아이디")
+        @Parameter(description = "결제주문아이디")
         @RequestParam("tossOrderId") String tossOrderId);
 
     @Operation(
-        summary = "결재 후처리",
-        description = "Payment - 결재 후 회원 등급변경",
+        summary = "결제 후처리",
+        description = "Payment - 결제 후 회원 등급변경",
         responses = {
             @ApiResponse(
                 responseCode = "200"
