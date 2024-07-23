@@ -38,8 +38,6 @@ public interface NonClientOrderService {
      **/
     NonClientOrderGetResponseDto getOrder(HttpHeaders headers, long orderId, String orderPassword);
 
-    void paymentCompleteOrder(HttpHeaders headers, long orderId);
-
     void cancelOrder(HttpHeaders headers, long orderId);
 
     void refundOrder(HttpHeaders headers, long orderId);

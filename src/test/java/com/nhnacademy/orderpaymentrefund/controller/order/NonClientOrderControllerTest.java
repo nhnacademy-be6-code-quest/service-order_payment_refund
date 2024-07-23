@@ -34,7 +34,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @Import({SecurityConfig.class, HeaderFilter.class})
-@WebMvcTest(NonClientOrderController.class)
+@WebMvcTest(NonClientOrderControllerImpl.class)
 class NonClientOrderControllerTest {
 
     @Autowired
@@ -149,24 +149,5 @@ class NonClientOrderControllerTest {
         ).andExpect(status().isOk());
 
     }
-
-    @Test
-    @DisplayName("비회원 주문 상태 변경 - 결제완료")
-    void paymentCompleteOrderTest() throws Exception {
-
-        HttpHeaders headers = new HttpHeaders();
-
-        Long orderId = 1L;
-
-        doNothing().when(nonClientOrderService)
-            .paymentCompleteOrder(any(HttpHeaders.class), anyLong());
-
-        mockMvc.perform(
-            put("/api/non-client/orders/{orderId}/payment-complete", orderId)
-                .headers(headers)
-        ).andExpect(status().isOk());
-
-    }
-
 
 }
