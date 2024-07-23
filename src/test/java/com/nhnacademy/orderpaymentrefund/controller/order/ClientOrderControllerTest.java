@@ -35,7 +35,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @Import(SecurityConfig.class)
-@WebMvcTest(ClientOrderController.class)
+@WebMvcTest(ClientOrderControllerImpl.class)
 class ClientOrderControllerTest {
 
     private static final String ID_HEADER = "X-User-Id";
@@ -141,6 +141,7 @@ class ClientOrderControllerTest {
 
     }
 
+
     @Test
     @DisplayName("회원 주문 상품 상세 단건 조회")
     void getProductOrderDetailTest() throws Exception {
@@ -230,7 +231,5 @@ class ClientOrderControllerTest {
                 .header(ID_HEADER, "1")
         ).andExpect(status().isOk());
     }
-
-
 
 }

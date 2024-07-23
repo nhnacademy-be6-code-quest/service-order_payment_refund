@@ -4,89 +4,208 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
-import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
-import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
+
+@Tag(name = "ClientOrderController", description = "회원 주문 관련 API")
+public interface ClientOrderController {
 
 
-@RestController
-@RequiredArgsConstructor
-public class ClientOrderController {
-
-    private final ClientOrderService clientOrderService;
-
-    // 회원 임시 주문 저장
+    @Operation(
+        summary = "회원 주문 임시 저장",
+        description = "회원 주문 임시 저장",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "결제 승인 요청 정보"
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "찾으려는 주문이 없음"
+            )
+        }
+    )
     @PostMapping("/api/client/orders/temporary")
-    public ResponseEntity<String> saveClientTemporalOrder(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderCreateForm clientOrderForm){
-        clientOrderService.saveClientTemporalOrder(headers, clientOrderForm);
-        return ResponseEntity.ok().body("주문이 임시저장 되었습니다");
-    }
+    ResponseEntity<String> saveClientTemporalOrder(@RequestHeader HttpHeaders headers,
+        @RequestBody ClientOrderCreateForm clientOrderForm);
 
-    // 회원 임시 주문 가져오기
+
+
+    @Operation(
+        summary = "회원 임시 저장 주문 조회",
+        description = "회원 임시 저장 주문 조회",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "회원 임시 저장 주문 조회 성공"
+            )
+        }
+    )
     @GetMapping("/api/client/orders/temporary")
-    public ResponseEntity<ClientOrderCreateForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers, String tossOrderId){
-        return ResponseEntity.ok().body(clientOrderService.getClientTemporalOrder(headers, tossOrderId));
-    }
+    ResponseEntity<ClientOrderCreateForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers,
+        String tossOrderId);
 
-    // 주문 내역(Page) 조회 - 모든
+
+
+    @Operation(
+        summary = "회원 주문 리스트 조회",
+        description = "회원 주문 리스트 조회",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "회원 주문 조회 성공"
+            )
+        }
+    )
     @GetMapping("/api/client/orders")
-    public ResponseEntity<Page<ClientOrderGetResponseDto>> getOrders(
-            @RequestHeader HttpHeaders headers,
-            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
-            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
-            @RequestParam(value = "sortBy", defaultValue = "orderDatetime", required = false) String sortBy,
-            @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir){
-        return ResponseEntity.ok(clientOrderService.getOrders(headers, pageSize, pageNo, sortBy, sortDir));
-    }
+    ResponseEntity<Page<ClientOrderGetResponseDto>> getOrders(
+        @RequestHeader HttpHeaders headers,
+        @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
+        @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
+        @RequestParam(value = "sortBy", defaultValue = "orderDatetime", required = false) String sortBy,
+        @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir);
 
+
+
+    @Operation(
+        summary = "회원 주문 조회",
+        description = "회원 주문 조회",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "회원 주문 조회 성공"
+            )
+        }
+    )
     @GetMapping("/api/client/orders/{orderId}")
-    public ResponseEntity<ClientOrderGetResponseDto> getOrder(@RequestHeader HttpHeaders headers, @PathVariable Long orderId){
-        return ResponseEntity.ok(clientOrderService.getOrder(headers, orderId));
-    }
+    ResponseEntity<ClientOrderGetResponseDto> getOrder(@RequestHeader HttpHeaders headers,
+        @PathVariable Long orderId);
 
+
+    @Operation(
+        summary = "회원 주문 상품 상세 리스트 조회",
+        description = "회원 주문 상품 상세 리스트 조회",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "회원 주문 상품 상세 리스트 성공"
+            )
+        }
+    )
     @GetMapping("/api/client/orders/{orderId}/detail")
-    public ResponseEntity<List<ProductOrderDetailResponseDto>> getProductOrderDetailList(@RequestHeader HttpHeaders headers, @PathVariable Long orderId){
-        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailResponseDtoList(headers, orderId));
-    }
+    ResponseEntity<List<ProductOrderDetailResponseDto>> getProductOrderDetailList(
+        @RequestHeader HttpHeaders headers, @PathVariable Long orderId);
 
+
+
+    @Operation(
+        summary = "회원 주문 상품 상세 단건 조회",
+        description = "회원 주문 상품 상세 단건 조회",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "회원 주문 상품 상세 단건 조회"
+            )
+        }
+    )
     @GetMapping("/api/client/orders/{orderId}/detail/{productOrderDetailId}")
-    public ResponseEntity<ProductOrderDetailResponseDto> getProductOrderDetail(@RequestHeader HttpHeaders headers, @PathVariable Long orderId,
-                                                                               @PathVariable Long productOrderDetailId){
-        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailResponseDto(headers, orderId, productOrderDetailId));
-    }
+    ResponseEntity<ProductOrderDetailResponseDto> getProductOrderDetail(
+        @RequestHeader HttpHeaders headers, @PathVariable Long orderId,
+        @PathVariable Long productOrderDetailId);
 
+
+
+    @Operation(
+        summary = "회원 주문 상품 옵션 상세 단건 조회",
+        description = "회원 주문 상품 옵션 상세 단건 조회",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "회원 주문 상품 옵션 상세 단건 조회"
+            )
+        }
+    )
     @GetMapping("/api/client/orders/{orderId}/detail/{productOrderDetailId}/option")
-    public ResponseEntity<ProductOrderDetailOptionResponseDto> getProductOrderDetailOption(@RequestHeader HttpHeaders headers,@PathVariable Long orderId,
-                                                                                           @PathVariable Long productOrderDetailId){
-        return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailOptionResponseDto(headers, orderId, productOrderDetailId));
-    }
+    ResponseEntity<ProductOrderDetailOptionResponseDto> getProductOrderDetailOption(
+        @RequestHeader HttpHeaders headers, @PathVariable Long orderId,
+        @PathVariable Long productOrderDetailId);
 
+
+
+    @Operation(
+        summary = "회원 주문 취소 상태 변경",
+        description = "회원 주문 취소 상태 변경",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "회원 주문 취소 상태 변경"
+            )
+        }
+    )
     @PutMapping("/api/client/orders/{orderId}/cancel")
-    public ResponseEntity<String> cancelOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
-        clientOrderService.cancelOrder(headers, orderId);
-        return ResponseEntity.ok("주문 취소 상태로 변경되었습니다.");
-    }
+    ResponseEntity<String> cancelOrder(@RequestHeader HttpHeaders headers,
+        @PathVariable long orderId);
 
+
+
+    @Operation(
+        summary = "회원 주문 환불 상태 변경",
+        description = "회원 주문 환불 상태 변경",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "회원 주문 환불 상태 변경"
+            )
+        }
+    )
     @PutMapping("/api/client/orders/{orderId}/refund")
-    public ResponseEntity<String> refundOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
-        clientOrderService.refundOrder(headers, orderId);
-        return ResponseEntity.ok("반품 상태로 변경되었습니다.");
-    }
+    ResponseEntity<String> refundOrder(@RequestHeader HttpHeaders headers,
+        @PathVariable long orderId);
 
+
+
+    @Operation(
+        summary = "회원 주문 환불 요청",
+        description = "회원 주문 환불 요청",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "회원 주문 환불 요청"
+            )
+        }
+    )
     @PutMapping("/api/client/orders/{orderId}/refund-request")
-    public ResponseEntity<String> refundRequestOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
-        clientOrderService.refundOrderRequest(headers, orderId);
-        return ResponseEntity.ok("반품 요청 상태로 변경되었습니다.");
-    }
+    ResponseEntity<String> refundRequestOrder(@RequestHeader HttpHeaders headers,
+        @PathVariable long orderId);
 
+
+
+    @Operation(
+        summary = "회원 주문 상태 조회",
+        description = "회원 주문 상태 조회",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "회원 주문 상태 조회"
+            )
+        }
+    )
     @GetMapping("/api/client/orders/{orderId}/order-status")
-    public ResponseEntity<String> getOrderStatus(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
-        return ResponseEntity.ok().body(clientOrderService.getOrderStatus(headers, orderId));
-    }
+    ResponseEntity<String> getOrderStatus(@RequestHeader HttpHeaders headers,
+        @PathVariable long orderId);
+
 
 }

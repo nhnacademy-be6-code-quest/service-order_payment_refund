@@ -100,7 +100,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
         for(ProductOrderDetail productOrderDetail : orderDetailList){
 
-            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail).orElseThrow(OrderNotFoundException::new);
 
             NonClientOrderGetResponseDto.NonClientProductOrderDetailListItem nonClientProductOrderDetailListItem =
                     NonClientOrderGetResponseDto.NonClientProductOrderDetailListItem.builder()
@@ -120,21 +120,6 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
 
         return nonClientOrderGetResponseDto;
-    }
-
-    @Override
-    public void paymentCompleteOrder(HttpHeaders headers, long orderId) {
-
-        checkNonClient(headers);
-
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-
-        if(order.getOrderStatus() != OrderStatus.WAIT_PAYMENT){
-            throw new CannotCancelOrder("결제대기 상태일때만 결제완료 상태로 변경할 수 있습니다.");
-        }
-
-        order.updateOrderStatus(OrderStatus.DELIVERY_COMPLETE);
-        orderRepository.save(order);
     }
 
     @Override

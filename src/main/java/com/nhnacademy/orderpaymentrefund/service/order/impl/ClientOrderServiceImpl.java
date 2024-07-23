@@ -55,7 +55,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     @Override
     public ClientOrderCreateForm getClientTemporalOrder(HttpHeaders headers, String tossOrderId) {
 
-        ClientOrderCreateForm clientOrderCreateForm = (ClientOrderCreateForm) redisTemplate.opsForHash().get("order", tossOrderId);
+        ClientOrderCreateForm clientOrderCreateForm = (ClientOrderCreateForm) redisTemplate.opsForHash()
+            .get("order", tossOrderId);
 
         assert clientOrderCreateForm != null;
 
@@ -63,16 +64,18 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public Page<ClientOrderGetResponseDto> getOrders(HttpHeaders headers, int pageSize, int pageNo, String sortBy, String sortDir) {
+    public Page<ClientOrderGetResponseDto> getOrders(HttpHeaders headers, int pageSize, int pageNo,
+        String sortBy, String sortDir) {
         long clientId = getClientId(headers);
         Sort sort = getSortOrder(sortBy, sortDir);
         Page<Order> orderPage = fetchOrders(clientId, pageSize, pageNo, sort);
 
         List<ClientOrderGetResponseDto> responseDtoList = new ArrayList<>();
-        for(Order order : orderPage.getContent()){
+        for (Order order : orderPage.getContent()) {
             responseDtoList.add(mapToClientOrderGetResponseDto(order));
         }
-        return new PageImpl<>(responseDtoList, PageRequest.of(pageNo, pageSize, sort), responseDtoList.size());
+        return new PageImpl<>(responseDtoList, PageRequest.of(pageNo, pageSize, sort),
+            responseDtoList.size());
     }
 
     private Sort getSortOrder(String sortBy, String sortDir) {
@@ -105,7 +108,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
             .accumulatedPoint(order.getAccumulatedPoint())
             .build();
 
-        List<ClientOrderGetResponseDto.ClientProductOrderDetailListItem> detailListItems = getOrderDetails(order);
+        List<ClientOrderGetResponseDto.ClientProductOrderDetailListItem> detailListItems = getOrderDetails(
+            order);
         detailListItems.forEach(dto::addClientProductOrderDetailListItem);
 
         return dto;
@@ -115,15 +119,19 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         return date == null ? null : date.toString();
     }
 
-    private List<ClientOrderGetResponseDto.ClientProductOrderDetailListItem> getOrderDetails(Order order) {
-        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(order);
+    private List<ClientOrderGetResponseDto.ClientProductOrderDetailListItem> getOrderDetails(
+        Order order) {
+        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(
+            order);
         return orderDetailList.stream()
             .map(this::mapToClientProductOrderDetailListItem)
             .toList();
     }
 
-    private ClientOrderGetResponseDto.ClientProductOrderDetailListItem mapToClientProductOrderDetailListItem(ProductOrderDetail productOrderDetail) {
-        ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+    private ClientOrderGetResponseDto.ClientProductOrderDetailListItem mapToClientProductOrderDetailListItem(
+        ProductOrderDetail productOrderDetail) {
+        ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail(
+            productOrderDetail).orElseThrow();
 
         return getClientProductOrderDetailListItem(productOrderDetail, option);
     }
@@ -136,37 +144,44 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
         assert order.getClientId() != null;
-        if(!order.getClientId().equals(clientId)) throw new WrongClientAccessToOrder();
+        if (!order.getClientId().equals(clientId)) {
+            throw new WrongClientAccessToOrder();
+        }
 
         ClientOrderGetResponseDto clientOrderGetResponseDto = ClientOrderGetResponseDto.builder()
-                .orderId(order.getOrderId())
-                .clientId(order.getClientId())
-                .couponId(order.getCouponId())
-                .tossOrderId(order.getTossOrderId())
-                .orderDatetime(order.getOrderDatetime().toString().split("T")[0])
-                .orderStatus(order.getOrderStatus().kor)
-                .productTotalAmount(order.getProductTotalAmount())
-                .shippingFee(order.getShippingFee())
-                .orderTotalAmount(order.getOrderTotalAmount())
-                .designatedDeliveryDate(order.getDesignatedDeliveryDate() == null ? null : order.getDesignatedDeliveryDate().toString())
-                .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
-                .phoneNumber(order.getPhoneNumber())
-                .deliveryAddress(order.getDeliveryAddress())
-                .discountAmountByCoupon(order.getDiscountAmountByCoupon())
-                .discountAmountByPoint(order.getDiscountAmountByPoint())
-                .accumulatedPoint(order.getAccumulatedPoint())
-                .build();
+            .orderId(order.getOrderId())
+            .clientId(order.getClientId())
+            .couponId(order.getCouponId())
+            .tossOrderId(order.getTossOrderId())
+            .orderDatetime(order.getOrderDatetime().toString().split("T")[0])
+            .orderStatus(order.getOrderStatus().kor)
+            .productTotalAmount(order.getProductTotalAmount())
+            .shippingFee(order.getShippingFee())
+            .orderTotalAmount(order.getOrderTotalAmount())
+            .designatedDeliveryDate(order.getDesignatedDeliveryDate() == null ? null
+                : order.getDesignatedDeliveryDate().toString())
+            .deliveryStartDate(order.getDeliveryStartDate() == null ? null
+                : order.getDeliveryStartDate().toString())
+            .phoneNumber(order.getPhoneNumber())
+            .deliveryAddress(order.getDeliveryAddress())
+            .discountAmountByCoupon(order.getDiscountAmountByCoupon())
+            .discountAmountByPoint(order.getDiscountAmountByPoint())
+            .accumulatedPoint(order.getAccumulatedPoint())
+            .build();
 
-        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(order);
+        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(
+            order);
 
-        for(ProductOrderDetail productOrderDetail : orderDetailList){
+        for (ProductOrderDetail productOrderDetail : orderDetailList) {
 
-            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
+            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(
+                productOrderDetail).orElseThrow();
 
+            ClientOrderGetResponseDto.ClientProductOrderDetailListItem clientProductOrderDetailListItem = getClientProductOrderDetailListItem(
+                productOrderDetail, productOrderDetailOption);
 
-            ClientOrderGetResponseDto.ClientProductOrderDetailListItem clientProductOrderDetailListItem = getClientProductOrderDetailListItem(productOrderDetail, productOrderDetailOption);
-
-            clientOrderGetResponseDto.addClientProductOrderDetailListItem(clientProductOrderDetailListItem);
+            clientOrderGetResponseDto.addClientProductOrderDetailListItem(
+                clientProductOrderDetailListItem);
 
         }
 
@@ -182,11 +197,12 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
         assert order.getClientId() != null;
-        if(!order.getClientId().equals(clientId)) {
+        if (!order.getClientId().equals(clientId)) {
             throw new WrongClientAccessToOrder();
         }
 
-        if(!(order.getOrderStatus() == OrderStatus.WAIT_PAYMENT || order.getOrderStatus() == OrderStatus.PAYED)){
+        if (!(order.getOrderStatus() == OrderStatus.WAIT_PAYMENT
+            || order.getOrderStatus() == OrderStatus.PAYED)) {
             log.info("유효하지 않은 상태에서 주문취소 상태 변경을 시도하고 있습니다.");
             throw new CannotCancelOrder("결제대기 또는 결제완료 상태에서 주문취소 가능합니다.");
         }
@@ -205,11 +221,11 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
         assert order.getClientId() != null;
-        if(!order.getClientId().equals(clientId)) {
+        if (!order.getClientId().equals(clientId)) {
             throw new WrongClientAccessToOrder();
         }
 
-        if(order.getOrderStatus() != OrderStatus.REFUND_REQUEST){
+        if (order.getOrderStatus() != OrderStatus.REFUND_REQUEST) {
             throw new CannotCancelOrder("반품 요청 상태에서 반품 가능합니다.");
         }
 
@@ -226,11 +242,12 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
         assert order.getClientId() != null;
-        if(!order.getClientId().equals(clientId)) {
+        if (!order.getClientId().equals(clientId)) {
             throw new WrongClientAccessToOrder();
         }
 
-        if(!(order.getOrderStatus() == OrderStatus.DELIVERING || order.getOrderStatus() == OrderStatus.DELIVERY_COMPLETE)){
+        if (!(order.getOrderStatus() == OrderStatus.DELIVERING
+            || order.getOrderStatus() == OrderStatus.DELIVERY_COMPLETE)) {
             throw new CannotCancelOrder("배송중 또는 배송완료 상태에서 주문반품요청 가능합니다.");
         }
 
@@ -248,7 +265,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
         assert order.getClientId() != null;
-        if(!order.getClientId().equals(clientId)) {
+        if (!order.getClientId().equals(clientId)) {
             throw new WrongClientAccessToOrder();
         }
 
@@ -257,29 +274,31 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public List<ProductOrderDetailResponseDto> getProductOrderDetailResponseDtoList(HttpHeaders headers, Long orderId) {
+    public List<ProductOrderDetailResponseDto> getProductOrderDetailResponseDtoList(
+        HttpHeaders headers, Long orderId) {
 
         long clientId = getClientId(headers);
 
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
         assert order.getClientId() != null;
-        if(!order.getClientId().equals(clientId)) {
+        if (!order.getClientId().equals(clientId)) {
             throw new WrongClientAccessToOrder();
         }
 
-        List<ProductOrderDetail> productOrderDetailList = productOrderDetailRepository.findAllByOrder(order);
+        List<ProductOrderDetail> productOrderDetailList = productOrderDetailRepository.findAllByOrder(
+            order);
 
         List<ProductOrderDetailResponseDto> productOrderDetailResponseDtoList = new ArrayList<>();
 
-        for(ProductOrderDetail productOrderDetail : productOrderDetailList){
+        for (ProductOrderDetail productOrderDetail : productOrderDetailList) {
             ProductOrderDetailResponseDto productOrderDetailResponseDto = ProductOrderDetailResponseDto.builder()
-                    .orderId(order.getOrderId())
-                    .productId(productOrderDetail.getProductId())
-                    .quantity(productOrderDetail.getQuantity())
-                    .pricePerProduct(productOrderDetail.getPricePerProduct())
-                    .productName(productOrderDetail.getProductName())
-                    .build();
+                .orderId(order.getOrderId())
+                .productId(productOrderDetail.getProductId())
+                .quantity(productOrderDetail.getQuantity())
+                .pricePerProduct(productOrderDetail.getPricePerProduct())
+                .productName(productOrderDetail.getProductName())
+                .build();
             productOrderDetailResponseDtoList.add(productOrderDetailResponseDto);
         }
 
@@ -287,70 +306,65 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
-    public ProductOrderDetailResponseDto getProductOrderDetailResponseDto(HttpHeaders headers, Long orderId, Long productOrderDetailId) {
+    public ProductOrderDetailResponseDto getProductOrderDetailResponseDto(HttpHeaders headers,
+        Long orderId, Long productOrderDetailId) {
 
-        Order order = getOrderEntity(headers,orderId);
+        Order order = getOrderEntity(headers, orderId);
 
         ProductOrderDetail productOrderDetail = getProductOrderDetailEntity(productOrderDetailId);
 
-        if(!productOrderDetail.getOrder().equals(order)){
+        if (!productOrderDetail.getOrder().equals(order)) {
             throw new BadRequestExceptionType("orderId와 productOrderDetailId가 매칭되지 않습니다");
         }
 
         return ProductOrderDetailResponseDto.builder()
-                .productOrderDetailId(productOrderDetail.getProductOrderDetailId())
-                .orderId(order.getOrderId())
-                .productId(productOrderDetail.getProductId())
-                .quantity(productOrderDetail.getQuantity())
-                .pricePerProduct(productOrderDetail.getPricePerProduct())
-                .productName(productOrderDetail.getProductName())
-                .build();
+            .productOrderDetailId(productOrderDetail.getProductOrderDetailId())
+            .orderId(order.getOrderId())
+            .productId(productOrderDetail.getProductId())
+            .quantity(productOrderDetail.getQuantity())
+            .pricePerProduct(productOrderDetail.getPricePerProduct())
+            .productName(productOrderDetail.getProductName())
+            .build();
 
     }
 
     @Override
-    public ProductOrderDetailOptionResponseDto getProductOrderDetailOptionResponseDto(HttpHeaders headers, long orderId, long detailId) {
+    public ProductOrderDetailOptionResponseDto getProductOrderDetailOptionResponseDto(
+        HttpHeaders headers, long orderId, long detailId) {
 
-        Order order =  getOrderEntity(headers, orderId);
         ProductOrderDetail productOrderDetail = getProductOrderDetailEntity(detailId);
-        ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail);
-
-        if(!productOrderDetail.getOrder().equals(order)){
-            throw new BadRequestExceptionType("orderId와 productOrderDetailId가 매칭되지 않습니다");
-        }
-
-        if(productOrderDetailOption == null){
-            throw new BadRequestExceptionType("옵션 상품을 구매하지 않았습니다");
-        }
+        ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(
+            productOrderDetail).orElseThrow(ProductOrderDetailNotFoundException::new);
 
         return ProductOrderDetailOptionResponseDto.builder()
-                .productId(productOrderDetailOption.getProductId())
-                .productOrderDetailId(productOrderDetailOption.getProductOrderDetailOptionId())
-                .optionProductName(productOrderDetailOption.getOptionProductName())
-                .optionProductPrice(productOrderDetailOption.getOptionProductPrice())
-                .optionProductQuantity(productOrderDetailOption.getQuantity())
-                .build();
+            .productId(productOrderDetailOption.getProductId())
+            .productOrderDetailId(productOrderDetailOption.getProductOrderDetailOptionId())
+            .optionProductName(productOrderDetailOption.getOptionProductName())
+            .optionProductPrice(productOrderDetailOption.getOptionProductPrice())
+            .optionProductQuantity(productOrderDetailOption.getQuantity())
+            .build();
     }
 
-    private long getClientId(HttpHeaders headers){
-        if (headers.get(ID_HEADER) == null){
+    private long getClientId(HttpHeaders headers) {
+        if (headers.get(ID_HEADER) == null) {
             throw new UnauthorizedExceptionType("clientId is null");
         }
         return Long.parseLong(Objects.requireNonNull(headers.getFirst(ID_HEADER)));
     }
 
-    private ProductOrderDetail getProductOrderDetailEntity(Long productOrderDetailId){
-        return productOrderDetailRepository.findById(productOrderDetailId).orElseThrow(ProductOrderDetailNotFoundException::new);
+    private ProductOrderDetail getProductOrderDetailEntity(Long productOrderDetailId) {
+        return productOrderDetailRepository.findById(productOrderDetailId)
+            .orElseThrow(ProductOrderDetailNotFoundException::new);
     }
 
-    private Order getOrderEntity(HttpHeaders headers, Long orderId){
+    private Order getOrderEntity(HttpHeaders headers, Long orderId) {
 
         long clientId = getClientId(headers);
 
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
         assert order.getClientId() != null;
-        if(!order.getClientId().equals(clientId)) {
+        if (!order.getClientId().equals(clientId)) {
             throw new WrongClientAccessToOrder();
         }
 
@@ -358,17 +372,22 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     }
 
-    private ClientOrderGetResponseDto.ClientProductOrderDetailListItem getClientProductOrderDetailListItem(ProductOrderDetail productOrderDetail, ProductOrderDetailOption productOrderDetailOption){
+    private ClientOrderGetResponseDto.ClientProductOrderDetailListItem getClientProductOrderDetailListItem(
+        ProductOrderDetail productOrderDetail, ProductOrderDetailOption productOrderDetailOption) {
         return ClientOrderGetResponseDto.ClientProductOrderDetailListItem.builder()
             .productOrderDetailId(productOrderDetail.getProductOrderDetailId())
             .productId(productOrderDetail.getProductId())
             .productName(productOrderDetail.getProductName())
             .productQuantity(productOrderDetail.getQuantity())
             .productSinglePrice(productOrderDetail.getPricePerProduct())
-            .optionProductId(productOrderDetailOption == null ? null : productOrderDetailOption.getProductId())
-            .optionProductName(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductName())
-            .optionProductQuantity(productOrderDetailOption == null ? null : productOrderDetailOption.getQuantity())
-            .optionProductSinglePrice(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductPrice())
+            .optionProductId(
+                productOrderDetailOption == null ? null : productOrderDetailOption.getProductId())
+            .optionProductName(productOrderDetailOption == null ? null
+                : productOrderDetailOption.getOptionProductName())
+            .optionProductQuantity(
+                productOrderDetailOption == null ? null : productOrderDetailOption.getQuantity())
+            .optionProductSinglePrice(productOrderDetailOption == null ? null
+                : productOrderDetailOption.getOptionProductPrice())
             .build();
     }
 

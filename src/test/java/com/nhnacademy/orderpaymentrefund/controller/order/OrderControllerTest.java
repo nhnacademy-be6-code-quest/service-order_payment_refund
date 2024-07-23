@@ -38,7 +38,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 
 @Import(SecurityConfig.class)
-@WebMvcTest(OrderController.class)
+@WebMvcTest(OrderControllerImpl.class)
 class OrderControllerTest {
 
     @Autowired
