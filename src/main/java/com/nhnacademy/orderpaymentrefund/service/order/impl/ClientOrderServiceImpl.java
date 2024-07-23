@@ -68,12 +68,11 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         Sort sort = getSortOrder(sortBy, sortDir);
         Page<Order> orderPage = fetchOrders(clientId, pageSize, pageNo, sort);
 
-        List<ClientOrderGetResponseDto> responseDtoList = orderPage.getContent().stream()
-            .filter(order -> validateOrderClient(order, clientId))
-            .map(this::mapToClientOrderGetResponseDto)
-            .toList();
-
-        return new PageImpl<>(responseDtoList, PageRequest.of(pageNo, pageSize, sort), orderPage.getTotalElements());
+        List<ClientOrderGetResponseDto> responseDtoList = new ArrayList<>();
+        for(Order order : orderPage.getContent()){
+            responseDtoList.add(mapToClientOrderGetResponseDto(order));
+        }
+        return new PageImpl<>(responseDtoList, PageRequest.of(pageNo, pageSize, sort), responseDtoList.size());
     }
 
     private Sort getSortOrder(String sortBy, String sortDir) {
@@ -84,14 +83,6 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     private Page<Order> fetchOrders(long clientId, int pageSize, int pageNo, Sort sort) {
         return orderRepository.findByClientId(clientId, PageRequest.of(pageNo, pageSize, sort));
-    }
-
-    private boolean validateOrderClient(Order order, long clientId) {
-        assert order.getClientId() != null;
-        if (!order.getClientId().equals(clientId)) {
-            throw new WrongClientAccessToOrder();
-        }
-        return true;
     }
 
     private ClientOrderGetResponseDto mapToClientOrderGetResponseDto(Order order) {
@@ -196,12 +187,14 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         }
 
         if(!(order.getOrderStatus() == OrderStatus.WAIT_PAYMENT || order.getOrderStatus() == OrderStatus.PAYED)){
+            log.info("유효하지 않은 상태에서 주문취소 상태 변경을 시도하고 있습니다.");
             throw new CannotCancelOrder("결제대기 또는 결제완료 상태에서 주문취소 가능합니다.");
         }
 
         order.updateOrderStatus(OrderStatus.CANCEL);
         orderRepository.save(order);
 
+        log.info("order 주문 취소 상태 변경 성공");
     }
 
     @Override
@@ -216,8 +209,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
             throw new WrongClientAccessToOrder();
         }
 
-        if(!(order.getOrderStatus() == OrderStatus.DELIVERING || order.getOrderStatus() == OrderStatus.DELIVERY_COMPLETE)){
-            throw new CannotCancelOrder("배송중 또는 배송완료 상태에서 주문취소 가능합니다.");
+        if(order.getOrderStatus() != OrderStatus.REFUND_REQUEST){
+            throw new CannotCancelOrder("반품 요청 상태에서 반품 가능합니다.");
         }
 
         order.updateOrderStatus(OrderStatus.REFUND);
@@ -238,7 +231,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         }
 
         if(!(order.getOrderStatus() == OrderStatus.DELIVERING || order.getOrderStatus() == OrderStatus.DELIVERY_COMPLETE)){
-            throw new CannotCancelOrder("배송중 또는 배송완료 상태에서 주문취소요청 가능합니다.");
+            throw new CannotCancelOrder("배송중 또는 배송완료 상태에서 주문반품요청 가능합니다.");
         }
 
         order.updateOrderStatus(OrderStatus.REFUND_REQUEST);
@@ -246,26 +239,6 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     }
 
-    @Override
-    public void paymentCompleteOrder(HttpHeaders headers, long orderId) {
-
-        long clientId = getClientId(headers);
-
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-
-        assert order.getClientId() != null;
-        if(!order.getClientId().equals(clientId)) {
-            throw new WrongClientAccessToOrder();
-        }
-
-        if(order.getOrderStatus() != OrderStatus.WAIT_PAYMENT){
-            throw new CannotCancelOrder("결제대기 상태일때만 결제완료 상태로 변경할 수 있습니다.");
-        }
-
-        order.updateOrderStatus(OrderStatus.DELIVERY_COMPLETE);
-        orderRepository.save(order);
-
-    }
 
     @Override
     public String getOrderStatus(HttpHeaders headers, long orderId) {

@@ -1,11 +1,9 @@
 package com.nhnacademy.orderpaymentrefund.dto.order.request;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDate;
 import java.util.List;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor

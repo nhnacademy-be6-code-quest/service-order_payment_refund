@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 class ClientOrderGetResponseDtoTest {
     @Test
-    public void testClientOrderGetResponseDtoBuilder() {
+    void testClientOrderGetResponseDtoBuilder() {
         // Given
         Long orderId = 1L;
         Long clientId = 2L;

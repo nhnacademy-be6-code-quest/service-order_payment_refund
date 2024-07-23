@@ -14,7 +14,6 @@ public interface ClientOrderService {
     ClientOrderCreateForm getClientTemporalOrder(HttpHeaders headers, String tossOrderId);
     Page<ClientOrderGetResponseDto> getOrders(HttpHeaders headers, int pageSize, int pageNo, String sortBy, String sortDir);
     ClientOrderGetResponseDto getOrder(HttpHeaders headers, long orderId);
-    void paymentCompleteOrder(HttpHeaders headers, long orderId);
     void cancelOrder(HttpHeaders headers, long orderId);
     void refundOrder(HttpHeaders headers, long orderId);
     void refundOrderRequest(HttpHeaders headers, long orderId);
