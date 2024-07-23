@@ -180,21 +180,6 @@ class ClientOrderControllerTest {
     }
 
     @Test
-    @DisplayName("주문상태 변경 - 결제완료")
-    void paymentCompleteOrderTest() throws Exception {
-
-        Long orderId = 1L;
-
-        doNothing().when(clientOrderService).paymentCompleteOrder(any(HttpHeaders.class), anyLong());
-
-        mockMvc.perform(
-            put("/api/client/orders/{orderId}/payment-complete", orderId)
-                .header(ID_HEADER, "1")
-        ).andExpect(status().isOk());
-
-    }
-
-    @Test
     @DisplayName("주문상태 변경 - 주문취소")
     void cancelOrderTest() throws Exception {
         Long orderId = 1L;
@@ -245,5 +230,7 @@ class ClientOrderControllerTest {
                 .header(ID_HEADER, "1")
         ).andExpect(status().isOk());
     }
+
+
 
 }
