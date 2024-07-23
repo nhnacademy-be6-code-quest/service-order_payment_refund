@@ -2,7 +2,6 @@ package com.nhnacademy.orderpaymentrefund.dto.order.response;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto.ClientProductOrderDetailListItem;
 import java.util.List;
 import org.junit.jupiter.api.Test;
