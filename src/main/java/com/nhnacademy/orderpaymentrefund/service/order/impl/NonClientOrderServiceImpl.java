@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 public class NonClientOrderServiceImpl implements NonClientOrderService {
 
     private static final String ID_HEADER = "X-User-Id";
-
+    private static final String ID_KEY = "order";
     private final OrderRepository orderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
@@ -42,15 +42,15 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     public void saveNonClientTemporalOrder(HttpHeaders headers, NonClientOrderForm requestDto) {
         checkNonClient(headers);
         String tossOrderId = requestDto.getTossOrderId();
-        redisTemplate.opsForHash().put("order", tossOrderId, requestDto);
-        Object data = redisTemplate.opsForHash().get("order", tossOrderId);
+        redisTemplate.opsForHash().put(ID_KEY, tossOrderId, requestDto);
+        Object data = redisTemplate.opsForHash().get(ID_KEY, tossOrderId);
         log.info("data: {}", data);
     }
 
     @Override
     public NonClientOrderForm getNonClientTemporalOrder(HttpHeaders headers, String tossOrderId) {
         checkNonClient(headers);
-        return (NonClientOrderForm) redisTemplate.opsForHash().get("order", tossOrderId);
+        return (NonClientOrderForm) redisTemplate.opsForHash().get(ID_KEY, tossOrderId);
     }
 
     @Override
