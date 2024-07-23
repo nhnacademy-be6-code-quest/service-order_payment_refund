@@ -5,66 +5,124 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPas
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.NonClientOrderGetResponseDto;
-import com.nhnacademy.orderpaymentrefund.service.order.NonClientOrderService;
-import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 
-/**
- * NonClientOrderController : 비회원 주문 컨트롤러
- * @author 박희원(bakhuiwon326)
- * @version 2.0
- **/
 
-@RestController
-@RequiredArgsConstructor
-public class NonClientOrderController {
+@Tag(name = "NonClientOrderController", description = "비회원 주문 관련 API")
+public interface NonClientOrderController {
 
-    private final NonClientOrderService nonClientOrderService;
 
-    // 비회원 임시 주문 저장
+    @Operation(
+        summary = "비회원 주문 임시 저장",
+        description = "비회원 주문 임시 저장",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "주문 임시 저장 성공"
+            )
+        }
+    )
     @PostMapping("/api/non-client/orders/temporary")
-    public ResponseEntity<String> saveNonClientTemporalOrder(@RequestHeader HttpHeaders headers, @RequestBody NonClientOrderForm nonClientOrderForm){
-        nonClientOrderService.saveNonClientTemporalOrder(headers, nonClientOrderForm);
-        return ResponseEntity.ok().body("비회원 임시 주문 저장");
-    }
+    ResponseEntity<String> saveNonClientTemporalOrder(@RequestHeader HttpHeaders headers,
+        @RequestBody NonClientOrderForm nonClientOrderForm);
 
-    // 비회원 임시 주문 가져오기
+
+
+
+    @Operation(
+        summary = "비회원 임시 주문 조회",
+        description = "비회원 임시 주문 조회",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "임시 주문 조회 성공"
+            ),
+            @ApiResponse(
+                responseCode = "403",
+                description = "임시 주문 조회 실패. 회원이 비회원 주문 조회를 시도하고 있음. 잘못된 접근."
+            )
+        }
+    )
     @GetMapping("/api/non-client/orders/temporary")
-    public ResponseEntity<NonClientOrderForm> getNonClientTemporalOrder(@RequestHeader HttpHeaders headers, String tossOrderId){
-        return ResponseEntity.ok().body(nonClientOrderService.getNonClientTemporalOrder(headers, tossOrderId));
-    }
+    ResponseEntity<NonClientOrderForm> getNonClientTemporalOrder(
+        @RequestHeader HttpHeaders headers, String tossOrderId);
 
+
+
+
+    @Operation(
+        summary = "비회원 주문 조회",
+        description = "비회원 주문 조회",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "비회원 주문 조회에 성공"
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "비회원 주문 조회 실패. 주문을 찾을 수 없음"
+            )
+        }
+    )
     @GetMapping("/api/non-client/orders/{orderId}")
-    public ResponseEntity<NonClientOrderGetResponseDto> findNonClientOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId, @RequestParam("pwd") String orderPassword){
-        return ResponseEntity.ok().body(nonClientOrderService.getOrder(headers, orderId, orderPassword));
-    }
+    ResponseEntity<NonClientOrderGetResponseDto> findNonClientOrder(
+        @RequestHeader HttpHeaders headers, @PathVariable long orderId,
+        @RequestParam("pwd") String orderPassword);
 
+
+
+
+    @Operation(
+        summary = "비회원 주문 번호 찾기",
+        description = "비회원 주문 번호 찾기",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "해당 비회원이 주문했던 과거 주문 이력들을 조회하는데 성공."
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "주문을 찾을 수 없음"
+            )
+        }
+    )
     @GetMapping("/api/non-client/orders/find-orderId")
-    public ResponseEntity<Page<FindNonClientOrderIdInfoResponseDto>> findNonClientOrderId(@ModelAttribute FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto,
-                                                                                          @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
-                                                                                          @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
-                                                                                          @RequestParam(value = "sortBy", defaultValue = "orderDatetime", required = false) String sortBy,
-                                                                                          @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir,
-                                                                                          @RequestHeader HttpHeaders headers){
-        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        return ResponseEntity.ok().body(nonClientOrderService.findNonClientOrderId(headers, findNonClientOrderIdRequestDto, PageRequest.of(pageNo, pageSize, sort)));
-    }
+    ResponseEntity<Page<FindNonClientOrderIdInfoResponseDto>> findNonClientOrderId(
+        @ModelAttribute FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto,
+        @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
+        @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
+        @RequestParam(value = "sortBy", defaultValue = "orderDatetime", required = false) String sortBy,
+        @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir,
+        @RequestHeader HttpHeaders headers);
 
+
+
+
+    @Operation(
+        summary = "비회원 주문 비밀번호 찾기",
+        description = "비회원 주문 비밀번호 찾기",
+        responses = {
+            @ApiResponse(
+                responseCode = "200"
+            )
+        }
+    )
     @GetMapping("/api/non-client/orders/find-password")
-    public ResponseEntity<String> findNonClientOrderPassword(@RequestHeader HttpHeaders headers,
-                                                             FindNonClientOrderPasswordRequestDto findNonClientOrderPasswordRequestDto){
-        return ResponseEntity.ok().body(nonClientOrderService.findNonClientOrderPassword(headers, findNonClientOrderPasswordRequestDto));
-    }
+    ResponseEntity<String> findNonClientOrderPassword(@RequestHeader HttpHeaders headers,
+        FindNonClientOrderPasswordRequestDto findNonClientOrderPasswordRequestDto);
 
-    @PutMapping("/api/non-client/orders/{orderId}/payment-complete")
-    public ResponseEntity<String> paymentCompleteOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
-        nonClientOrderService.paymentCompleteOrder(headers, orderId);
-        return ResponseEntity.ok("주문 결제완료 되었습니다.");
-    }
+
 
 }
