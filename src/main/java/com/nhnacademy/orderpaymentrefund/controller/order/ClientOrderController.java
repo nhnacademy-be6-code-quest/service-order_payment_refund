@@ -66,12 +66,6 @@ public class ClientOrderController {
         return ResponseEntity.ok().body(clientOrderService.getProductOrderDetailOptionResponseDto(headers, orderId, productOrderDetailId));
     }
 
-    @PutMapping("/api/client/orders/{orderId}/payment-complete")
-    public ResponseEntity<String> paymentCompleteOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
-        clientOrderService.paymentCompleteOrder(headers, orderId);
-        return ResponseEntity.ok("주문 결제완료 되었습니다.");
-    }
-
     @PutMapping("/api/client/orders/{orderId}/cancel")
     public ResponseEntity<String> cancelOrder(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
         clientOrderService.cancelOrder(headers, orderId);
