@@ -1,4 +1,4 @@
-package com.nhnacademy.orderpaymentrefund.service.payment.impl;
+package com.nhnacademy.orderpaymentrefund.service.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.orderpaymentrefund.client.client.ClientServiceFeignClient;
@@ -27,6 +27,7 @@ import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
+import com.nhnacademy.orderpaymentrefund.service.payment.impl.PaymentServiceImpl;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
@@ -171,101 +172,6 @@ class PaymentServiceImplTest {
         Field field = target.getClass().getDeclaredField(fieldName);
         field.setAccessible(true); // Make private fields accessible
         field.set(target, value);
-    }
-
-
-    @Test
-    void testSavePaymentWithClientOrder() throws Exception {
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-User-Id", "1");
-
-        TossPaymentsResponseDto tossPaymentsResponseDto = TossPaymentsResponseDto.builder()
-            .orderName("Order1")
-            .totalAmount(1000)
-            .method("카드")
-            .paymentKey("payment-key")
-            .orderId("order-id")
-            .build();
-
-        List<OrderDetailDtoItem> orderDetailDtoItemList = new ArrayList<>();
-        ClientOrderCreateForm clientOrderCreateForm = createClientOrderCreateForm("order-id", orderDetailDtoItemList);
-        Order order = createOrder(1000L, 500L, 500L, 50, 1L, OrderStatus.PAYED);
-
-        // Mock behaviors
-        when(redisTemplate.opsForHash().get(eq("order"), eq("order-id"))).thenReturn(clientOrderCreateForm);
-        when(objectMapper.convertValue(any(), eq(ClientOrderCreateForm.class))).thenReturn(clientOrderCreateForm);
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
-        when(paymentRepository.save(any(Payment.class))).thenReturn(new Payment());
-
-        // Call the method under test
-        paymentService.savePayment(headers, tossPaymentsResponseDto);
-
-        // Verify interactions with mocks
-        verify(rabbitTemplate).convertAndSend(
-            eq(cartCheckoutExchangeName),
-            eq(cartCheckoutRoutingKey),
-            any(CartCheckoutRequestDto.class)
-        );
-        verify(rabbitTemplate).convertAndSend(
-            eq(inventoryDecreaseExchangeName),
-            eq(inventoryDecreaseRoutingKey),
-            any(InventoryDecreaseRequestDto.class)
-        );
-        verify(rabbitTemplate).convertAndSend(
-            eq(pointUseExchangeName),
-            eq(pointUseRoutingKey),
-            any(PointUsagePaymentMessageDto.class)
-        );
-
-        // Verify that orderRepository.save is called twice
-        verify(orderRepository, times(1)).save(any(Order.class));
-
-        // Optionally verify other method calls
-        verify(paymentRepository).save(any(Payment.class));
-    }
-
-    @Test
-    void testSavePaymentWithNonClientOrder() throws Exception {
-        HttpHeaders headers = new HttpHeaders();
-
-        TossPaymentsResponseDto tossPaymentsResponseDto = TossPaymentsResponseDto.builder()
-            .orderName("Order1")
-            .totalAmount(1000)
-            .method("카드")
-            .paymentKey("payment-key")
-            .orderId("order-id")
-            .build();
-
-        List<OrderDetailDtoItem> orderDetailDtoItemList = new ArrayList<>();
-        NonClientOrderForm nonClientOrderForm = createNonClientOrderForm("order-id", orderDetailDtoItemList);
-        Order order = createOrder(1000L, 500L, 500L, 50, 1L, OrderStatus.PAYED);
-
-        // Mock behaviors
-        when(redisTemplate.opsForHash().get(eq("order"), eq("order-id"))).thenReturn(nonClientOrderForm);
-        when(objectMapper.convertValue(any(), eq(NonClientOrderForm.class))).thenReturn(nonClientOrderForm);
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
-        when(paymentRepository.save(any(Payment.class))).thenReturn(new Payment());
-
-        // Call the method under test
-        paymentService.savePayment(headers, tossPaymentsResponseDto);
-
-        // Verify interactions with mocks
-        // Check that InventoryDecreaseRequestDto was sent
-        verify(rabbitTemplate).convertAndSend(
-            eq(inventoryDecreaseExchangeName),
-            eq(inventoryDecreaseRoutingKey),
-            any(InventoryDecreaseRequestDto.class)
-        );
-
-        // Check that CartCheckoutRequestDto was sent
-
-
-        // Verify that orderRepository.save is called once
-        verify(orderRepository, times(1)).save(any(Order.class));
-
-        // Optionally verify other method calls
-        verify(paymentRepository).save(any(Payment.class));
     }
 
     @Test

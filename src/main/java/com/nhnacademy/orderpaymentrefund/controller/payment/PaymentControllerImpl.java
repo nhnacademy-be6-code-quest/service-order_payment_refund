@@ -47,9 +47,5 @@ public class PaymentControllerImpl implements PaymentController{
         return paymentService.getPostProcessRequiredPaymentResponseDto(tossOrderId);
     }
 
-    @Override
-    public void updateUser(@RequestBody UserUpdateGradeRequestDto userUpdateGradeRequestDto){
-        paymentService.updateUserGrade(userUpdateGradeRequestDto);
-    }
 
 }

@@ -179,7 +179,7 @@ public class OrderServiceImpl implements OrderService {
 
         Long orderTotalAmount = null;
 
-        Object data = redisTemplate.opsForHash().get("order", tossOrderId);
+        Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, tossOrderId);
         NonClientOrderForm nonClientOrderForm = objectMapper.convertValue(data,
             NonClientOrderForm.class);
 

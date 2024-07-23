@@ -24,41 +24,6 @@ public class RefundPolicyService {
     private final RefundPolicyRepository refundPolicyRepository;
     private final OrderRepository orderRepository;
 
-    public List<RefundPolicyRequestDto> findAllRefundPolicyRequestDtoList() {
-        List<RefundPolicyRequestDto> refundPolicyRequestDtoList = new ArrayList<>();
-
-        List<RefundPolicy> refundPolicyList = refundPolicyRepository.findAll();
-        for (RefundPolicy refundPolicy : refundPolicyList) {
-            refundPolicyRequestDtoList.add(
-                RefundPolicyRequestDto.builder()
-                    .refundAndCancelPolicyType(refundPolicy.getRefundPolicyType())
-                    .refundShippingFee(refundPolicy.getRefundShippingFee())
-                    .build()
-            );
-        }
-        return refundPolicyRequestDtoList;
-    }
-
-    public void save(RefundPolicyRegisterRequestDto requestDto){
-        RefundPolicy refund = refundPolicyRepository.findByRefundPolicyType(requestDto.getRefundPolicyType());
-        if (refund != null){
-        refund.setRefundPolicyExpirationDate(LocalDateTime.now());
-        refundPolicyRepository.save(refund);
-        }
-
-        RefundPolicy refundPolicy = new RefundPolicy(requestDto.getRefundPolicyType(), requestDto.getRefundShippingFee());
-        refundPolicyRepository.save(refundPolicy);
-    }
-
-
-
-    public void refundStatus(long oderId){
-        Order order = orderRepository.findById(oderId).orElseThrow(()-> new OrderNotFoundException("주문을 찾을 수 없습니다."));
-        order.updateOrderStatus(OrderStatus.REFUND_REQUEST);
-        orderRepository.save(order);
-    }
-
-
     public List<RefundPolicyResponseDto> findRefundPolicy(long orderId) {
         Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new OrderNotFoundException("주문을 찾을 수 없습니다."));
