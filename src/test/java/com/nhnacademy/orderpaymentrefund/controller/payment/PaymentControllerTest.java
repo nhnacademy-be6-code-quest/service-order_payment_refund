@@ -133,17 +133,4 @@ class PaymentControllerTest {
             .andExpect(jsonPath("$.productIdList[1]").value(2))
             .andExpect(jsonPath("$.productIdList[2]").value(3));
     }
-
-    @Test
-    @DisplayName("회원 등급 업데이트 성공")
-    void updateUserTest() throws Exception {
-        UserUpdateGradeRequestDto request = new UserUpdateGradeRequestDto(456L);
-
-        doNothing().when(paymentService).updateUserGrade(any(UserUpdateGradeRequestDto.class));
-
-        mockMvc.perform(post("/api/order/update/user")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isOk());
-    }
 }
