@@ -13,37 +13,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-
-    @Query("SELECT o FROM Order o WHERE o.orderId = :orderId and o.nonClientOrdererName = :ordererName and o.phoneNumber = :phoneNumber and o.nonClientOrdererEmail = :email")
-    Optional<Order> findNonClientOrderPassword(@Param("orderId") Long orderId, @Param("ordererName") String ordererName, @Param("phoneNumber") String phoneNumber, @Param("email") String email);
-
-    // 비회원 주문 아이디 찾기
-    @Query("SELECT o FROM Order o WHERE o.nonClientOrdererName = :#{#req.ordererName} " +
-        "AND o.phoneNumber = :#{#req.phoneNumber} " +
-        "AND o.nonClientOrdererEmail = :#{#req.email}")
-    Page<Order> findNonClientOrderIdList(@Param("req") FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, @Param("pageable") Pageable pageable);
-
-    Optional<Order> findByOrderIdAndNonClientOrderPassword(Long orderId, String orderPassword);
-
-    Page<Order> findByClientId(long clientId, Pageable pageable);
-
-    @Query("SELECT SUM(o.productTotalAmount - o.discountAmountByCoupon - o.discountAmountByPoint) " +
-        "FROM Order o " +
-        "WHERE (o.orderStatus = 1 OR o.orderStatus = 2 OR o.orderStatus = 3) " +
-        "  AND o.orderDatetime >= :startDate " +
-        "  AND o.clientId = :clientId")
-    Long sumFinalAmountForCompletedOrders(Long clientId, @Param("startDate") LocalDateTime startDate);
-
-    @Query("SELECT SUM(podo.optionProductPrice) " +
-        "FROM ProductOrderDetailOption podo " +
-        "LEFT JOIN ProductOrderDetail pod on pod.productOrderDetailId = podo.productOrderDetail.productOrderDetailId " +
-        "LEFT JOIN Order o on o.orderId = pod.order.orderId " +
-        "WHERE (o.orderStatus = 1 OR o.orderStatus = 2 OR o.orderStatus = 3) " +
-        "AND o.orderDatetime >= :startDate " +
-        "AND o.clientId = :clientId")
-    Long getTotalOptionPriceForLastThreeMonths(Long clientId, @Param("startDate") LocalDateTime localDateTime);
-
-    Optional<Order> getOrderByTossOrderId(String tossOrderId);
-
+    Optional<Order> getOrderByOrderCode(String orderCode);
     List<Order> findAllByOrderStatusAndOrderDatetimeBefore(OrderStatus orderStatus, LocalDateTime orderDatetime);
 }

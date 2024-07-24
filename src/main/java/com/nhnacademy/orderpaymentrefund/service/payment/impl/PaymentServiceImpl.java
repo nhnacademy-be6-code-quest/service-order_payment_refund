@@ -5,6 +5,8 @@ import com.nhnacademy.orderpaymentrefund.client.client.ClientServiceFeignClient;
 import com.nhnacademy.orderpaymentrefund.client.payment.TossPaymentsClient;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverter;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
+import com.nhnacademy.orderpaymentrefund.domain.order.ClientOrder;
+import com.nhnacademy.orderpaymentrefund.domain.order.NonClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
@@ -24,6 +26,7 @@ import com.nhnacademy.orderpaymentrefund.dto.product.CartCheckoutRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.InventoryDecreaseRequestDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
+import com.nhnacademy.orderpaymentrefund.repository.order.ClientOrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
@@ -56,9 +59,10 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final ClientOrderRepository clientOrderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
-    private final RedisTemplate<String, ?> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
     private final TossPaymentsClient tossPaymentsClient;
     private final String tossSecretKey;
@@ -233,35 +237,62 @@ public class PaymentServiceImpl implements PaymentService {
 
     private Order saveClientOrderEntity(Long clientId,
         ClientOrderCreateForm clientOrderCreateForm) {
-        Order order = Order.clientOrderBuilder()
-            .clientId(clientId)
-            .couponId(clientOrderCreateForm.getCouponId())
-            .tossOrderId(clientOrderCreateForm.getTossOrderId())
+
+        // order 생성 및 저장
+        Order order = Order.builder()
+            .orderCode(clientOrderCreateForm.getOrderCode())
             .productTotalAmount(clientOrderCreateForm.getProductTotalAmount())
             .shippingFee(clientOrderCreateForm.getShippingFee())
             .designatedDeliveryDate(clientOrderCreateForm.getDesignatedDeliveryDate())
             .phoneNumber(clientOrderCreateForm.getPhoneNumber())
             .deliveryAddress(clientOrderCreateForm.getDeliveryAddress())
-            .discountAmountByPoint(clientOrderCreateForm.getUsedPointDiscountAmount())
-            .discountAmountByCoupon(clientOrderCreateForm.getCouponDiscountAmount())
-            .accumulatedPoint(clientOrderCreateForm.getAccumulatePoint())
             .build();
-        return orderRepository.save(order);
+
+        orderRepository.save(order);
+
+        // client order 생성 및 저장
+        ClientOrder clientOrder = ClientOrder.builder()
+            .clientId(clientId)
+            .couponId(clientOrderCreateForm.getCouponId())
+            .discountAmountByPoint(
+                clientOrderCreateForm.getUsedPointDiscountAmount() == null ? 0 : clientOrderCreateForm.getUsedPointDiscountAmount())
+            .discountAmountByCoupon(
+                clientOrderCreateForm.getCouponDiscountAmount() == null ? 0 : clientOrderCreateForm.getCouponDiscountAmount())
+            .accumulatedPoint(
+                clientOrderCreateForm.getAccumulatePoint() == null ? 0 : clientOrderCreateForm.getAccumulatePoint())
+            .order(order)
+            .build();
+
+        clientOrderRepository.save(clientOrder);
+
+        return order;
+
     }
 
-    private Order saveNonClientOrderEntity(NonClientOrderForm nonClientOrderForm) {
-        Order order = Order.nonClientOrderBuilder()
-            .tossOrderId(nonClientOrderForm.getTossOrderId())
+    private Order saveNonClientOrderEntity(
+        NonClientOrderForm nonClientOrderForm) {
+
+        Order order = Order.builder()
+            .orderCode(nonClientOrderForm.getOrderCode())
             .productTotalAmount(nonClientOrderForm.getProductTotalAmount())
             .shippingFee(nonClientOrderForm.getShippingFee())
             .designatedDeliveryDate(nonClientOrderForm.getDesignatedDeliveryDate())
             .phoneNumber(nonClientOrderForm.getPhoneNumber())
             .deliveryAddress(nonClientOrderForm.getDeliveryAddress())
-            .nonClientOrdererName(nonClientOrderForm.getOrderedPersonName())
-            .nonClientOrdererEmail(nonClientOrderForm.getEmail())
-            .nonClientOrderPassword(nonClientOrderForm.getOrderPassword())
             .build();
-        return orderRepository.save(order);
+
+        orderRepository.save(order);
+
+        // nonclient order 생성 및 저장
+        NonClientOrder nonClientOrder = NonClientOrder.builder()
+            .nonClientOrderPassword(nonClientOrderForm)
+            .nonClientOrdererEmail(nonClientOrderForm)
+            .nonClientOrdererName(nonClientOrderForm )
+            .build()
+
+        nonClientOrderRepository.save(nonClientOrder);
+
+        return order;
     }
 
     private void savePaymentEntity(Order order, TossPaymentsResponseDto tossPaymentsResponseDto) {
@@ -303,14 +334,14 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentGradeResponseDto getPaymentRecordOfClient(Long clientId) {
-        Long totalOptionPriceForLastThreeMonth = orderRepository.getTotalOptionPriceForLastThreeMonths(
+        Long totalOptionPriceForLastThreeMonth = clientOrderRepository.getTotalOptionPriceForLastThreeMonths(
             clientId, LocalDateTime.now().minusDays(90L));
         if (totalOptionPriceForLastThreeMonth == null) {
             totalOptionPriceForLastThreeMonth = 0L;
         }
         log.error("totalOptionPriceForLastThreeMonth: {}", totalOptionPriceForLastThreeMonth);
 
-        Long sumFinalAmountForCompletedOrders = orderRepository.sumFinalAmountForCompletedOrders(
+        Long sumFinalAmountForCompletedOrders = clientOrderRepository.sumFinalAmountForCompletedOrders(
             clientId, LocalDateTime.now().minusDays(90L));
         log.error("sumFinalAmountForCompletedOrders: {}", sumFinalAmountForCompletedOrders);
 
@@ -384,20 +415,22 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(
-        String tossOrderId) {
+        HttpHeaders headers, String orderCode) {
 
-        Order order = orderRepository.getOrderByTossOrderId(tossOrderId).orElseThrow(
+        Order order = orderRepository.getOrderByOrderCode(orderCode).orElseThrow(
             OrderNotFoundException::new);
 
+        Long clientId = getClientId(headers);
+
         Payment payment = paymentRepository.findByOrder_OrderId(order.getOrderId())
-            .orElseThrow(() -> new PaymentNotFoundException(tossOrderId));
+            .orElseThrow(() -> new PaymentNotFoundException(orderCode));
 
         List<ProductOrderDetail> productOrderDetailList = productOrderDetailRepository.findAllByOrder(
             order);
 
         PostProcessRequiredPaymentResponseDto postProcessRequiredPaymentResponseDto = PostProcessRequiredPaymentResponseDto.builder()
             .orderId(order.getOrderId())
-            .clientId(order.getClientId())
+            .clientId(clientId)
             .amount(payment.getPayAmount())
             .paymentMethodName(payment.getPaymentMethodName())
             .build();
