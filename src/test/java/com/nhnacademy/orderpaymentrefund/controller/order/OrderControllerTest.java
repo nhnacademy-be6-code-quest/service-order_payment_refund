@@ -51,21 +51,21 @@ class OrderControllerTest {
     @DisplayName("토스 결제 요청을 위한 데이터 조회 성공")
     void getPaymentOrderShowRequestDtoSuccessTest() throws Exception {
 
-        String tossOrderId = "uuid-1234";
+        String orderCode = "uuid-1234";
 
         PaymentOrderShowRequestDto resDto = PaymentOrderShowRequestDto.builder()
             .orderTotalAmount(10000L)
             .discountAmountByCoupon(1000L)
             .discountAmountByPoint(500L)
-            .tossOrderId(tossOrderId)
+            .orderCode(orderCode)
             .orderHistoryTitle("초코파이 외 10건")
             .build();
 
         when(orderService.getPaymentOrderShowRequestDto(any(HttpHeaders.class),
-            any(HttpServletRequest.class), eq(tossOrderId))).thenReturn(resDto);
+            any(HttpServletRequest.class), eq(orderCode))).thenReturn(resDto);
 
         mockMvc.perform(
-            get("/api/order/{tossOrderId}/payment-request", tossOrderId)
+            get("/api/order/{orderCode}/payment-request", orderCode)
                 .header("X-User-Id", 181)
         ).andExpect(status().isOk());
 
@@ -75,14 +75,14 @@ class OrderControllerTest {
     @DisplayName("토스 결제 요청을 위한 데이터 조회 실패")
     void getPaymentOrderShowRequestDtoFailTest() throws Exception {
 
-        String tossOrderId = "저장되지 않은 uuid-1234";
+        String orderCode = "저장되지 않은 uuid-1234";
 
         doThrow(new OrderNotFoundException()).when(
             orderService).getPaymentOrderShowRequestDto(any(HttpHeaders.class),
-            any(HttpServletRequest.class), eq(tossOrderId));
+            any(HttpServletRequest.class), eq(orderCode));
 
         mockMvc.perform(
-            get("/api/order/{tossOrderId}/payment-request", tossOrderId)
+            get("/api/order/{orderCode}/payment-request", orderCode)
         ).andExpect(status().isNotFound());
 
     }
@@ -91,12 +91,12 @@ class OrderControllerTest {
     @DisplayName("토스 결제 승인을 위한 데이터 조회 성공")
     void getPaymentOrderApproveRequestDtoSuccessTest() throws Exception {
 
-        String tossOrderId = "uuid-1234";
+        String orderCode = "uuid-1234";
 
         PaymentOrderApproveRequestDto resDto = PaymentOrderApproveRequestDto.builder()
             .orderTotalAmount(10000L)
             .discountAmountByCoupon(10000L)
-            .tossOrderId(tossOrderId)
+            .orderCode(orderCode)
             .clientId(10000L)
             .couponId(10000L)
             .discountAmountByPoint(10000L)
@@ -105,10 +105,10 @@ class OrderControllerTest {
             .build();
 
         when(orderService.getPaymentOrderApproveRequestDto(any(HttpHeaders.class),
-            any(HttpServletRequest.class), eq(tossOrderId))).thenReturn(resDto);
+            any(HttpServletRequest.class), eq(orderCode))).thenReturn(resDto);
 
         mockMvc.perform(
-            get("/api/order/{tossOrderId}/approve-request", tossOrderId)
+            get("/api/order/{orderCode}/approve-request", orderCode)
         ).andExpect(status().isOk());
 
 
@@ -118,14 +118,14 @@ class OrderControllerTest {
     @DisplayName("토스 결제 승인을 위한 데이터 조회 실패")
     void getPaymentOrderApproveRequestDtoFailTest() throws Exception {
 
-        String tossOrderId = "uuid-1234";
+        String orderCode = "uuid-1234";
 
         doThrow(new OrderNotFoundException()).when(orderService)
             .getPaymentOrderApproveRequestDto(any(HttpHeaders.class),
-                any(HttpServletRequest.class), eq(tossOrderId));
+                any(HttpServletRequest.class), eq(orderCode));
 
         mockMvc.perform(
-            get("/api/order/{tossOrderId}/approve-request", tossOrderId)
+            get("/api/order/{orderCode}/approve-request", orderCode)
         ).andExpect(status().isNotFound());
 
     }

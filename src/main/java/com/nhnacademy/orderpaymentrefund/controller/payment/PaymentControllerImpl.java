@@ -43,8 +43,8 @@ public class PaymentControllerImpl implements PaymentController{
     }
 
     @Override
-    public PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(@RequestParam("tossOrderId") String tossOrderId){
-        return paymentService.getPostProcessRequiredPaymentResponseDto(tossOrderId);
+    public PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(@RequestHeader HttpHeaders headers, @RequestParam("orderCode") String orderCode){
+        return paymentService.getPostProcessRequiredPaymentResponseDto(headers, orderCode);
     }
 
 

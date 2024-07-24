@@ -23,6 +23,6 @@ public class NonClientOrderForm {
     LocalDate designatedDeliveryDate; // 배송날짜 지정
     Integer paymentMethod; // 결제 방식
     String orderPassword; // 주문 비밀번호
-    String tossOrderId; // 토스 주문
+    String orderCode; // 토스 주문
 
 }

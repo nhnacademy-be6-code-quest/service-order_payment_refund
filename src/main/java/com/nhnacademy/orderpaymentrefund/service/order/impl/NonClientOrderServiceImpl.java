@@ -1,5 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
+import com.nhnacademy.orderpaymentrefund.domain.order.NonClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
@@ -12,6 +13,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.response.NonClientOrderGetRes
 import com.nhnacademy.orderpaymentrefund.exception.CannotCancelOrder;
 import com.nhnacademy.orderpaymentrefund.exception.ClientCannotAccessNonClientService;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
+import com.nhnacademy.orderpaymentrefund.repository.order.NonClientOrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
@@ -33,6 +35,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     private static final String ID_HEADER = "X-User-Id";
     private static final String ID_KEY = "order";
     private final OrderRepository orderRepository;
+    private final NonClientOrderRepository nonClientOrderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
 
@@ -41,83 +44,104 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     @Override
     public void saveNonClientTemporalOrder(HttpHeaders headers, NonClientOrderForm requestDto) {
         checkNonClient(headers);
-        String tossOrderId = requestDto.getTossOrderId();
-        redisTemplate.opsForHash().put(ID_KEY, tossOrderId, requestDto);
-        Object data = redisTemplate.opsForHash().get(ID_KEY, tossOrderId);
+        String orderCode = requestDto.getOrderCode();
+        redisTemplate.opsForHash().put(ID_KEY, orderCode, requestDto);
+        Object data = redisTemplate.opsForHash().get(ID_KEY, orderCode);
         log.info("data: {}", data);
     }
 
     @Override
-    public NonClientOrderForm getNonClientTemporalOrder(HttpHeaders headers, String tossOrderId) {
+    public NonClientOrderForm getNonClientTemporalOrder(HttpHeaders headers, String orderCode) {
         checkNonClient(headers);
-        return (NonClientOrderForm) redisTemplate.opsForHash().get(ID_KEY, tossOrderId);
+        return (NonClientOrderForm) redisTemplate.opsForHash().get(ID_KEY, orderCode);
     }
 
     @Override
-    public Page<FindNonClientOrderIdInfoResponseDto> findNonClientOrderId(HttpHeaders headers, FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, Pageable pageable) {
+    public Page<FindNonClientOrderIdInfoResponseDto> findNonClientOrderId(HttpHeaders headers,
+        FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, Pageable pageable) {
+
         checkNonClient(headers);
-        return orderRepository.findNonClientOrderIdList(findNonClientOrderIdRequestDto, pageable).map(order ->
-            FindNonClientOrderIdInfoResponseDto.builder()
-                    .orderDateTime(order.getOrderDatetime())
-                    .orderId(order.getOrderId())
+
+        nonClientOrderRepository.findByNonClientOrdererNameAndNonClientOrdererEmailAndOrder_PhoneNumber(
+            findNonClientOrderIdRequestDto.ordererName(), findNonClientOrderIdRequestDto.email(),
+            findNonClientOrderIdRequestDto.phoneNumber(), pageable);
+
+        return nonClientOrderRepository.findByNonClientOrdererNameAndNonClientOrdererEmailAndOrder_PhoneNumber(
+                findNonClientOrderIdRequestDto.ordererName(), findNonClientOrderIdRequestDto.email(),
+                findNonClientOrderIdRequestDto.phoneNumber(), pageable)
+            .map(nonClientOrder ->
+                FindNonClientOrderIdInfoResponseDto.builder()
+                    .orderDateTime(nonClientOrder.getOrder().getOrderDatetime())
+                    .orderId(nonClientOrder.getOrder().getOrderId())
                     .build());
     }
 
     @Override
-    public String findNonClientOrderPassword(HttpHeaders headers, FindNonClientOrderPasswordRequestDto requestDto) {
+    public String findNonClientOrderPassword(HttpHeaders headers,
+        FindNonClientOrderPasswordRequestDto requestDto) {
+
         checkNonClient(headers);
-        Order order = orderRepository.findNonClientOrderPassword(requestDto.getOrderId(),
-                requestDto.getOrdererName(),
-                requestDto.getOrdererName(),
-                requestDto.getEmail()).orElseThrow(OrderNotFoundException::new);
-        return order.getNonClientOrderPassword();
+
+        NonClientOrder nonClientOrder = nonClientOrderRepository.findByNonClientOrdererNameAndNonClientOrdererEmailAndOrder_PhoneNumber(
+            requestDto.getOrdererName(), requestDto.getEmail(), requestDto.getPhoneNumber()).orElseThrow(OrderNotFoundException::new);
+
+        return nonClientOrder.getNonClientOrderPassword();
     }
 
     @Override
-    public NonClientOrderGetResponseDto getOrder(HttpHeaders headers, long orderId, String orderPassword) {
+    public NonClientOrderGetResponseDto getOrder(HttpHeaders headers, long orderId,
+        String orderPassword) {
         checkNonClient(headers);
 
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+        NonClientOrder nonClientOrder = nonClientOrderRepository.findByNonClientOrderPasswordEqualsAndOrder_OrderId(orderPassword, orderId).orElseThrow(OrderNotFoundException::new);
+        Order order = nonClientOrder.getOrder();
 
         NonClientOrderGetResponseDto nonClientOrderGetResponseDto = NonClientOrderGetResponseDto.builder()
-                .orderId(order.getOrderId())
-                .tossOrderId(order.getTossOrderId())
-                .orderDatetime(order.getOrderDatetime().toString().split("T")[0])
-                .orderStatus(order.getOrderStatus().kor)
-                .productTotalAmount(order.getProductTotalAmount())
-                .shippingFee(order.getShippingFee())
-                .orderTotalAmount(order.getOrderTotalAmount())
-                .designatedDeliveryDate(order.getDesignatedDeliveryDate() == null ? null : order.getDesignatedDeliveryDate().toString())
-                .deliveryStartDate(order.getDeliveryStartDate() == null ? null : order.getDeliveryStartDate().toString())
-                .phoneNumber(order.getPhoneNumber())
-                .deliveryAddress(order.getDeliveryAddress())
-                .nonClientOrderPassword(order.getNonClientOrderPassword())
-                .nonClientOrdererName(order.getNonClientOrdererName())
-                .nonClientOrdererEmail(order.getNonClientOrdererEmail())
-                .build();
+            .orderId(order.getOrderId())
+            .orderCode(order.getOrderCode())
+            .orderDatetime(order.getOrderDatetime().toString().split("T")[0])
+            .orderStatus(order.getOrderStatus().kor)
+            .productTotalAmount(order.getProductTotalAmount())
+            .shippingFee(order.getShippingFee())
+            .orderTotalAmount(order.getOrderTotalAmount())
+            .designatedDeliveryDate(order.getDesignatedDeliveryDate() == null ? null
+                : order.getDesignatedDeliveryDate().toString())
+            .deliveryStartDate(order.getDeliveryStartDate() == null ? null
+                : order.getDeliveryStartDate().toString())
+            .phoneNumber(order.getPhoneNumber())
+            .deliveryAddress(order.getDeliveryAddress())
+            .nonClientOrderPassword(nonClientOrder.getNonClientOrderPassword())
+            .nonClientOrdererName(nonClientOrder.getNonClientOrdererName())
+            .nonClientOrdererEmail(nonClientOrder.getNonClientOrdererEmail())
+            .build();
 
-        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(order);
+        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder_OrderId(orderId);
 
-        for(ProductOrderDetail productOrderDetail : orderDetailList){
+        for (ProductOrderDetail productOrderDetail : orderDetailList) {
 
-            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(productOrderDetail).orElseThrow(OrderNotFoundException::new);
+            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail_ProductOrderDetailId(
+                productOrderDetail.getProductOrderDetailId()).orElse(null);
 
             NonClientOrderGetResponseDto.NonClientProductOrderDetailListItem nonClientProductOrderDetailListItem =
-                    NonClientOrderGetResponseDto.NonClientProductOrderDetailListItem.builder()
-                            .productId(productOrderDetail.getProductOrderDetailId())
-                            .productName(productOrderDetail.getProductName())
-                            .productQuantity(productOrderDetail.getQuantity())
-                            .productSinglePrice(productOrderDetail.getPricePerProduct())
-                            .optionProductId(productOrderDetailOption == null ? null : productOrderDetailOption.getProductId())
-                            .optionProductName(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductName())
-                            .optionProductQuantity(productOrderDetailOption == null ? null : productOrderDetailOption.getQuantity())
-                            .optionProductSinglePrice(productOrderDetailOption == null ? null : productOrderDetailOption.getOptionProductPrice())
-                            .build();
+                NonClientOrderGetResponseDto.NonClientProductOrderDetailListItem.builder()
+                    .productId(productOrderDetail.getProductOrderDetailId())
+                    .productName(productOrderDetail.getProductName())
+                    .productQuantity(productOrderDetail.getQuantity())
+                    .productSinglePrice(productOrderDetail.getPricePerProduct())
+                    .optionProductId(productOrderDetailOption == null ? null
+                        : productOrderDetailOption.getProductId())
+                    .optionProductName(productOrderDetailOption == null ? null
+                        : productOrderDetailOption.getOptionProductName())
+                    .optionProductQuantity(productOrderDetailOption == null ? null
+                        : productOrderDetailOption.getQuantity())
+                    .optionProductSinglePrice(productOrderDetailOption == null ? null
+                        : productOrderDetailOption.getOptionProductPrice())
+                    .build();
 
-            nonClientOrderGetResponseDto.addNonClientProductOrderDetailList(nonClientProductOrderDetailListItem);
+            nonClientOrderGetResponseDto.addNonClientProductOrderDetailList(
+                nonClientProductOrderDetailListItem);
 
         }
-
 
         return nonClientOrderGetResponseDto;
     }
@@ -129,7 +153,8 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
-        if(!(order.getOrderStatus() == OrderStatus.WAIT_PAYMENT || order.getOrderStatus() == OrderStatus.PAYED)){
+        if (!(order.getOrderStatus() == OrderStatus.WAIT_PAYMENT
+            || order.getOrderStatus() == OrderStatus.PAYED)) {
             throw new CannotCancelOrder("결제대기 또는 결제완료 상태에서 주문취소 가능합니다.");
         }
 
@@ -144,7 +169,8 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
-        if(!(order.getOrderStatus() == OrderStatus.DELIVERING || order.getOrderStatus() == OrderStatus.DELIVERY_COMPLETE)){
+        if (!(order.getOrderStatus() == OrderStatus.DELIVERING
+            || order.getOrderStatus() == OrderStatus.DELIVERY_COMPLETE)) {
             throw new CannotCancelOrder("배송중 또는 배송완료 상태에서 주문취소 가능합니다.");
         }
 
@@ -152,8 +178,8 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
         orderRepository.save(order);
     }
 
-    private void checkNonClient(HttpHeaders headers){
-        if(headers.get(ID_HEADER) != null){
+    private void checkNonClient(HttpHeaders headers) {
+        if (headers.get(ID_HEADER) != null) {
             throw new ClientCannotAccessNonClientService();
         }
     }

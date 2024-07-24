@@ -13,7 +13,7 @@ class NonClientOrderGetResponseDtoTest {
     void testNonClientOrderGetResponseDtoBuilder() {
         // Given
         Long orderId = 1L;
-        String tossOrderId = "toss-1234";
+        String orderCode = "toss-1234";
         String orderDatetime = "2024-07-21T12:34:56";
         String orderStatus = "COMPLETED";
         Long productTotalAmount = 20000L;
@@ -56,7 +56,7 @@ class NonClientOrderGetResponseDtoTest {
         // When
         NonClientOrderGetResponseDto dto = NonClientOrderGetResponseDto.builder()
             .orderId(orderId)
-            .tossOrderId(tossOrderId)
+            .orderCode(orderCode)
             .orderDatetime(orderDatetime)
             .orderStatus(orderStatus)
             .productTotalAmount(productTotalAmount)
@@ -74,7 +74,7 @@ class NonClientOrderGetResponseDtoTest {
 
         // Then
         assertThat(dto.getOrderId()).isEqualTo(orderId);
-        assertThat(dto.getTossOrderId()).isEqualTo(tossOrderId);
+        assertThat(dto.getOrderCode()).isEqualTo(orderCode);
         assertThat(dto.getOrderDatetime()).isEqualTo(orderDatetime);
         assertThat(dto.getOrderStatus()).isEqualTo(orderStatus);
         assertThat(dto.getProductTotalAmount()).isEqualTo(productTotalAmount);
@@ -98,7 +98,7 @@ class NonClientOrderGetResponseDtoTest {
 
         // Then
         assertThat(dto.getOrderId()).isNull();
-        assertThat(dto.getTossOrderId()).isNull();
+        assertThat(dto.getOrderCode()).isNull();
         assertThat(dto.getOrderDatetime()).isNull();
         assertThat(dto.getOrderStatus()).isNull();
         assertThat(dto.getProductTotalAmount()).isNull();
@@ -118,7 +118,7 @@ class NonClientOrderGetResponseDtoTest {
     void testNonClientOrderGetResponseDtoAllArgsConstructor() {
         // Given
         Long orderId = 1L;
-        String tossOrderId = "toss-1234";
+        String orderCode = "toss-1234";
         String orderDatetime = "2024-07-21T12:34:56";
         String orderStatus = "COMPLETED";
         Long productTotalAmount = 20000L;
@@ -134,14 +134,14 @@ class NonClientOrderGetResponseDtoTest {
 
         // When
         NonClientOrderGetResponseDto dto = new NonClientOrderGetResponseDto(
-            orderId, tossOrderId, orderDatetime, orderStatus, productTotalAmount, shippingFee, orderTotalAmount,
+            orderId, orderCode, orderDatetime, orderStatus, productTotalAmount, shippingFee, orderTotalAmount,
             designatedDeliveryDate, deliveryStartDate, phoneNumber, deliveryAddress, nonClientOrderPassword,
             nonClientOrdererName, nonClientOrdererEmail
         );
 
         // Then
         assertThat(dto.getOrderId()).isEqualTo(orderId);
-        assertThat(dto.getTossOrderId()).isEqualTo(tossOrderId);
+        assertThat(dto.getOrderCode()).isEqualTo(orderCode);
         assertThat(dto.getOrderDatetime()).isEqualTo(orderDatetime);
         assertThat(dto.getOrderStatus()).isEqualTo(orderStatus);
         assertThat(dto.getProductTotalAmount()).isEqualTo(productTotalAmount);

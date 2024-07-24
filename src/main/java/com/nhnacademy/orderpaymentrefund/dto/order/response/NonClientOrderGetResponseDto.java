@@ -12,7 +12,7 @@ import java.util.List;
 @Getter
 public class NonClientOrderGetResponseDto {
     private Long orderId;
-    private String tossOrderId;
+    private String orderCode;
     private String orderDatetime;
     private String orderStatus;
     private Long productTotalAmount;
@@ -36,11 +36,11 @@ public class NonClientOrderGetResponseDto {
 
     @Builder
     @SuppressWarnings("java:S107") //be sure this construct
-    public NonClientOrderGetResponseDto(Long orderId, String tossOrderId, String orderDatetime, String orderStatus, Long productTotalAmount,
+    public NonClientOrderGetResponseDto(Long orderId, String orderCode, String orderDatetime, String orderStatus, Long productTotalAmount,
                                      Integer shippingFee, Long orderTotalAmount, String designatedDeliveryDate, String deliveryStartDate, String phoneNumber,
                                      String deliveryAddress, String nonClientOrderPassword, String nonClientOrdererName, String nonClientOrdererEmail){
         this.orderId = orderId;
-        this.tossOrderId = tossOrderId;
+        this.orderCode = orderCode;
         this.orderDatetime = orderDatetime;
         this.orderStatus = orderStatus;
         this.productTotalAmount = productTotalAmount;

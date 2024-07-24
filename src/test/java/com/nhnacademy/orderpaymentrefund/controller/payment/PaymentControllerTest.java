@@ -108,6 +108,7 @@ class PaymentControllerTest {
     @Test
     @DisplayName("결제 후처리 정보 조회 성공")
     void getPostProcessRequiredPaymentResponseDtoTest() throws Exception {
+        HttpHeaders headers = new HttpHeaders();
         PostProcessRequiredPaymentResponseDto response = PostProcessRequiredPaymentResponseDto.builder()
             .orderId(123L)
             .clientId(456L)
@@ -119,11 +120,11 @@ class PaymentControllerTest {
         response.addProductIdList(2L);
         response.addProductIdList(3L);
 
-        when(paymentService.getPostProcessRequiredPaymentResponseDto(anyString())).thenReturn(
+        when(paymentService.getPostProcessRequiredPaymentResponseDto(headers, anyString())).thenReturn(
             response);
 
         mockMvc.perform(get("/api/order/payment/post-process")
-                .param("tossOrderId", "order123"))
+                .param("orderCode", "order123"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.orderId").value(123))
             .andExpect(jsonPath("$.clientId").value(456))

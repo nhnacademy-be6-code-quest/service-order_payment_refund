@@ -13,7 +13,7 @@ class ClientOrderGetResponseDtoTest {
         Long orderId = 1L;
         Long clientId = 2L;
         Long couponId = 3L;
-        String tossOrderId = "order-1234";
+        String orderCode = "order-1234";
         String orderDatetime = "2024-07-21T12:34:56";
         String orderStatus = "COMPLETED";
         Long productTotalAmount = 20000L;
@@ -32,7 +32,7 @@ class ClientOrderGetResponseDtoTest {
             .orderId(orderId)
             .clientId(clientId)
             .couponId(couponId)
-            .tossOrderId(tossOrderId)
+            .orderCode(orderCode)
             .orderDatetime(orderDatetime)
             .orderStatus(orderStatus)
             .productTotalAmount(productTotalAmount)
@@ -51,7 +51,7 @@ class ClientOrderGetResponseDtoTest {
         assertThat(dto.getOrderId()).isEqualTo(orderId);
         assertThat(dto.getClientId()).isEqualTo(clientId);
         assertThat(dto.getCouponId()).isEqualTo(couponId);
-        assertThat(dto.getTossOrderId()).isEqualTo(tossOrderId);
+        assertThat(dto.getOrderCode()).isEqualTo(orderCode);
         assertThat(dto.getOrderDatetime()).isEqualTo(orderDatetime);
         assertThat(dto.getOrderStatus()).isEqualTo(orderStatus);
         assertThat(dto.getProductTotalAmount()).isEqualTo(productTotalAmount);
