@@ -1,6 +1,8 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nhnacademy.orderpaymentrefund.domain.order.ClientOrder;
+import com.nhnacademy.orderpaymentrefund.domain.order.NonClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
@@ -17,6 +19,8 @@ import com.nhnacademy.orderpaymentrefund.exception.InvalidOrderChangeAttempt;
 import com.nhnacademy.orderpaymentrefund.exception.NonClientCannotAccessClientService;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.exception.ProductOrderDetailNotFoundException;
+import com.nhnacademy.orderpaymentrefund.repository.order.ClientOrderRepository;
+import com.nhnacademy.orderpaymentrefund.repository.order.NonClientOrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
@@ -48,10 +52,12 @@ public class OrderServiceImpl implements OrderService {
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
+    private final ClientOrderRepository clientOrderRepository;
+    private final NonClientOrderRepository nonClientOrderRepository;
 
     @Override
     public PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(HttpHeaders headers,
-        HttpServletRequest request, String tossOrderId) {
+        HttpServletRequest request, String orderCode) {
 
         StringBuilder orderHistoryTitle = new StringBuilder();
         Long orderTotalAmount = null;
@@ -61,7 +67,7 @@ public class OrderServiceImpl implements OrderService {
 
         if (isClient(headers)) {
 
-            Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, tossOrderId);
+            Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, orderCode);
             ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
                 ClientOrderCreateForm.class);
 
@@ -84,7 +90,7 @@ public class OrderServiceImpl implements OrderService {
 
         } else {
 
-            Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, tossOrderId);
+            Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, orderCode);
             NonClientOrderForm nonClientOrderForm = objectMapper.convertValue(data,
                 NonClientOrderForm.class);
 
@@ -109,24 +115,24 @@ public class OrderServiceImpl implements OrderService {
             .orderTotalAmount(orderTotalAmount == null ? 0 : orderTotalAmount)
             .discountAmountByCoupon(discountAmountByCoupon == null ? 0 : discountAmountByCoupon)
             .discountAmountByPoint(discountAmountByPoint == null ? 0 : discountAmountByPoint)
-            .tossOrderId(tossOrderId)
+            .orderCode(orderCode)
             .orderHistoryTitle(orderHistoryTitle.toString())
             .build();
     }
 
     @Override
     public PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(HttpHeaders headers,
-        HttpServletRequest request, String tossOrderId) {
+        HttpServletRequest request, String orderCode) {
         if (isClient(headers)) {
-            return getPaymentOrderApproveRequestDtoFromClientOrderForm(tossOrderId,
+            return getPaymentOrderApproveRequestDtoFromClientOrderForm(orderCode,
                 getClientId(headers));
         } else {
-            return getPaymentOrderApproveRequestDtoFromNonClientOrderForm(tossOrderId);
+            return getPaymentOrderApproveRequestDtoFromNonClientOrderForm(orderCode);
         }
     }
 
     private PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDtoFromClientOrderForm(
-        String tossOrderId, Long clientId) {
+        String orderCode, Long clientId) {
 
         List<PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto> productOrderDetailList = new ArrayList<>();
 
@@ -136,7 +142,7 @@ public class OrderServiceImpl implements OrderService {
         Long couponId = null;
         Long accumulatedPoint = null;
 
-        Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, tossOrderId);
+        Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, orderCode);
         ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
             ClientOrderCreateForm.class);
 
@@ -162,7 +168,7 @@ public class OrderServiceImpl implements OrderService {
             .orderTotalAmount(orderTotalAmount)
             .discountAmountByPoint(discountAmountByPoint == null ? 0 : discountAmountByPoint)
             .discountAmountByCoupon(discountAmountByCoupon == null ? 0 : discountAmountByCoupon)
-            .tossOrderId(tossOrderId)
+            .orderCode(orderCode)
             .clientId(clientId)
             .couponId(couponId)
             .accumulatedPoint(accumulatedPoint == null ? 0 : accumulatedPoint)
@@ -171,13 +177,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDtoFromNonClientOrderForm(
-        String tossOrderId) {
+        String orderCode) {
 
         List<PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto> productOrderDetailList = new ArrayList<>();
 
         Long orderTotalAmount = null;
 
-        Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, tossOrderId);
+        Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, orderCode);
         NonClientOrderForm nonClientOrderForm = objectMapper.convertValue(data,
             NonClientOrderForm.class);
 
@@ -204,7 +210,7 @@ public class OrderServiceImpl implements OrderService {
 
         return PaymentOrderApproveRequestDto.builder()
             .orderTotalAmount(orderTotalAmount)
-            .tossOrderId(tossOrderId)
+            .orderCode(orderCode)
             .clientId(null)
             .productOrderDetailList(productOrderDetailList)
             .build();
@@ -276,8 +282,8 @@ public class OrderServiceImpl implements OrderService {
 
         for (Order order : orderPage.getContent()) {
             OrderResponseDto orderResponseDto = mapOrderToOrderResponseDto(order);
-            List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(
-                order);
+            List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder_OrderId(
+                order.getOrderId());
 
             for (ProductOrderDetail productOrderDetail : orderDetailList) {
                 OrderResponseDto.OrderListItem orderListItem = mapProductOrderDetailToOrderListItem(
@@ -293,11 +299,25 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderResponseDto mapOrderToOrderResponseDto(Order order) {
+
+        boolean isClientOrder = false;
+        ClientOrder clientOrder = null;
+        NonClientOrder nonClientOrder = null;
+
+        if(clientOrderRepository.existsByOrder_OrderId(order.getOrderId())) {
+            isClientOrder = true;
+            clientOrder = clientOrderRepository.findByOrder_OrderId(order.getOrderId()).orElseThrow(OrderNotFoundException::new);
+        }
+        else{
+            nonClientOrder = nonClientOrderRepository.findByOrder_OrderId(order.getOrderId()).orElseThrow(OrderNotFoundException::new);
+        }
+
+
         return OrderResponseDto.builder()
             .orderId(order.getOrderId())
-            .clientId(order.getClientId())
-            .couponId(order.getCouponId())
-            .tossOrderId(order.getTossOrderId())
+            .clientId(isClientOrder ? clientOrder.getClientId() : null)
+            .couponId(isClientOrder ? clientOrder.getCouponId() : null)
+            .orderCode(order.getOrderCode())
             .orderDatetime(order.getOrderDatetime().toString())
             .orderStatus(order.getOrderStatus().kor)
             .productTotalAmount(order.getProductTotalAmount())
@@ -309,19 +329,20 @@ public class OrderServiceImpl implements OrderService {
                 : order.getDeliveryStartDate().toString())
             .phoneNumber(order.getPhoneNumber())
             .deliveryAddress(order.getDeliveryAddress())
-            .discountAmountByCoupon(order.getDiscountAmountByCoupon())
-            .discountAmountByPoint(order.getDiscountAmountByPoint())
-            .accumulatedPoint(order.getAccumulatedPoint())
-            .nonClientOrdererEmail(order.getNonClientOrdererEmail())
-            .nonClientOrdererName(order.getNonClientOrdererName())
-            .nonClientOrderPassword(order.getNonClientOrderPassword())
+            .discountAmountByCoupon(isClientOrder ? clientOrder.getDiscountAmountByCoupon() : 0)
+            .discountAmountByPoint(isClientOrder ? clientOrder.getDiscountAmountByPoint() : 0)
+            .accumulatedPoint(isClientOrder ? clientOrder.getAccumulatedPoint() : 0)
+            .nonClientOrdererEmail(isClientOrder ? null : nonClientOrder.getNonClientOrdererEmail())
+            .nonClientOrdererName(isClientOrder ? null : nonClientOrder.getNonClientOrdererName())
+            .nonClientOrderPassword(isClientOrder ? null : nonClientOrder.getNonClientOrderPassword())
             .build();
     }
 
     private OrderResponseDto.OrderListItem mapProductOrderDetailToOrderListItem(
         ProductOrderDetail productOrderDetail) {
-        ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(
-            productOrderDetail).orElseThrow(OrderNotFoundException::new);
+
+        ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail_ProductOrderDetailId(
+            productOrderDetail.getProductOrderDetailId()).orElse(null);
 
         return OrderResponseDto.OrderListItem.builder()
             .productOrderDetailId(productOrderDetail.getProductOrderDetailId())
@@ -345,8 +366,8 @@ public class OrderServiceImpl implements OrderService {
     public List<ProductOrderDetailResponseDto> getProductOrderDetailList(Long orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
-        List<ProductOrderDetail> productOrderDetailList = productOrderDetailRepository.findAllByOrder(
-            order);
+        List<ProductOrderDetail> productOrderDetailList = productOrderDetailRepository.findAllByOrder_OrderId(
+            order.getOrderId());
 
         List<ProductOrderDetailResponseDto> productOrderDetailResponseDtoList = new ArrayList<>();
 
@@ -389,9 +410,8 @@ public class OrderServiceImpl implements OrderService {
 
         ProductOrderDetail productOrderDetail = productOrderDetailRepository.findById(detailId)
             .orElseThrow(ProductOrderDetailNotFoundException::new);
-        ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(
-            productOrderDetail).orElseThrow(ProductOrderDetailNotFoundException::new);
-
+        ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail_ProductOrderDetailId(
+            productOrderDetail.getProductOrderDetailId()).orElseThrow(ProductOrderDetailNotFoundException::new);
 
         return ProductOrderDetailOptionResponseDto.builder()
             .productId(productOrderDetailOption.getProductId())

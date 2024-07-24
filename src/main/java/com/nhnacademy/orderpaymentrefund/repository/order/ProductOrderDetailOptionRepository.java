@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface ProductOrderDetailOptionRepository extends JpaRepository<ProductOrderDetailOption, Long> {
     List<ProductOrderDetailOption> findByProductOrderDetail_ProductOrderDetailId(Long productOrderDetailId);
-    ProductOrderDetailOption findFirstByProductOrderDetail_ProductOrderDetailId(Long productOrderDetailId);
+    Optional<ProductOrderDetailOption> findFirstByProductOrderDetail_ProductOrderDetailId(Long productOrderDetailId);
 }

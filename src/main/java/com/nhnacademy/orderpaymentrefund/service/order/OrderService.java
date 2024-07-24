@@ -12,8 +12,8 @@ import org.springframework.http.HttpHeaders;
 import java.util.List;
 
 public interface OrderService {
-    PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(HttpHeaders headers, HttpServletRequest request, String tossOrderId);
-    PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(HttpHeaders headers, HttpServletRequest request, String tossOrderId);
+    PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(HttpHeaders headers, HttpServletRequest request, String orderCode);
+    PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(HttpHeaders headers, HttpServletRequest request, String orderCode);
     void changeOrderStatus(long orderId, String orderStatus);
     Page<OrderResponseDto> getAllOrderList(int pageSize, int pageNo, String sortBy, String sortDir);
     List<ProductOrderDetailResponseDto> getProductOrderDetailList(Long orderId);

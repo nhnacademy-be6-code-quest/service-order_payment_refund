@@ -42,7 +42,7 @@ class OrderResponseDtoTest {
             .orderId(1L)
             .clientId(1L)
             .couponId(1L)
-            .tossOrderId("uuid-1234")
+            .orderCode("uuid-1234")
             .orderDatetime("2024-07-21 10:00:00")
             .orderStatus("Pending")
             .productTotalAmount(3000L)
@@ -65,7 +65,7 @@ class OrderResponseDtoTest {
         assertThat(dto.getOrderId()).isEqualTo(1L);
         assertThat(dto.getClientId()).isEqualTo(1L);
         assertThat(dto.getCouponId()).isEqualTo(1L);
-        assertThat(dto.getTossOrderId()).isEqualTo("uuid-1234");
+        assertThat(dto.getOrderCode()).isEqualTo("uuid-1234");
         assertThat(dto.getOrderDatetime()).isEqualTo("2024-07-21 10:00:00");
         assertThat(dto.getOrderStatus()).isEqualTo("Pending");
         assertThat(dto.getProductTotalAmount()).isEqualTo(3000L);

@@ -2,6 +2,8 @@ package com.nhnacademy.orderpaymentrefund.repository.order;
 
 import com.nhnacademy.orderpaymentrefund.domain.order.NonClientOrder;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface NonClientOrderRepository extends JpaRepository<NonClientOrder, Long> {
@@ -14,5 +16,8 @@ public interface NonClientOrderRepository extends JpaRepository<NonClientOrder, 
 
     Boolean existsByOrder_OrderId(Long orderId);
 
-    // TODO 비밀번호찾기, 비회원 주문 아이디 찾기
+    Page<NonClientOrder> findByNonClientOrdererNameAndNonClientOrdererEmailAndOrder_PhoneNumber(String nonClientOrdererName, String nonClientOrdererEmail, String phoneNumber, Pageable pageable);
+
+    Optional<NonClientOrder> findByNonClientOrdererNameAndNonClientOrdererEmailAndOrder_PhoneNumber(String nonClientOrdererName, String nonClientOrdererEmail, String phoneNumber);
+
 }

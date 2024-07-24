@@ -86,7 +86,9 @@ public interface PaymentController {
     )
     @GetMapping("/api/order/payment/post-process")
     PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(
+        @Parameter(description = "회원 정보")
+        @RequestHeader HttpHeaders headers,
         @Parameter(description = "결재주문아이디")
-        @RequestParam("tossOrderId") String tossOrderId);
+        @RequestParam("orderCode") String orderCode);
 
 }

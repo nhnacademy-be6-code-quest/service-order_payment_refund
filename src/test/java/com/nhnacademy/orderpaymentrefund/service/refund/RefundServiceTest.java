@@ -61,9 +61,6 @@ class RefundServiceTest {
     @InjectMocks
     private RefundService refundService;
 
-    @InjectMocks
-    private PaymentServiceImpl paymentService;
-
     @Mock
     private RefundRepository refundRepository;
 
@@ -204,12 +201,12 @@ class RefundServiceTest {
         List<ProductOrderDetail> productOrderDetails = new ArrayList<>();
         ProductOrderDetail productOrderDetail = createProductOrderDetail(1L, 10L);
         productOrderDetails.add(productOrderDetail);
-        when(productOrderDetailRepository.findAllByOrder(order)).thenReturn(productOrderDetails);
+        when(productOrderDetailRepository.findAllByOrder_OrderId(order.getOrderId())).thenReturn(productOrderDetails);
 
         List<ProductOrderDetailOption> options = new ArrayList<>();
         ProductOrderDetailOption option = createProductOrderDetailOption(1L, 5L);
         options.add(option);
-        when(productOrderDetailOptionRepository.findByProductOrderDetail(productOrderDetail)).thenReturn(options);
+        when(productOrderDetailOptionRepository.findByProductOrderDetail_ProductOrderDetailId(productOrderDetail.getProductOrderDetailId())).thenReturn(options);
 
         PaymentCancelRequestDto requestDto = new PaymentCancelRequestDto();
         requestDto.setOrderId(orderId);
@@ -273,7 +270,7 @@ class RefundServiceTest {
         List<ProductOrderDetail> productOrderDetails = new ArrayList<>();
         ProductOrderDetail productOrderDetail = createProductOrderDetail(1L, 10L);
         productOrderDetails.add(productOrderDetail);
-        when(productOrderDetailRepository.findAllByOrder(order)).thenReturn(productOrderDetails);
+        when(productOrderDetailRepository.findAllByOrder_OrderId(order.getOrderId())).thenReturn(productOrderDetails);
 
         Payment payment = createPayment("tossPaymentKey");
         when(paymentRepository.findByOrder_OrderId(orderId)).thenReturn(Optional.of(payment));

@@ -1,7 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.service.payment.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nhnacademy.orderpaymentrefund.client.client.ClientServiceFeignClient;
 import com.nhnacademy.orderpaymentrefund.client.payment.TossPaymentsClient;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverter;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
@@ -11,14 +10,12 @@ import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
-import com.nhnacademy.orderpaymentrefund.dto.client.ClientUpdateGradeRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.coupon.PaymentCompletedCouponResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.message.PointUsagePaymentMessageDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
-import com.nhnacademy.orderpaymentrefund.dto.payment.request.UserUpdateGradeRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
@@ -27,6 +24,7 @@ import com.nhnacademy.orderpaymentrefund.dto.product.InventoryDecreaseRequestDto
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.ClientOrderRepository;
+import com.nhnacademy.orderpaymentrefund.repository.order.NonClientOrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
@@ -60,13 +58,13 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final ClientOrderRepository clientOrderRepository;
+    private final NonClientOrderRepository nonClientOrderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
     private final TossPaymentsClient tossPaymentsClient;
     private final String tossSecretKey;
-    private final ClientServiceFeignClient clientServiceFeignClient;
 
     private final RabbitTemplate rabbitTemplate;
 
@@ -139,7 +137,7 @@ public class PaymentServiceImpl implements PaymentService {
         // 후처리 - 재고감소
         postProcessingInventoryDecrease(order.getOrderId(), clientOrderCreateForm.getOrderDetailDtoItemList());
 
-        redisTemplate.opsForHash().delete(ORDER, clientOrderCreateForm.getTossOrderId());
+        redisTemplate.opsForHash().delete(ORDER, clientOrderCreateForm.getOrderCode());
 
     }
 
@@ -162,7 +160,7 @@ public class PaymentServiceImpl implements PaymentService {
         // 후처리 - 재고감소
         postProcessingInventoryDecrease(order.getOrderId(), nonClientOrderForm.getOrderDetailDtoItemList());
 
-        redisTemplate.opsForHash().delete(ORDER, nonClientOrderForm.getTossOrderId());
+        redisTemplate.opsForHash().delete(ORDER, nonClientOrderForm.getOrderCode());
 
     }
 
@@ -285,10 +283,11 @@ public class PaymentServiceImpl implements PaymentService {
 
         // nonclient order 생성 및 저장
         NonClientOrder nonClientOrder = NonClientOrder.builder()
-            .nonClientOrderPassword(nonClientOrderForm)
-            .nonClientOrdererEmail(nonClientOrderForm)
-            .nonClientOrdererName(nonClientOrderForm )
-            .build()
+            .nonClientOrderPassword(nonClientOrderForm.getOrderPassword())
+            .nonClientOrdererEmail(nonClientOrderForm.getEmail())
+            .nonClientOrdererName(nonClientOrderForm.getOrderedPersonName())
+            .order(order)
+            .build();
 
         nonClientOrderRepository.save(nonClientOrder);
 
@@ -317,18 +316,6 @@ public class PaymentServiceImpl implements PaymentService {
                     item, productOrderDetail);
                 productOrderDetailOptionRepository.save(productOrderDetailOption);
             }
-        }
-    }
-
-    @Override
-    public void updateUserGrade(UserUpdateGradeRequestDto userUpdateGradeRequestDto) {
-        if(Objects.nonNull(userUpdateGradeRequestDto.getClientId())){
-            ClientUpdateGradeRequestDto clientUpdateGradeRequestDto = ClientUpdateGradeRequestDto.builder()
-                .clientId(userUpdateGradeRequestDto.getClientId())
-                .payment(getPaymentRecordOfClient(
-                    userUpdateGradeRequestDto.getClientId()).getPaymentGradeValue())
-                .build();
-            clientServiceFeignClient.updateClientGrade(clientUpdateGradeRequestDto);
         }
     }
 
@@ -425,8 +412,8 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findByOrder_OrderId(order.getOrderId())
             .orElseThrow(() -> new PaymentNotFoundException(orderCode));
 
-        List<ProductOrderDetail> productOrderDetailList = productOrderDetailRepository.findAllByOrder(
-            order);
+        List<ProductOrderDetail> productOrderDetailList = productOrderDetailRepository.findAllByOrder_OrderId(
+            order.getOrderId());
 
         PostProcessRequiredPaymentResponseDto postProcessRequiredPaymentResponseDto = PostProcessRequiredPaymentResponseDto.builder()
             .orderId(order.getOrderId())
