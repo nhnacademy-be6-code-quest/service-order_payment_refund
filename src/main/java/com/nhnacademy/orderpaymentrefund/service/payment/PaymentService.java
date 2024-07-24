@@ -13,5 +13,5 @@ public interface PaymentService {
     PaymentGradeResponseDto getPaymentRecordOfClient(Long clientId);
     void updateUserGrade(UserUpdateGradeRequestDto userUpdateGradeRequestDto);
     TossPaymentsResponseDto approvePayment(TossApprovePaymentRequest tossApprovePaymentRequest) throws ParseException;
-    PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(String tossOrderId);
+    PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(HttpHeaders headers, String orderCode);
 }
