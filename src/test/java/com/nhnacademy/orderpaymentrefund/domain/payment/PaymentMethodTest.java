@@ -24,13 +24,13 @@ class PaymentMethodTest {
 
     @Test
     void testPaymentMethodCreation() {
-        PaymentMethod paymentMethod = new PaymentMethod();
-        paymentMethod.setMethodName("Credit Card");
+        PaymentMethodType paymentMethodType = new PaymentMethodType();
+        paymentMethodType.setMethodName("Credit Card");
 
-        PaymentMethod savedPaymentMethod = entityManager.persistFlushFind(paymentMethod);
+        PaymentMethodType savedPaymentMethodType = entityManager.persistFlushFind(paymentMethodType);
 
-        assertThat(savedPaymentMethod).isNotNull();
-        assertThat(savedPaymentMethod.getPaymentMethodId()).isPositive();
-        assertThat(savedPaymentMethod.getPaymentMethodName()).isEqualTo("Credit Card");
+        assertThat(savedPaymentMethodType).isNotNull();
+        assertThat(savedPaymentMethodType.getPaymentMethodTypeId()).isPositive();
+        assertThat(savedPaymentMethodType.getPaymentMethodTypeName()).isEqualTo("Credit Card");
     }
 }

@@ -5,6 +5,7 @@ import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeRespon
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
+import com.nhnacademy.orderpaymentrefund.service.payment.impl.PaymentStrategyService;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
 import org.springframework.http.HttpHeaders;
@@ -25,10 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class PaymentControllerImpl implements PaymentController{
 
     private final PaymentService paymentService;
+    private final PaymentStrategyService paymentStrategyService;
 
     @Override
     public PaymentsResponseDto approvePayment(@RequestBody ApprovePaymentRequestDto approvePaymentRequestDto) throws ParseException {
-        return paymentService.approvePayment(approvePaymentRequestDto);
+        return paymentStrategyService.approvePayment(approvePaymentRequestDto);
+
     }
 
     @Override

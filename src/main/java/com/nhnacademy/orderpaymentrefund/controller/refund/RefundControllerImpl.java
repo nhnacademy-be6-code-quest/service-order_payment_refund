@@ -31,8 +31,8 @@ public class RefundControllerImpl implements RefundController{
 
     @Override
     public void paymentCancel(@RequestBody PaymentCancelRequestDto paymentCancelRequestDto){
-        refundService.tossRefund(paymentCancelRequestDto.getOrderId(),
-            paymentCancelRequestDto.getCancelReason());
+//        refundService.tossRefund(paymentCancelRequestDto.getOrderId(),
+//            paymentCancelRequestDto.getCancelReason());
         refundService.saveCancel(paymentCancelRequestDto);
 
     }
@@ -50,7 +50,7 @@ public class RefundControllerImpl implements RefundController{
     @Override
     public void refundAccess(@RequestBody RefundAfterRequestDto refundAfterRequestDto){
         RefundResultResponseDto result = refundService.refundUser(refundAfterRequestDto);
-        refundService.tossRefund(refundAfterRequestDto.getOrderId(), result.getCancelReason());
+//        refundService.tossRefund(refundAfterRequestDto.getOrderId(), result.getCancelReason());
     }
 
 }

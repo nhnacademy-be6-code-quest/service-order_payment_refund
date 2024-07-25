@@ -48,5 +48,7 @@ public class PaymentsResponseDto {
     @Nullable
     String customerMobilePhone; // method 가 휴대폰일 때 : 구매자가 결제에 사용한 휴대폰 번호
 
-    String orderId; // orderCode
+    String orderCode; // orderCode
+
+    String methodType;
 }

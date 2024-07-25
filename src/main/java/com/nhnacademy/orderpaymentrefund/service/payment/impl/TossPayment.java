@@ -1,11 +1,17 @@
 package com.nhnacademy.orderpaymentrefund.service.payment.impl;
 
 import com.nhnacademy.orderpaymentrefund.client.payment.TossPaymentsClient;
+import com.nhnacademy.orderpaymentrefund.client.refund.TossPayRefundClient;
+import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.refund.request.TossRefundRequestDto;
+import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
+import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentStrategy;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Base64.Encoder;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +26,8 @@ public class TossPayment implements PaymentStrategy {
 
     private final String tossSecretKey;
     private final TossPaymentsClient tossPaymentsClient;
+    private final PaymentRepository paymentRepository;
+    private final TossPayRefundClient tossPayRefundClient;
 
     @NoArgsConstructor
     public static class TossApprovePaymentRequestDto {
@@ -91,13 +99,25 @@ public class TossPayment implements PaymentStrategy {
             .accountNumber(accountNumber)
             .bank(bank)
             .customerMobilePhone(customerMobilePhone)
-            .orderId(approvePaymentRequestDto.getOrderCode())
+            .orderCode(approvePaymentRequestDto.getOrderCode())
             .build();
 
     }
 
     @Override
     public void refundPayment(long orderId, String cancelReason) {
+
+        // 시크릿 키를 Base64로 인코딩하여 Authorization 헤더 생성
+        Payment payment = paymentRepository.findByOrder_OrderId(orderId).orElseThrow(()-> new PaymentNotFoundException("결재 정보가 존재하지않습니다."));
+        Encoder encoder = Base64.getEncoder();
+        byte[] encodedBytes = encoder.encode(tossSecretKey.getBytes(StandardCharsets.UTF_8));
+        String authorizations = "Basic " + new String(encodedBytes);
+
+        TossRefundRequestDto dto = TossRefundRequestDto.builder()
+            .cancelReason(cancelReason
+            ).build();
+
+        tossPayRefundClient.cancelPayment(payment.getTossPaymentKey(), dto, authorizations);
 
     }
 
