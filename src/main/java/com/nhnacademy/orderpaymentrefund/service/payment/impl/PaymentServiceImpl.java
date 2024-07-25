@@ -298,8 +298,6 @@ public class PaymentServiceImpl implements PaymentService {
             .tossPaymentKey(paymentsResponseDto.getPaymentKey())
             .build();
         paymentRepository.save(payment);
-
-
     }
 
     private void saveOrderProductDetailAndOrderProductDetailOption(Order order,
