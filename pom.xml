@@ -135,6 +135,12 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>4.8.1</version> <!-- 최신 버전으로 업데이트하세요 -->
+        <scope>test</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

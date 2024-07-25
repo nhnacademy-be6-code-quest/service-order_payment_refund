@@ -267,10 +267,10 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = Order.builder()
             .orderCode(nonClientOrderForm.getOrderCode())
             .productTotalAmount(nonClientOrderForm.getProductTotalAmount())
-            .shippingFee(nonClientOrderForm.getShippingFee())
             .designatedDeliveryDate(nonClientOrderForm.getDesignatedDeliveryDate())
             .phoneNumber(nonClientOrderForm.getPhoneNumber())
             .deliveryAddress(nonClientOrderForm.getDeliveryAddress())
+            .shippingFee(nonClientOrderForm.getShippingFee())
             .build();
 
         orderRepository.save(order);
