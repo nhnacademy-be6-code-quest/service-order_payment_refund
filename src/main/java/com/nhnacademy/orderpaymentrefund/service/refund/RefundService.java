@@ -167,20 +167,8 @@ public class RefundService {
 //        }
     }
 
-    public void tossRefund(long orderId, String cancelReason) {
-        // 시크릿 키를 Base64로 인코딩하여 Authorization 헤더 생성
-        Payment payment = paymentRepository.findByOrder_OrderId(orderId).orElseThrow(()-> new PaymentNotFoundException("결재 정보가 존재하지않습니다."));
-        Encoder encoder = Base64.getEncoder();
-        byte[] encodedBytes = encoder.encode(tossSecretKey.getBytes(StandardCharsets.UTF_8));
-        String authorizations = "Basic " + new String(encodedBytes);
 
-        TossRefundRequestDto dto = TossRefundRequestDto.builder()
-            .cancelReason(cancelReason
-            ).build();
 
-        tossPayRefundClient.cancelPayment(payment.getTossPaymentKey(), dto, authorizations);
-
-    }
     //dto 오더아이디 취소이유 가격
     public RefundResultResponseDto refundUser(RefundAfterRequestDto dto) {
 //        Order order = orderRepository.findById(dto.getOrderId())

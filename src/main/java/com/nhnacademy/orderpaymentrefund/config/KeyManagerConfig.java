@@ -64,7 +64,18 @@ public class KeyManagerConfig {
     @Value("${secret.key.toss.key.id}")
     private String tossKeyId;
 
+    @Value("${secret.key.naver.secret.key}")
+    private String naverSecretKey;
+
     private static final String BASE_URL = "https://api-keymanager.nhncloudservice.com/keymanager/v1.2/appkey/";
+
+
+    @Bean
+    public String naverSecretKey() {
+        String naverSecret = getKey(getSecret(naverSecretKey));
+        log.info("Rabbitmq Host Key: {}", naverSecretKey);
+        return naverSecret;
+    }
 
     @Bean
     public String rabbitHost() {
