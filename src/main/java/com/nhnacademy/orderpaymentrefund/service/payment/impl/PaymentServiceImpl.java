@@ -15,10 +15,10 @@ import com.nhnacademy.orderpaymentrefund.dto.message.PointUsagePaymentMessageDto
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
-import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
+import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.CartCheckoutRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.InventoryDecreaseRequestDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
@@ -30,6 +30,7 @@ import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOpti
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
+import com.nhnacademy.orderpaymentrefund.service.payment.impl.TossPayment.TossApprovePaymentRequestDto;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -94,24 +95,24 @@ public class PaymentServiceImpl implements PaymentService {
     private static final String ORDER = "order";
 
     @Override
-    public void savePayment(HttpHeaders headers, TossPaymentsResponseDto tossPaymentsResponseDto) {
+    public void savePayment(HttpHeaders headers, PaymentsResponseDto paymentsResponseDto) {
 
         Long clientId = getClientId(headers);
 
         Object data = redisTemplate.opsForHash()
-            .get(ORDER, tossPaymentsResponseDto.getOrderId());
+            .get(ORDER, paymentsResponseDto.getOrderId());
 
         if (clientId != null) {
-            processClientOrderAndPayment(clientId, data, tossPaymentsResponseDto);
+            processClientOrderAndPayment(clientId, data, paymentsResponseDto);
         } else {
-            processNonClientOrderAndPayment(data, tossPaymentsResponseDto);
+            processNonClientOrderAndPayment(data, paymentsResponseDto);
         }
 
     }
 
     // 회원 주문 및 결제 생성 및 후처리 프로세스
     private void processClientOrderAndPayment(Long clientId, Object data,
-        TossPaymentsResponseDto tossPaymentsResponseDto) {
+        PaymentsResponseDto paymentsResponseDto) {
 
         ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
             ClientOrderCreateForm.class);
@@ -123,7 +124,7 @@ public class PaymentServiceImpl implements PaymentService {
         saveOrderProductDetailAndOrderProductDetailOption(order, clientOrderCreateForm.getOrderDetailDtoItemList());
 
         // payment 저장
-        savePaymentEntity(order, tossPaymentsResponseDto);
+        savePaymentEntity(order, paymentsResponseDto);
 
         // 후처리 - 회원 장바구니 비우기
         postProcessingClientCartCheckout(clientId, clientOrderCreateForm);
@@ -143,7 +144,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     // 비회원 주문 및 결제 생성 및 후처리 프로세스
     private void processNonClientOrderAndPayment(Object data,
-        TossPaymentsResponseDto tossPaymentsResponseDto) {
+        PaymentsResponseDto paymentsResponseDto) {
 
         NonClientOrderForm nonClientOrderForm = objectMapper.convertValue(data,
             NonClientOrderForm.class);
@@ -155,7 +156,7 @@ public class PaymentServiceImpl implements PaymentService {
         saveOrderProductDetailAndOrderProductDetailOption(order, nonClientOrderForm.getOrderDetailDtoItemList());
 
         // payment 저장
-        savePaymentEntity(order, tossPaymentsResponseDto);
+        savePaymentEntity(order, paymentsResponseDto);
 
         // 후처리 - 재고감소
         postProcessingInventoryDecrease(order.getOrderId(), nonClientOrderForm.getOrderDetailDtoItemList());
@@ -294,12 +295,12 @@ public class PaymentServiceImpl implements PaymentService {
         return order;
     }
 
-    private void savePaymentEntity(Order order, TossPaymentsResponseDto tossPaymentsResponseDto) {
+    private void savePaymentEntity(Order order, PaymentsResponseDto paymentsResponseDto) {
         Payment payment = Payment.builder()
             .order(order)
-            .payAmount(tossPaymentsResponseDto.getTotalAmount())
-            .paymentMethodName(tossPaymentsResponseDto.getMethod())
-            .tossPaymentKey(tossPaymentsResponseDto.getPaymentKey())
+            .payAmount(paymentsResponseDto.getTotalAmount())
+            .paymentMethodName(paymentsResponseDto.getMethod())
+            .tossPaymentKey(paymentsResponseDto.getPaymentKey())
             .build();
         paymentRepository.save(payment);
     }
@@ -341,8 +342,8 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public TossPaymentsResponseDto approvePayment(
-        TossApprovePaymentRequest tossApprovePaymentRequest) throws ParseException {
+    public PaymentsResponseDto approvePayment(
+        ApprovePaymentRequestDto approvePaymentRequestDto) throws ParseException {
 
         // 시크릿 키를 Base64로 인코딩하여 Authorization 헤더 생성
         Base64.Encoder encoder = Base64.getEncoder();
@@ -350,8 +351,10 @@ public class PaymentServiceImpl implements PaymentService {
         String authorizations = "Basic " + new String(encodedBytes);
 
         // 승인 요청을 보내면서 + 응답을 받아 옴.
+        TossApprovePaymentRequestDto tossApprovePaymentRequestDto = new TossApprovePaymentRequestDto(
+            approvePaymentRequestDto.getOrderCode(), approvePaymentRequestDto.getPaymentKey(), approvePaymentRequestDto.getAmount());
         String tossPaymentsApproveResponseString = tossPaymentsClient.approvePayment(
-            tossApprovePaymentRequest, authorizations);
+            tossApprovePaymentRequestDto, authorizations);
 
         // 다시 한 번 JSONObject 로 변환한다.
         JSONObject jsonObject = (JSONObject) new JSONParser().parse(
@@ -380,16 +383,16 @@ public class PaymentServiceImpl implements PaymentService {
                 method + "-" + ((JSONObject) jsonObject.get("easyPay")).get("provider").toString();
         }
 
-        return TossPaymentsResponseDto.builder()
+        return PaymentsResponseDto.builder()
             .orderName(orderName)
             .totalAmount(Long.parseLong(totalAmount))
             .method(method)
-            .paymentKey(tossApprovePaymentRequest.getPaymentKey())
+            .paymentKey(approvePaymentRequestDto.getPaymentKey())
             .cardNumber(cardNumber)
             .accountNumber(accountNumber)
             .bank(bank)
             .customerMobilePhone(customerMobilePhone)
-            .orderId(tossApprovePaymentRequest.getOrderId())
+            .orderId(approvePaymentRequestDto.getOrderCode())
             .build();
     }
 
