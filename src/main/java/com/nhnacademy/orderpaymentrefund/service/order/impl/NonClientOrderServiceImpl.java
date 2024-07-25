@@ -1,5 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
+import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
 import com.nhnacademy.orderpaymentrefund.domain.order.NonClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
@@ -32,18 +33,19 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class NonClientOrderServiceImpl implements NonClientOrderService {
 
-    private static final String ID_HEADER = "X-User-Id";
     private static final String ID_KEY = "order";
     private final OrderRepository orderRepository;
     private final NonClientOrderRepository nonClientOrderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
 
+    private final ClientHeaderContext clientHeaderContext;
+
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public void saveNonClientTemporalOrder(HttpHeaders headers, NonClientOrderForm requestDto) {
-        checkNonClient(headers);
+        checkNonClient();
         String orderCode = requestDto.getOrderCode();
         redisTemplate.opsForHash().put(ID_KEY, orderCode, requestDto);
         Object data = redisTemplate.opsForHash().get(ID_KEY, orderCode);
@@ -52,7 +54,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
     @Override
     public NonClientOrderForm getNonClientTemporalOrder(HttpHeaders headers, String orderCode) {
-        checkNonClient(headers);
+        checkNonClient();
         return (NonClientOrderForm) redisTemplate.opsForHash().get(ID_KEY, orderCode);
     }
 
@@ -60,7 +62,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     public Page<FindNonClientOrderIdInfoResponseDto> findNonClientOrderId(HttpHeaders headers,
         FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto, Pageable pageable) {
 
-        checkNonClient(headers);
+        checkNonClient();
 
         nonClientOrderRepository.findByNonClientOrdererNameAndNonClientOrdererEmailAndOrder_PhoneNumber(
             findNonClientOrderIdRequestDto.ordererName(), findNonClientOrderIdRequestDto.email(),
@@ -80,7 +82,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     public String findNonClientOrderPassword(HttpHeaders headers,
         FindNonClientOrderPasswordRequestDto requestDto) {
 
-        checkNonClient(headers);
+        checkNonClient();
 
         NonClientOrder nonClientOrder = nonClientOrderRepository.findByNonClientOrdererNameAndNonClientOrdererEmailAndOrder_PhoneNumber(
             requestDto.getOrdererName(), requestDto.getEmail(), requestDto.getPhoneNumber()).orElseThrow(OrderNotFoundException::new);
@@ -91,7 +93,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     @Override
     public NonClientOrderGetResponseDto getOrder(HttpHeaders headers, long orderId,
         String orderPassword) {
-        checkNonClient(headers);
+        checkNonClient();
 
         NonClientOrder nonClientOrder = nonClientOrderRepository.findByNonClientOrderPasswordEqualsAndOrder_OrderId(orderPassword, orderId).orElseThrow(OrderNotFoundException::new);
         Order order = nonClientOrder.getOrder();
@@ -149,7 +151,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     @Override
     public void cancelOrder(HttpHeaders headers, long orderId) {
 
-        checkNonClient(headers);
+        checkNonClient();
 
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
@@ -165,7 +167,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     @Override
     public void refundOrder(HttpHeaders headers, long orderId) {
 
-        checkNonClient(headers);
+        checkNonClient();
 
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
@@ -178,8 +180,8 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
         orderRepository.save(order);
     }
 
-    private void checkNonClient(HttpHeaders headers) {
-        if (headers.get(ID_HEADER) != null) {
+    private void checkNonClient() {
+        if (clientHeaderContext.isClient()) {
             throw new ClientCannotAccessNonClientService();
         }
     }

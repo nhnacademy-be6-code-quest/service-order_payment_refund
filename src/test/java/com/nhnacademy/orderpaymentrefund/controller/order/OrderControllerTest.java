@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.nhnacademy.orderpaymentrefund.config.SecurityConfig;
+import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
@@ -46,6 +47,9 @@ class OrderControllerTest {
 
     @MockBean
     private OrderService orderService;
+
+    @MockBean
+    private ClientHeaderContext clientHeaderContext;
 
     @Test
     @DisplayName("토스 결제 요청을 위한 데이터 조회 성공")
