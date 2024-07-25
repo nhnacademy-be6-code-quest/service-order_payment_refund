@@ -12,7 +12,7 @@
 //import com.nhnacademy.orderpaymentrefund.dto.coupon.PaymentCompletedCouponResponseDto;
 //import com.nhnacademy.orderpaymentrefund.dto.message.PointUsagePaymentMessageDto;
 //import com.nhnacademy.orderpaymentrefund.dto.message.PointUsageRefundMessageDto;
-//import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
+//import com.nhnacademy.orderpaymentrefund.dto.payment.request.approvePaymentRequestDto;
 //import com.nhnacademy.orderpaymentrefund.dto.payment.request.UserUpdateGradeRequestDto;
 //import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 //import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
@@ -215,7 +215,7 @@
 //    @Test
 //    void testApprovePayment_withCardMethod() throws Exception {
 //        // Given
-//        TossApprovePaymentRequest request = new TossApprovePaymentRequest ("test-order-id", 5000, "test-payment-key");
+//        approvePaymentRequestDto request = new approvePaymentRequestDto ("test-order-id", 5000, "test-payment-key");
 //
 //        String mockResponse = "{"
 //            + "\"orderName\":\"Order1\","
@@ -225,7 +225,7 @@
 //            + "}";
 //
 //        // Mock 동작 설정
-//        when(tossPaymentsClient.approvePayment(any(TossApprovePaymentRequest.class), anyString()))
+//        when(tossPaymentsClient.approvePayment(any(approvePaymentRequestDto.class), anyString()))
 //            .thenReturn(mockResponse);
 //
 //        // 테스트할 메소드 호출

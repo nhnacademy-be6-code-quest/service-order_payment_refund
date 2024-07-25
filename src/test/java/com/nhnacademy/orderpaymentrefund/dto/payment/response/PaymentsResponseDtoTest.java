@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-class TossPaymentsResponseDtoTest {
+class PaymentsResponseDtoTest {
 
     @Test
     void testBuilder() {
-        TossPaymentsResponseDto dto = TossPaymentsResponseDto.builder()
+        PaymentsResponseDto dto = PaymentsResponseDto.builder()
             .orderName("Test Order")
             .totalAmount(10000L)
             .method("카드")
@@ -34,7 +34,7 @@ class TossPaymentsResponseDtoTest {
 
     @Test
     void testSetters() {
-        TossPaymentsResponseDto dto = new TossPaymentsResponseDto();
+        PaymentsResponseDto dto = new PaymentsResponseDto();
         dto.setCardNumber("1234-5678-9012-3456");
         dto.setAccountNumber("987654321");
         dto.setBank("001");
@@ -48,7 +48,7 @@ class TossPaymentsResponseDtoTest {
 
     @Test
     void testDefaultValues() {
-        TossPaymentsResponseDto dto = new TossPaymentsResponseDto();
+        PaymentsResponseDto dto = new PaymentsResponseDto();
 
         assertThat(dto).isNotNull();
         assertThat(dto.getOrderName()).isNull();
