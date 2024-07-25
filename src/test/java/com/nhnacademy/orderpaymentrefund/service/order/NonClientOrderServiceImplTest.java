@@ -101,7 +101,7 @@ class NonClientOrderServiceImplTest {
 
         nonClientOrderService.saveNonClientTemporalOrder(headers, requestDto);
 
-        verify(hashOperations, times(1)).put(REDIS_KEY, "uuid-1234", eq(requestDto));
+        verify(hashOperations, times(1)).put(REDIS_KEY, "uuid-1234", requestDto);
 
     }
 
