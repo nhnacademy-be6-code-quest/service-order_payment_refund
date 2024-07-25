@@ -10,6 +10,5 @@ import org.springframework.http.HttpHeaders;
 public interface PaymentService {
     void savePayment(HttpHeaders headers, PaymentsResponseDto paymentsResponseDto);
     PaymentGradeResponseDto getPaymentRecordOfClient(Long clientId);
-    PaymentsResponseDto approvePayment(ApprovePaymentRequestDto approvePaymentRequestDto) throws ParseException;
     PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(HttpHeaders headers, String orderCode);
 }

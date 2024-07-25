@@ -1,7 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.service.payment.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nhnacademy.orderpaymentrefund.client.payment.TossPaymentsClient;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverter;
 import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
 import com.nhnacademy.orderpaymentrefund.domain.order.ClientOrder;
@@ -10,12 +9,12 @@ import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
+import com.nhnacademy.orderpaymentrefund.domain.payment.PaymentMethodType;
 import com.nhnacademy.orderpaymentrefund.dto.coupon.PaymentCompletedCouponResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.message.PointUsagePaymentMessageDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
-import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
@@ -28,21 +27,16 @@ import com.nhnacademy.orderpaymentrefund.repository.order.NonClientOrderReposito
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
+import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentMethodTypeRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
-import com.nhnacademy.orderpaymentrefund.service.payment.impl.TossPayment.TossApprovePaymentRequestDto;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -64,8 +58,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
-    private final TossPaymentsClient tossPaymentsClient;
-    private final String tossSecretKey;
+    private final PaymentMethodTypeRepository paymentMethodTypeRepository;
 
     private final RabbitTemplate rabbitTemplate;
 
@@ -100,7 +93,7 @@ public class PaymentServiceImpl implements PaymentService {
         Long clientId = getClientId(headers);
 
         Object data = redisTemplate.opsForHash()
-            .get(ORDER, paymentsResponseDto.getOrderId());
+            .get(ORDER, paymentsResponseDto.getOrderCode());
 
         if (clientId != null) {
             processClientOrderAndPayment(clientId, data, paymentsResponseDto);
@@ -296,13 +289,17 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void savePaymentEntity(Order order, PaymentsResponseDto paymentsResponseDto) {
+        PaymentMethodType paymentMethodType = paymentMethodTypeRepository.findByPaymentMethodTypeNameEquals(paymentsResponseDto.getMethodType());
         Payment payment = Payment.builder()
             .order(order)
+            .paymentMethodType(paymentMethodType)
             .payAmount(paymentsResponseDto.getTotalAmount())
             .paymentMethodName(paymentsResponseDto.getMethod())
             .tossPaymentKey(paymentsResponseDto.getPaymentKey())
             .build();
         paymentRepository.save(payment);
+
+
     }
 
     private void saveOrderProductDetailAndOrderProductDetailOption(Order order,
@@ -338,61 +335,6 @@ public class PaymentServiceImpl implements PaymentService {
         }
         return PaymentGradeResponseDto.builder()
             .paymentGradeValue(sumFinalAmountForCompletedOrders - totalOptionPriceForLastThreeMonth)
-            .build();
-    }
-
-    @Override
-    public PaymentsResponseDto approvePayment(
-        ApprovePaymentRequestDto approvePaymentRequestDto) throws ParseException {
-
-        // 시크릿 키를 Base64로 인코딩하여 Authorization 헤더 생성
-        Base64.Encoder encoder = Base64.getEncoder();
-        byte[] encodedBytes = encoder.encode(tossSecretKey.getBytes(StandardCharsets.UTF_8));
-        String authorizations = "Basic " + new String(encodedBytes);
-
-        // 승인 요청을 보내면서 + 응답을 받아 옴.
-        TossApprovePaymentRequestDto tossApprovePaymentRequestDto = new TossApprovePaymentRequestDto(
-            approvePaymentRequestDto.getOrderCode(), approvePaymentRequestDto.getPaymentKey(), approvePaymentRequestDto.getAmount());
-        String tossPaymentsApproveResponseString = tossPaymentsClient.approvePayment(
-            tossApprovePaymentRequestDto, authorizations);
-
-        // 다시 한 번 JSONObject 로 변환한다.
-        JSONObject jsonObject = (JSONObject) new JSONParser().parse(
-            tossPaymentsApproveResponseString);
-
-        String orderName = jsonObject.get("orderName").toString();
-        String totalAmount = jsonObject.get("totalAmount").toString();
-        String method = jsonObject.get("method").toString();
-        String cardNumber = null;
-        String accountNumber = null;
-        String bank = null;
-        String customerMobilePhone = null;
-
-        if (method.equals("카드")) {
-            cardNumber = ((JSONObject) jsonObject.get("card")).get("number").toString();
-        } else if (method.equals("가상계좌")) {
-            accountNumber = ((JSONObject) jsonObject.get("virtualAccount")).get("accountNumber")
-                .toString();
-        } else if (method.equals("계좌이체")) {
-            bank = ((JSONObject) jsonObject.get("transfer")).get("bank").toString();
-        } else if (method.equals("휴대폰")) {
-            customerMobilePhone = ((JSONObject) jsonObject.get("mobilePhone")).get(
-                "customerMobilePhone").toString();
-        } else if (method.equals("간편결제")) {
-            method =
-                method + "-" + ((JSONObject) jsonObject.get("easyPay")).get("provider").toString();
-        }
-
-        return PaymentsResponseDto.builder()
-            .orderName(orderName)
-            .totalAmount(Long.parseLong(totalAmount))
-            .method(method)
-            .paymentKey(approvePaymentRequestDto.getPaymentKey())
-            .cardNumber(cardNumber)
-            .accountNumber(accountNumber)
-            .bank(bank)
-            .customerMobilePhone(customerMobilePhone)
-            .orderId(approvePaymentRequestDto.getOrderCode())
             .build();
     }
 

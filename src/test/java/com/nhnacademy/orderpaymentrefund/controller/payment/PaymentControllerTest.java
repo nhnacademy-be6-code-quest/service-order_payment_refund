@@ -18,6 +18,7 @@ import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequire
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.filter.HeaderFilter;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
+import com.nhnacademy.orderpaymentrefund.service.payment.impl.PaymentStrategyService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,9 @@ class PaymentControllerTest {
     @MockBean
     private PaymentService paymentService;
 
+    @MockBean
+    private PaymentStrategyService paymentStrategyService;
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -45,16 +49,16 @@ class PaymentControllerTest {
     @DisplayName("결제 승인 성공")
     void approvePaymentTest() throws Exception {
         ApprovePaymentRequestDto request = new ApprovePaymentRequestDto("order123", 1000,
-            "paymentKey123");
+            "paymentKey123","toss");
         PaymentsResponseDto response = PaymentsResponseDto.builder()
             .orderName("Order Name")
             .totalAmount(1000)
             .method("카드")
             .paymentKey("paymentKey123")
-            .orderId("order123")
+            .orderCode("order123")
             .build();
 
-        when(paymentService.approvePayment(any(ApprovePaymentRequestDto.class))).thenReturn(
+        when(paymentStrategyService.approvePayment(any(ApprovePaymentRequestDto.class))).thenReturn(
             response);
 
         mockMvc.perform(post("/api/order/payment/approve")
@@ -76,7 +80,7 @@ class PaymentControllerTest {
             .totalAmount(1000)
             .method("카드")
             .paymentKey("paymentKey123")
-            .orderId("order123")
+            .orderCode("order123")
             .build();
 
         HttpHeaders headers = new HttpHeaders();
