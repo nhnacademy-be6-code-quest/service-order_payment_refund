@@ -3,6 +3,7 @@ package com.nhnacademy.orderpaymentrefund.controller.payment;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -12,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.orderpaymentrefund.config.SecurityConfig;
+import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
@@ -41,7 +43,8 @@ class PaymentControllerTest {
 
     @MockBean
     private PaymentStrategyService paymentStrategyService;
-
+    @MockBean
+    private ClientHeaderContext clientHeaderContext;
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -69,7 +72,7 @@ class PaymentControllerTest {
             .andExpect(jsonPath("$.totalAmount").value(1000))
             .andExpect(jsonPath("$.method").value("카드"))
             .andExpect(jsonPath("$.paymentKey").value("paymentKey123"))
-            .andExpect(jsonPath("$.orderId").value("order123"));
+            .andExpect(jsonPath("$.orderCode").value("order123"));
     }
 
     @Test
@@ -123,8 +126,8 @@ class PaymentControllerTest {
         response.addProductIdList(2L);
         response.addProductIdList(3L);
 
-        when(paymentService.getPostProcessRequiredPaymentResponseDto(headers, anyString())).thenReturn(
-            response);
+        when(paymentService.getPostProcessRequiredPaymentResponseDto(any(HttpHeaders.class), anyString()))
+            .thenReturn(response);
 
         mockMvc.perform(get("/api/order/payment/post-process")
                 .param("orderCode", "order123"))
