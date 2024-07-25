@@ -1,7 +1,10 @@
 //package com.nhnacademy.orderpaymentrefund.service.order;
 //
 //import static org.junit.jupiter.api.Assertions.assertEquals;
+//import static org.mockito.ArgumentMatchers.any;
+//import static org.mockito.ArgumentMatchers.anyString;
 //import static org.mockito.ArgumentMatchers.eq;
+//import static org.mockito.Mockito.atLeastOnce;
 //import static org.mockito.Mockito.verify;
 //import static org.mockito.Mockito.when;
 //
@@ -36,6 +39,9 @@
 //    @Captor
 //    private ArgumentCaptor<LocalDateTime> dateTimeCaptor;
 //
+//    @Captor
+//    private ArgumentCaptor<Order> orderCaptor;
+//
 //    private List<Order> orderList;
 //
 //    @BeforeEach
@@ -54,12 +60,10 @@
 //
 //        orderList = List.of(order1, order2);
 //
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-//        LocalDateTime thresholdDateTime = currentOrderDateTime.plusMinutes(10);
-//        String formattedDateTime = thresholdDateTime.format(formatter);
-//        LocalDateTime parsedDateTime = LocalDateTime.parse(formattedDateTime, formatter);
+//        LocalDateTime thresholdDateTime = LocalDateTime.now().minusMinutes(10);
 //
-//        when(orderRepository.findAllByOrderStatusAndOrderDatetimeBefore(eq(OrderStatus.DELIVERING), dateTimeCaptor.capture()))
+//        when(orderRepository.findAllByOrderStatusAndOrderDatetimeBefore(
+//            OrderStatus.valueOf(anyString()), eq(thresholdDateTime)))
 //            .thenReturn(orderList);
 //    }
 //
@@ -67,20 +71,25 @@
 //    public void testScheduleOrderStatusToDeliveryCompleted() {
 //        schedulingService.scheduleOrderStatusToDeliveryCompleted();
 //
-//        LocalDateTime capturedDateTime = dateTimeCaptor.getValue();
-//        LocalDateTime expectedDateTime = LocalDateTime.now().minusMinutes(10);
+//        // Verify the repository method interactions
+//        verify(orderRepository).findAllByOrderStatusAndOrderDatetimeBefore(eq(OrderStatus.DELIVERING), dateTimeCaptor.capture());
+//
+//        // Capture the updated order to verify its state
+//        verify(orderRepository, atLeastOnce()).save(orderCaptor.capture());
 //
 //        // Verify that the captured date time is close to the expected date time
+//        LocalDateTime capturedDateTime = dateTimeCaptor.getValue();
+//        LocalDateTime expectedDateTime = LocalDateTime.now().minusMinutes(10);
 //        assertEquals(expectedDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
 //            capturedDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
 //
-//        for (Order order : orderList) {
-//            verify(order).updateOrderStatus(OrderStatus.DELIVERY_COMPLETE);
-//            verify(order).updateDeliveryStartDate();
-//            verify(orderRepository).save(order);
+//        // Verify each order's status has been updated
+//        List<Order> capturedOrders = orderCaptor.getAllValues();
+//        for (Order order : capturedOrders) {
+//            assertEquals(OrderStatus.DELIVERY_COMPLETE, order.getOrderStatus());
+//            assertEquals(LocalDate.now(), order.getDeliveryStartDate());
 //        }
 //    }
-//
 //
 //    public Order createOrder(String orderCode, Long productTotalAmount, Integer shippingFee,
 //        LocalDate designatedDeliveryDate,
@@ -94,5 +103,4 @@
 //            .deliveryAddress(deliveryAddress)
 //            .build();
 //    }
-//
 //}
