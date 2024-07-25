@@ -41,13 +41,15 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.util.ReflectionTestUtils;
-
+@ExtendWith(MockitoExtension.class)
 class RefundServiceTest {
 
     @InjectMocks
@@ -102,9 +104,6 @@ class RefundServiceTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        ReflectionTestUtils.setField(refundService, "tossSecretKey", TOSS_SECRET_KEY);
-
     }
 
     private Order createOrder(Long orderTotalAmount, Integer shippingFee, OrderStatus orderStatus ) throws Exception {

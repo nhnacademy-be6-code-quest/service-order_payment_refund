@@ -36,7 +36,7 @@ public class Payment {
     @NotNull
     private long payAmount;
 
-    @JoinColumn(name = "payment_method_type_id;")
+    @JoinColumn(name = "payment_method_type_id")
     @ManyToOne
     private PaymentMethodType paymentMethodType;
 
