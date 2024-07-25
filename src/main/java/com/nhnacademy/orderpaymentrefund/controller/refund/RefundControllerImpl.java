@@ -6,6 +6,7 @@ import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundPolicyResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundResultResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundSuccessResponseDto;
+import com.nhnacademy.orderpaymentrefund.service.payment.impl.PaymentStrategyService;
 import com.nhnacademy.orderpaymentrefund.service.refund.RefundPolicyService;
 import com.nhnacademy.orderpaymentrefund.service.refund.RefundService;
 import java.util.List;
@@ -28,10 +29,11 @@ public class RefundControllerImpl implements RefundController{
 
     private final RefundService refundService;
     private final RefundPolicyService refundPolicyService;
+    private final PaymentStrategyService paymentStrategyService;
 
     @Override
     public void paymentCancel(@RequestBody PaymentCancelRequestDto paymentCancelRequestDto){
-//        refundService.tossRefund(paymentCancelRequestDto.getOrderId(),
+//        paymentStrategyService.refundPayment(paymentCancelRequestDto.getOrderId(),
 //            paymentCancelRequestDto.getCancelReason());
         refundService.saveCancel(paymentCancelRequestDto);
 
@@ -50,7 +52,7 @@ public class RefundControllerImpl implements RefundController{
     @Override
     public void refundAccess(@RequestBody RefundAfterRequestDto refundAfterRequestDto){
         RefundResultResponseDto result = refundService.refundUser(refundAfterRequestDto);
-//        refundService.tossRefund(refundAfterRequestDto.getOrderId(), result.getCancelReason());
+//        paymentStrategyService.refundPayment(refundAfterRequestDto.getOrderId(), result.getCancelReason());
     }
 
 }

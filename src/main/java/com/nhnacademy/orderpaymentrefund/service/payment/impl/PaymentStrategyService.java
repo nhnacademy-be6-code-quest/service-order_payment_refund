@@ -23,12 +23,6 @@ public class PaymentStrategyService {
 
         return paymentStrategy.approvePayment(approvePaymentRequestDto);
 
-//        if(!result.getStatusCode().is2xxSuccessful()){
-//            log.warn("결제 승인에 실패했습니다.");
-//            throw new RuntimeException("결제 승인에 실패했습니다.");
-//        }
-//
-//        return result.getBody();
 
     }
 

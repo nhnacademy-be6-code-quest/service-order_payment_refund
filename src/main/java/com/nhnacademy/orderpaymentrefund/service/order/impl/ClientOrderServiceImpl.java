@@ -406,7 +406,6 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
 
 
-        // TODO 민선님, 알아서 쓰세요
 
     @Override
     public void cancelOrder(HttpHeaders headers, long orderId) {

@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,7 @@ public class RefundPolicyService {
         LocalDate deliveryStatDate = order.getDeliveryStartDate();
         OrderStatus orderStatus = order.getOrderStatus();
         if (deliveryStatDate != null && orderStatus == OrderStatus.DELIVERING || orderStatus == OrderStatus.DELIVERY_COMPLETE) {
-            if (deliveryStatDate.isAfter(LocalDate.now().minusDays(10))) {
+            if (Objects.requireNonNull(deliveryStatDate).isAfter(LocalDate.now().minusDays(10))) {
                 refundPolicies = refundPolicyRepository.findByRefundPolicyExpirationDateIsNull();
                 return refundPolicies.stream().map(refundPolicy -> new RefundPolicyResponseDto(refundPolicy.getRefundPolicyId(), refundPolicy.getRefundPolicyType(),
                     refundPolicy.getRefundShippingFee())).toList();
