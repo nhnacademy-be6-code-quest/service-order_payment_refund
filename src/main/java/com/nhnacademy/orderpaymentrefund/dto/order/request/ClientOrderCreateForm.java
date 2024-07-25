@@ -53,6 +53,6 @@ public class ClientOrderCreateForm {
     Long accumulatePoint; // 예상 적립금
 
     @NotNull
-    String tossOrderId; // uuid
+    String orderCode; // uuid
 
 }

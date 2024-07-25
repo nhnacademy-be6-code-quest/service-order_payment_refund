@@ -14,7 +14,7 @@ public class ClientOrderGetResponseDto {
     private Long orderId;
     private Long clientId;
     private Long couponId;
-    private String tossOrderId;
+    private String orderCode;
     private String orderDatetime;
     private String orderStatus;
     private Long productTotalAmount;
@@ -38,13 +38,13 @@ public class ClientOrderGetResponseDto {
 
     @Builder
     @SuppressWarnings("java:S107") //be sure this construct
-    public ClientOrderGetResponseDto(Long orderId, Long clientId, Long couponId, String tossOrderId, String orderDatetime, String orderStatus, Long productTotalAmount,
+    public ClientOrderGetResponseDto(Long orderId, Long clientId, Long couponId, String orderCode, String orderDatetime, String orderStatus, Long productTotalAmount,
                                           Integer shippingFee, Long orderTotalAmount, String designatedDeliveryDate, String deliveryStartDate, String phoneNumber,
                                           String deliveryAddress, Long discountAmountByCoupon, Long discountAmountByPoint, Long accumulatedPoint){
         this.orderId = orderId;
         this.clientId = clientId;
         this.couponId = couponId;
-        this.tossOrderId = tossOrderId;
+        this.orderCode = orderCode;
         this.orderDatetime = orderDatetime;
         this.orderStatus = orderStatus;
         this.productTotalAmount = productTotalAmount;

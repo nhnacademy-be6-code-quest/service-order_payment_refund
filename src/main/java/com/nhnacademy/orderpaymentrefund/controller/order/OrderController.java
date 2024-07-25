@@ -48,9 +48,9 @@ public interface OrderController {
             )
         }
     )
-    @GetMapping("/api/order/{tossOrderId}/payment-request")
+    @GetMapping("/api/order/{orderCode}/payment-request")
     ResponseEntity<PaymentOrderShowRequestDto> getPaymentOrderShowRequestDto(
-        @Parameter(description = "Toss 결제 주문 ID") @PathVariable String tossOrderId,
+        @Parameter(description = "Toss 결제 주문 ID") @PathVariable String orderCode,
         HttpServletRequest request,
         @RequestHeader HttpHeaders headers);
 
@@ -72,9 +72,9 @@ public interface OrderController {
             )
         }
     )
-    @GetMapping("/api/order/{tossOrderId}/approve-request")
+    @GetMapping("/api/order/{orderCode}/approve-request")
     ResponseEntity<PaymentOrderApproveRequestDto> getPaymentOrderApproveRequestDto(
-        @Parameter(description = "Toss 결제 주문 ID") @PathVariable String tossOrderId,
+        @Parameter(description = "Toss 결제 주문 ID") @PathVariable String orderCode,
         HttpServletRequest request,
         @RequestHeader HttpHeaders headers);
 

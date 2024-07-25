@@ -35,16 +35,9 @@ public class Order {
     @Column(name = "order_id")
     private Long orderId;
 
-    @Nullable
-    @Column(name = "client_id", unique = true)
-    private Long clientId; // fk
-
-    @Nullable
-    private Long couponId; // fk
-
     @NotNull
     @Column(unique = true)
-    private String tossOrderId;
+    private String orderCode; // 결제에 필요한 uuid
 
     @NotNull
     private LocalDateTime orderDatetime; // 주문 일시
@@ -75,88 +68,25 @@ public class Order {
 
     @NotNull
     @Size(max = 512)
-    @Column(name = "client_delivery_address")
     private String deliveryAddress; // 배송 주소지
-
-    @NotNull
-    private Long discountAmountByCoupon; // 쿠폰 할인금액
-
-    @NotNull
-    private Long discountAmountByPoint; // 포인트 할인금액
-
-    @NotNull
-    private Long accumulatedPoint; // 적립 포인트
-
-    @Size(max = 255)
-    @Nullable
-    private String nonClientOrderPassword; // 비회원 주문 비밀번호
-
-    @Size(max = 128)
-    @Nullable
-    private String nonClientOrdererName; // 비회원 주문자 이름
-
-    @Size(max = 320)
-    @Nullable
-    private String nonClientOrdererEmail; // 비회원 주문자 이메일
 
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
     private List<ProductOrderDetail> productOrderDetailList;
 
     /**
-     * 회원을 위한 Order 엔티티 생성 빌더
+     * Order 엔티티 생성 빌더
      *
-     * @param clientId 회원 아이디
-     * @param couponId 쿠폰 아이디. 쿠폰을 사용하지 않으면 null. 쿠폰 사용 시 not null
-     * @param tossOrderId 토스 페이먼츠 아이디(uuid). PG service (토스페이먼츠)에 넘길 주문 고유값.
      * @param productTotalAmount 상품 총 금액. 주문한 상품들의 총 금액. (옵션 상품 포함)
-     * @param shippingFee 배송비. 주문당시 배송정책에 따른 배송비.
      * @param designatedDeliveryDate 지정 날짜. 주문자가 지정하지 않으면 null.
      * @param phoneNumber 주문자 핸드폰 번호
      * @param deliveryAddress 배송지 주소
-     * @param discountAmountByCoupon 쿠폰 할인 금액. 쿠폰을 사용하지 않으면 0.
-     * @param discountAmountByPoint 포인트 할인 금액. 포인트를 사용하지 않으면 0.
-     * @param accumulatedPoint 적립 포인트.
-     *
      **/
-    @SuppressWarnings("java:S107") // be sure this construct
-    @Builder(builderMethodName = "clientOrderBuilder", builderClassName = "clientOrderBuilder")
-    public Order(@NotNull Long clientId, @Nullable Long couponId, @NotNull String tossOrderId, @NotNull Long productTotalAmount, @NotNull Integer shippingFee, @Nullable LocalDate designatedDeliveryDate,
-                 @NotNull String phoneNumber, @NotNull String deliveryAddress, Long discountAmountByCoupon, Long discountAmountByPoint, Long accumulatedPoint){
-        this.clientId = clientId;
-        this.couponId = couponId;
-        this.tossOrderId = tossOrderId;
-        this.productTotalAmount = productTotalAmount;
-        this.shippingFee = shippingFee;
-        this.designatedDeliveryDate = designatedDeliveryDate;
-        this.phoneNumber = phoneNumber;
-        this.deliveryAddress = deliveryAddress;
-        this.discountAmountByCoupon = discountAmountByCoupon;
-        this.discountAmountByPoint = discountAmountByPoint;
-        this.accumulatedPoint = accumulatedPoint;
-        this.orderDatetime = LocalDateTime.now();
-        this.orderStatus = OrderStatus.PAYED;
-        this.orderTotalAmount = this.productTotalAmount + this.shippingFee;
-    }
 
-    /**
-     * 비회원을 위한 Order 엔티티 생성 빌더
-     *
-     * @param tossOrderId 토스 페이먼츠 아이디(uuid). PG service (토스페이먼츠)에 넘길 주문 고유값.
-     * @param productTotalAmount 상품 총 금액. 주문한 상품들의 총 금액.
-     * @param shippingFee 배송비. 주문당시 배송정책에 따른 배송비.
-     * @param designatedDeliveryDate 지정 날짜. 주문자가 지정하지 않으면 null.
-     * @param phoneNumber 주문자 핸드폰 번호. 추후 조회용으로 사용됨.
-     * @param deliveryAddress 배송지 주소
-     * @param nonClientOrderPassword 비회원 주문 비밀번호. 추후 조회용으로 사용됨.
-     * @param nonClientOrdererName 비회원 주문자 이름. 추후 조회용으로 사용됨.
-     * @param nonClientOrdererEmail 비회원 주문자 이메일. 추후 조회용으로 사용됨.
-     *
-     **/
-    @SuppressWarnings("java:S107")// be sure this construct
-    @Builder(builderMethodName = "nonClientOrderBuilder", builderClassName = "nonClientOrderBuilder")
-    public Order(String tossOrderId, long productTotalAmount, int shippingFee, @Nullable LocalDate designatedDeliveryDate, String phoneNumber,
-                 String deliveryAddress, @NotNull String nonClientOrderPassword, @NotNull String nonClientOrdererName, @NotNull String nonClientOrdererEmail){
-        this.tossOrderId = tossOrderId;
+    @SuppressWarnings("java:S107") // be sure this construct
+    @Builder
+    public Order(@NotNull String orderCode, @NotNull Long productTotalAmount, @NotNull Integer shippingFee, @Nullable LocalDate designatedDeliveryDate,
+                 @NotNull String phoneNumber, @NotNull String deliveryAddress){
+        this.orderCode = orderCode;
         this.productTotalAmount = productTotalAmount;
         this.shippingFee = shippingFee;
         this.designatedDeliveryDate = designatedDeliveryDate;
@@ -165,12 +95,6 @@ public class Order {
         this.orderDatetime = LocalDateTime.now();
         this.orderStatus = OrderStatus.PAYED;
         this.orderTotalAmount = this.productTotalAmount + this.shippingFee;
-        this.nonClientOrderPassword = nonClientOrderPassword;
-        this.nonClientOrdererName = nonClientOrdererName;
-        this.nonClientOrdererEmail = nonClientOrdererEmail;
-        this.discountAmountByPoint = 0L;
-        this.discountAmountByCoupon = 0L;
-        this.accumulatedPoint = 0L;
     }
 
     /**

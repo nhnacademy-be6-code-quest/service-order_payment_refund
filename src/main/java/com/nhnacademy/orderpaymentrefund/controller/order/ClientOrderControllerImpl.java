@@ -2,6 +2,7 @@ package com.nhnacademy.orderpaymentrefund.controller.order;
 
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderCouponDiscountInfo;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
@@ -29,8 +30,8 @@ public class ClientOrderControllerImpl implements ClientOrderController {
 
     // 회원 임시 주문 가져오기
     @GetMapping("/api/client/orders/temporary")
-    public ResponseEntity<ClientOrderCreateForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers, String tossOrderId){
-        return ResponseEntity.ok().body(clientOrderService.getClientTemporalOrder(headers, tossOrderId));
+    public ResponseEntity<ClientOrderCreateForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers, String orderCode){
+        return ResponseEntity.ok().body(clientOrderService.getClientTemporalOrder(headers, orderCode));
     }
 
     // 주문 내역(Page) 조회 - 모든
@@ -39,7 +40,7 @@ public class ClientOrderControllerImpl implements ClientOrderController {
             @RequestHeader HttpHeaders headers,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
             @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
-            @RequestParam(value = "sortBy", defaultValue = "orderDatetime", required = false) String sortBy,
+            @RequestParam(value = "sortBy", defaultValue = "clientOrderId", required = false) String sortBy,
             @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir){
         return ResponseEntity.ok(clientOrderService.getOrders(headers, pageSize, pageNo, sortBy, sortDir));
     }
@@ -84,9 +85,8 @@ public class ClientOrderControllerImpl implements ClientOrderController {
         return ResponseEntity.ok("반품 요청 상태로 변경되었습니다.");
     }
 
-    @GetMapping("/api/client/orders/{orderId}/order-status")
-    public ResponseEntity<String> getOrderStatus(@RequestHeader HttpHeaders headers, @PathVariable long orderId){
-        return ResponseEntity.ok().body(clientOrderService.getOrderStatus(headers, orderId));
+    @PostMapping("/api/client/orders/coupon-info")
+    public ResponseEntity<List<OrderCouponDiscountInfo>> getCouponDiscountInfoList(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderCreateForm clientOrderCreateForm){
+        return ResponseEntity.ok().body(clientOrderService.getCouponDiscountInfoList(headers, clientOrderCreateForm));
     }
-
 }

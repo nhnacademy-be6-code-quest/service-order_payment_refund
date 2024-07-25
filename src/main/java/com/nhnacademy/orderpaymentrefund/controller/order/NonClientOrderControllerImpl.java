@@ -35,8 +35,8 @@ public class NonClientOrderControllerImpl implements NonClientOrderController {
 
     // 비회원 임시 주문 가져오기
     @GetMapping("/api/non-client/orders/temporary")
-    public ResponseEntity<NonClientOrderForm> getNonClientTemporalOrder(@RequestHeader HttpHeaders headers, String tossOrderId){
-        return ResponseEntity.ok().body(nonClientOrderService.getNonClientTemporalOrder(headers, tossOrderId));
+    public ResponseEntity<NonClientOrderForm> getNonClientTemporalOrder(@RequestHeader HttpHeaders headers, String orderCode){
+        return ResponseEntity.ok().body(nonClientOrderService.getNonClientTemporalOrder(headers, orderCode));
     }
 
     @GetMapping("/api/non-client/orders/{orderId}")

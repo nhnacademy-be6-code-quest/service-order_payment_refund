@@ -2,6 +2,7 @@ package com.nhnacademy.orderpaymentrefund.controller.order;
 
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderCouponDiscountInfo;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,7 +44,6 @@ public interface ClientOrderController {
         @RequestBody ClientOrderCreateForm clientOrderForm);
 
 
-
     @Operation(
         summary = "회원 임시 저장 주문 조회",
         description = "회원 임시 저장 주문 조회",
@@ -56,8 +56,7 @@ public interface ClientOrderController {
     )
     @GetMapping("/api/client/orders/temporary")
     ResponseEntity<ClientOrderCreateForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers,
-        String tossOrderId);
-
+        String orderCode);
 
 
     @Operation(
@@ -77,7 +76,6 @@ public interface ClientOrderController {
         @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
         @RequestParam(value = "sortBy", defaultValue = "orderDatetime", required = false) String sortBy,
         @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir);
-
 
 
     @Operation(
@@ -110,7 +108,6 @@ public interface ClientOrderController {
         @RequestHeader HttpHeaders headers, @PathVariable Long orderId);
 
 
-
     @Operation(
         summary = "회원 주문 상품 상세 단건 조회",
         description = "회원 주문 상품 상세 단건 조회",
@@ -125,7 +122,6 @@ public interface ClientOrderController {
     ResponseEntity<ProductOrderDetailResponseDto> getProductOrderDetail(
         @RequestHeader HttpHeaders headers, @PathVariable Long orderId,
         @PathVariable Long productOrderDetailId);
-
 
 
     @Operation(
@@ -144,7 +140,6 @@ public interface ClientOrderController {
         @PathVariable Long productOrderDetailId);
 
 
-
     @Operation(
         summary = "회원 주문 취소 상태 변경",
         description = "회원 주문 취소 상태 변경",
@@ -160,7 +155,6 @@ public interface ClientOrderController {
         @PathVariable long orderId);
 
 
-
     @Operation(
         summary = "회원 주문 환불 상태 변경",
         description = "회원 주문 환불 상태 변경",
@@ -174,7 +168,6 @@ public interface ClientOrderController {
     @PutMapping("/api/client/orders/{orderId}/refund")
     ResponseEntity<String> refundOrder(@RequestHeader HttpHeaders headers,
         @PathVariable long orderId);
-
 
 
     @Operation(
@@ -194,18 +187,18 @@ public interface ClientOrderController {
 
 
     @Operation(
-        summary = "회원 주문 상태 조회",
-        description = "회원 주문 상태 조회",
+        summary = "회원이 사용가능한 쿠폰과 할인 금액 정보 얻기",
+        description = "회원이 사용가능한 쿠폰과 할인 금액 정보 얻기",
         responses = {
             @ApiResponse(
                 responseCode = "200",
-                description = "회원 주문 상태 조회"
+                description = "회원이 사용가능한 쿠폰과 할인 금액 정보 얻기 성공"
             )
         }
     )
-    @GetMapping("/api/client/orders/{orderId}/order-status")
-    ResponseEntity<String> getOrderStatus(@RequestHeader HttpHeaders headers,
-        @PathVariable long orderId);
-
+    @PostMapping("/api/client/orders/coupon-info")
+    ResponseEntity<List<OrderCouponDiscountInfo>> getCouponDiscountInfoList(
+        @RequestHeader HttpHeaders headers,
+        @RequestBody ClientOrderCreateForm clientOrderCreateForm);
 
 }

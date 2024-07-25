@@ -10,8 +10,8 @@ import java.util.Optional;
 
 public interface ProductOrderDetailRepository extends JpaRepository<ProductOrderDetail, Long> {
 
-    List<ProductOrderDetail> findAllByOrder(Order order);
-    Optional<ProductOrderDetail> findFirstByOrder(Order order);
+    List<ProductOrderDetail> findAllByOrder_OrderId(Long orderId);
+    Optional<ProductOrderDetail> findFirstByOrder_OrderId(Long orderId);
 
     @Query(value = "select count(o) from ProductOrderDetail o where o.order = :order")
     long getSizeByOrderId(Order order);

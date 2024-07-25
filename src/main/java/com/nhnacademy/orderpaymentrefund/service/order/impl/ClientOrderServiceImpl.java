@@ -1,11 +1,17 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
+import com.nhnacademy.orderpaymentrefund.client.coupon.CouponClient;
+import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
+import com.nhnacademy.orderpaymentrefund.domain.order.ClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.CouponOrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderCouponDiscountInfo;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.CannotCancelOrder;
@@ -14,6 +20,7 @@ import com.nhnacademy.orderpaymentrefund.exception.ProductOrderDetailNotFoundExc
 import com.nhnacademy.orderpaymentrefund.exception.WrongClientAccessToOrder;
 import com.nhnacademy.orderpaymentrefund.exception.type.BadRequestExceptionType;
 import com.nhnacademy.orderpaymentrefund.exception.type.UnauthorizedExceptionType;
+import com.nhnacademy.orderpaymentrefund.repository.order.ClientOrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
@@ -39,24 +46,31 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     private static final String ID_HEADER = "X-User-Id";
 
+    private final ClientHeaderContext clientHeaderContext;
+
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
     private final OrderRepository orderRepository;
+    private final ClientOrderRepository clientOrderRepository;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private final CouponClient couponClient;
+
+    private static final String AMOUNTDISCOUNT = "AMOUNTDISCOUNT";
+    private static final String PERCENTAGEDISCOUNT = "PERCENTAGEDISCOUNT";
+
     @Override
     public void saveClientTemporalOrder(HttpHeaders headers, ClientOrderCreateForm requestDto) {
-        String tossOrderId = requestDto.getTossOrderId();
-        redisTemplate.opsForHash().put("order", tossOrderId, requestDto);
+        String orderCode = requestDto.getOrderCode();
+        redisTemplate.opsForHash().put("order", orderCode, requestDto);
     }
 
-
     @Override
-    public ClientOrderCreateForm getClientTemporalOrder(HttpHeaders headers, String tossOrderId) {
+    public ClientOrderCreateForm getClientTemporalOrder(HttpHeaders headers, String orderCode) {
 
         ClientOrderCreateForm clientOrderCreateForm = (ClientOrderCreateForm) redisTemplate.opsForHash()
-            .get("order", tossOrderId);
+            .get("order", orderCode);
 
         assert clientOrderCreateForm != null;
 
@@ -66,13 +80,16 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     @Override
     public Page<ClientOrderGetResponseDto> getOrders(HttpHeaders headers, int pageSize, int pageNo,
         String sortBy, String sortDir) {
-        long clientId = getClientId(headers);
+
         Sort sort = getSortOrder(sortBy, sortDir);
-        Page<Order> orderPage = fetchOrders(clientId, pageSize, pageNo, sort);
+
+        Page<ClientOrder> clientOrderPage = clientOrderRepository.findByClientId(
+            clientHeaderContext.getClientId(),
+            PageRequest.of(pageNo, pageSize, sort));
 
         List<ClientOrderGetResponseDto> responseDtoList = new ArrayList<>();
-        for (Order order : orderPage.getContent()) {
-            responseDtoList.add(mapToClientOrderGetResponseDto(order));
+        for (ClientOrder clientOrder : clientOrderPage.getContent()) {
+            responseDtoList.add(mapToClientOrderGetResponseDto(clientOrder));
         }
         return new PageImpl<>(responseDtoList, PageRequest.of(pageNo, pageSize, sort),
             responseDtoList.size());
@@ -84,16 +101,15 @@ public class ClientOrderServiceImpl implements ClientOrderService {
             : Sort.by(sortBy).descending();
     }
 
-    private Page<Order> fetchOrders(long clientId, int pageSize, int pageNo, Sort sort) {
-        return orderRepository.findByClientId(clientId, PageRequest.of(pageNo, pageSize, sort));
-    }
+    private ClientOrderGetResponseDto mapToClientOrderGetResponseDto(ClientOrder clientOrder) {
 
-    private ClientOrderGetResponseDto mapToClientOrderGetResponseDto(Order order) {
+        Order order = clientOrder.getOrder();
+
         ClientOrderGetResponseDto dto = ClientOrderGetResponseDto.builder()
             .orderId(order.getOrderId())
-            .clientId(order.getClientId())
-            .couponId(order.getCouponId())
-            .tossOrderId(order.getTossOrderId())
+            .clientId(clientOrder.getClientId())
+            .couponId(clientOrder.getCouponId())
+            .orderCode(order.getOrderCode())
             .orderDatetime(String.valueOf(order.getOrderDatetime()))
             .orderStatus(order.getOrderStatus().kor)
             .productTotalAmount(order.getProductTotalAmount())
@@ -103,9 +119,9 @@ public class ClientOrderServiceImpl implements ClientOrderService {
             .deliveryStartDate(formatDate(order.getDeliveryStartDate()))
             .phoneNumber(order.getPhoneNumber())
             .deliveryAddress(order.getDeliveryAddress())
-            .discountAmountByCoupon(order.getDiscountAmountByCoupon())
-            .discountAmountByPoint(order.getDiscountAmountByPoint())
-            .accumulatedPoint(order.getAccumulatedPoint())
+            .discountAmountByCoupon(clientOrder.getDiscountAmountByCoupon())
+            .discountAmountByPoint(clientOrder.getDiscountAmountByPoint())
+            .accumulatedPoint(clientOrder.getAccumulatedPoint())
             .build();
 
         List<ClientOrderGetResponseDto.ClientProductOrderDetailListItem> detailListItems = getOrderDetails(
@@ -121,8 +137,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     private List<ClientOrderGetResponseDto.ClientProductOrderDetailListItem> getOrderDetails(
         Order order) {
-        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(
-            order);
+        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder_OrderId(
+            order.getOrderId());
         return orderDetailList.stream()
             .map(this::mapToClientProductOrderDetailListItem)
             .toList();
@@ -130,8 +146,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     private ClientOrderGetResponseDto.ClientProductOrderDetailListItem mapToClientProductOrderDetailListItem(
         ProductOrderDetail productOrderDetail) {
-        ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail(
-            productOrderDetail).orElseThrow();
+        ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail_ProductOrderDetailId(
+            productOrderDetail.getProductOrderDetailId()).orElseThrow();
 
         return getClientProductOrderDetailListItem(productOrderDetail, option);
     }
@@ -139,20 +155,18 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     @Override
     public ClientOrderGetResponseDto getOrder(HttpHeaders headers, long orderId) {
 
-        long clientId = getClientId(headers);
+        ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
+        Order order = clientOrder.getOrder();
 
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-
-        assert order.getClientId() != null;
-        if (!order.getClientId().equals(clientId)) {
+        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
             throw new WrongClientAccessToOrder();
         }
 
         ClientOrderGetResponseDto clientOrderGetResponseDto = ClientOrderGetResponseDto.builder()
             .orderId(order.getOrderId())
-            .clientId(order.getClientId())
-            .couponId(order.getCouponId())
-            .tossOrderId(order.getTossOrderId())
+            .clientId(clientOrder.getClientOrderId())
+            .couponId(clientOrder.getCouponId())
+            .orderCode(order.getOrderCode())
             .orderDatetime(order.getOrderDatetime().toString().split("T")[0])
             .orderStatus(order.getOrderStatus().kor)
             .productTotalAmount(order.getProductTotalAmount())
@@ -164,18 +178,18 @@ public class ClientOrderServiceImpl implements ClientOrderService {
                 : order.getDeliveryStartDate().toString())
             .phoneNumber(order.getPhoneNumber())
             .deliveryAddress(order.getDeliveryAddress())
-            .discountAmountByCoupon(order.getDiscountAmountByCoupon())
-            .discountAmountByPoint(order.getDiscountAmountByPoint())
-            .accumulatedPoint(order.getAccumulatedPoint())
+            .discountAmountByCoupon(clientOrder.getDiscountAmountByCoupon())
+            .discountAmountByPoint(clientOrder.getDiscountAmountByPoint())
+            .accumulatedPoint(clientOrder.getAccumulatedPoint())
             .build();
 
-        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder(
-            order);
+        List<ProductOrderDetail> orderDetailList = productOrderDetailRepository.findAllByOrder_OrderId(
+            orderId);
 
         for (ProductOrderDetail productOrderDetail : orderDetailList) {
 
-            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(
-                productOrderDetail).orElseThrow();
+            ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail_ProductOrderDetailId(
+                productOrderDetail.getProductOrderDetailId()).orElseThrow();
 
             ClientOrderGetResponseDto.ClientProductOrderDetailListItem clientProductOrderDetailListItem = getClientProductOrderDetailListItem(
                 productOrderDetail, productOrderDetailOption);
@@ -190,14 +204,219 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     @Override
+    public List<OrderCouponDiscountInfo> getCouponDiscountInfoList(HttpHeaders headers, ClientOrderCreateForm clientOrderCreateForm) {
+
+        List<CouponOrderResponseDto> couponList = couponClient.findClientCoupon(headers);
+
+        List<OrderCouponDiscountInfo> couponDiscountInfoList = new ArrayList<>();
+
+        for(CouponOrderResponseDto coupon : couponList) {
+            OrderCouponDiscountInfo orderCouponDiscountInfo = orderCouponDiscountInfo(coupon, clientOrderCreateForm);
+            couponDiscountInfoList.add(orderCouponDiscountInfo);
+        }
+
+        return couponDiscountInfoList;
+    }
+
+    private OrderCouponDiscountInfo orderCouponDiscountInfo(CouponOrderResponseDto coupon, ClientOrderCreateForm clientOrderCreateForm) {
+
+        log.info("쿠폰 할인 정보 계산");
+
+        List<OrderDetailDtoItem> orderDetailDtoItemList = clientOrderCreateForm.getOrderDetailDtoItemList();
+
+        Long totalQuantity = 0L;
+        for(OrderDetailDtoItem orderDetailDtoItem : clientOrderCreateForm.getOrderDetailDtoItemList()){
+            totalQuantity += (orderDetailDtoItem.getQuantity() + orderDetailDtoItem.getOptionQuantity());
+        }
+
+        if (isAmountDiscount(coupon)) {
+            return getOrderCouponDiscountInfoUsingAmountDiscount(
+                coupon, clientOrderCreateForm.getProductTotalAmount(),
+                totalQuantity, orderDetailDtoItemList,
+                "전체 상품 주문 금액이 최소 주문 금액에 못 미칩니다"
+            );
+        }
+
+        if (isPercentageDiscount(coupon)) {
+            return getOrderCouponDiscountInfoUsingPercentageDiscount(
+                coupon, clientOrderCreateForm.getProductTotalAmount(),
+                totalQuantity, orderDetailDtoItemList,
+                "전체 상품 주문 금액이 최소 주문 금액에 못 미칩니다"
+            );
+        }
+
+        if (coupon.getProductCoupon() != null) {
+            return processProductCoupon(coupon, orderDetailDtoItemList);
+        }
+
+        if (coupon.getCategoryCoupon() != null) {
+            return processCategoryCoupon(coupon, orderDetailDtoItemList);
+        }
+
+        return createNotApplicableOrderCouponDiscountInfo(coupon, "쿠폰을 적용할 수 없습니다");
+    }
+
+    private boolean isAmountDiscount(CouponOrderResponseDto coupon) {
+        return coupon.getProductCoupon() == null && coupon.getCategoryCoupon() == null &&
+            coupon.getCouponPolicyDto() != null &&
+            coupon.getCouponPolicyDto().getDiscountType().equals(AMOUNTDISCOUNT);
+    }
+
+    private boolean isPercentageDiscount(CouponOrderResponseDto coupon) {
+        return coupon.getProductCoupon() == null && coupon.getCategoryCoupon() == null &&
+            coupon.getCouponPolicyDto() != null &&
+            coupon.getCouponPolicyDto().getDiscountType().equals(PERCENTAGEDISCOUNT);
+    }
+
+    private OrderCouponDiscountInfo processProductCoupon(CouponOrderResponseDto coupon, List<OrderDetailDtoItem> orderDetailDtoItemList) {
+        Long applicableProductId = coupon.getProductCoupon().getProductId();
+
+        for (OrderDetailDtoItem orderDetailDtoItem : orderDetailDtoItemList) {
+            if (orderDetailDtoItem.getProductId().equals(applicableProductId)) {
+                if (coupon.getCouponPolicyDto().getDiscountType().equals(AMOUNTDISCOUNT)) {
+                    return getOrderCouponDiscountInfoUsingAmountDiscount(coupon,
+                        orderDetailDtoItem.getProductSinglePrice() * orderDetailDtoItem.getQuantity(),
+                        orderDetailDtoItem.getQuantity(), List.of(orderDetailDtoItem),
+                        "쿠폰 적용가능한 상품의 총 주문 금액이 최소 주문 금액에 못 미칩니다");
+                }
+                if (coupon.getCouponPolicyDto().getDiscountType().equals(PERCENTAGEDISCOUNT)) {
+                    return getOrderCouponDiscountInfoUsingPercentageDiscount(coupon,
+                        orderDetailDtoItem.getProductSinglePrice() * orderDetailDtoItem.getQuantity(),
+                        orderDetailDtoItem.getQuantity(), List.of(orderDetailDtoItem),
+                        "쿠폰 적용가능한 상품의 총 주문 금액이 최소 주문 금액에 못 미칩니다");
+                }
+            }
+        }
+
+        return createNotApplicableOrderCouponDiscountInfo(coupon, "쿠폰을 적용할 수 있는 상품을 주문하지 않았습니다");
+    }
+
+    private OrderCouponDiscountInfo processCategoryCoupon(CouponOrderResponseDto coupon, List<OrderDetailDtoItem> orderDetailDtoItemList) {
+        Long applicableCategoryId = coupon.getCategoryCoupon().getProductCategoryId();
+        List<OrderDetailDtoItem> applicableProduct = new ArrayList<>();
+        long totalQuantity = 0;
+        long totalPrice = 0;
+
+        for (OrderDetailDtoItem orderDetailDtoItem : orderDetailDtoItemList) {
+            if (orderDetailDtoItem.getCategoryIdList() == null) break;
+            if (orderDetailDtoItem.getCategoryIdList().contains(applicableCategoryId)) {
+                applicableProduct.add(orderDetailDtoItem);
+                totalQuantity += orderDetailDtoItem.getQuantity();
+                totalPrice += orderDetailDtoItem.getProductSinglePrice() * orderDetailDtoItem.getQuantity();
+            }
+        }
+
+        if (!applicableProduct.isEmpty()) {
+            if (coupon.getCouponPolicyDto().getDiscountType().equals(AMOUNTDISCOUNT)) {
+                return getOrderCouponDiscountInfoUsingAmountDiscount(coupon, totalPrice, totalQuantity, applicableProduct, "쿠폰 적용가능한 카테고리 상품의 총 주문 금액이 최소 주문 금액에 못 미칩니다");
+            }
+            if (coupon.getCouponPolicyDto().getDiscountType().equals(PERCENTAGEDISCOUNT)) {
+                return getOrderCouponDiscountInfoUsingPercentageDiscount(coupon, totalPrice, totalQuantity, applicableProduct, "쿠폰 적용가능한 카테고리 상품의 총 주문 금액이 최소 주문 금액에 못 미칩니다");
+            }
+        }
+
+        return createNotApplicableOrderCouponDiscountInfo(coupon, "쿠폰을 적용할 수 있는 카테고리 상품을 구매하지 않았습니다");
+    }
+
+    private OrderCouponDiscountInfo createNotApplicableOrderCouponDiscountInfo(CouponOrderResponseDto coupon, String description) {
+        OrderCouponDiscountInfo orderCouponDiscountInfo = OrderCouponDiscountInfo.builder()
+            .couponId(coupon.getCouponId())
+            .isApplicable(false)
+            .build();
+        orderCouponDiscountInfo.updateNotApplicableDescription(description);
+        return orderCouponDiscountInfo;
+    }
+
+
+    // coupon: 적용할 쿠폰
+    // productTotalAmount: 쿠폰의 '최소 주문 금액'을 체크하기 위한 총 액수. 상품 쿠폰 Or 카테고리 쿠폰의 경우, 적용할 상품들의 총 액수가 됨.
+    // totalQuantity: 쿠폰을 적용시켜 할인 받을 상품의 총 개수. 상품 쿠폰 Or 카테고리 쿠폰의 경우, 적용할 상품들의 총 수량이 됨.
+    // orderDetailDtoItemList: 쿠폰 적용 대상이 되는 상품들.
+    private OrderCouponDiscountInfo getOrderCouponDiscountInfoUsingAmountDiscount(CouponOrderResponseDto coupon, Long productTotalAmount, Long totalQuantity, List<OrderDetailDtoItem> orderDetailDtoItemList, String updateNotApplicableDescription){
+
+        // 최소 금액 기준이 맞지 않음 => 쿠폰 사용 불가.
+        if(productTotalAmount < coupon.getCouponPolicyDto().getMinPurchaseAmount()){
+            OrderCouponDiscountInfo orderCouponDiscountInfo = OrderCouponDiscountInfo.builder()
+                .couponId(coupon.getCouponId())
+                .isApplicable(false)
+                .build();
+            orderCouponDiscountInfo.updateNotApplicableDescription(updateNotApplicableDescription);
+            return orderCouponDiscountInfo;
+        }
+
+        // 쿠폰 할인 금액
+        long discountValue = coupon.getCouponPolicyDto().getDiscountValue();
+
+        // 각 상품 당 할인 금액
+        long discountValuePerProduct = Math.round((double) discountValue / totalQuantity);
+
+        OrderCouponDiscountInfo orderCouponDiscountInfo = OrderCouponDiscountInfo.builder()
+            .couponId(coupon.getCouponId())
+            .isApplicable(true)
+            .discountTotalAmount(discountValue)
+            .build();
+
+        for(OrderDetailDtoItem orderDetailDtoItem : orderDetailDtoItemList){
+            orderCouponDiscountInfo.addProductPriceInfo(orderDetailDtoItem.getProductId(), orderDetailDtoItem.getProductSinglePrice() - discountValuePerProduct);
+        }
+
+        return orderCouponDiscountInfo;
+
+    }
+
+    // coupon: 적용할 쿠폰
+    // productTotalAmount: 쿠폰의 '최소 주문 금액'을 체크하기 위한 총 액수. 상품 쿠폰 Or 카테고리 쿠폰의 경우, 적용할 상품들의 총 액수가 됨.
+    // totalQuantity: 쿠폰을 적용시켜 할인 받을 상품의 총 개수. 상품 쿠폰 Or 카테고리 쿠폰의 경우, 적용할 상품들의 총 수량이 됨.
+    // orderDetailDtoItemList: 쿠폰 적용 대상이 되는 상품들.
+    private OrderCouponDiscountInfo getOrderCouponDiscountInfoUsingPercentageDiscount(CouponOrderResponseDto coupon, Long productTotalAmount, Long totalQuantity,
+        List<OrderDetailDtoItem> orderDetailDtoItemList, String updateNotApplicableDescription) {
+
+        // 최소 금액 기준이 맞지 않음 => 쿠폰 사용 불가.
+        if (productTotalAmount < coupon.getCouponPolicyDto().getMinPurchaseAmount()) {
+            OrderCouponDiscountInfo orderCouponDiscountInfo = OrderCouponDiscountInfo.builder()
+                .couponId(coupon.getCouponId())
+                .isApplicable(false)
+                .build();
+            orderCouponDiscountInfo.updateNotApplicableDescription(updateNotApplicableDescription);
+            return orderCouponDiscountInfo;
+        }
+
+        // 할인금액 계산
+        long discountValue = Math.round(
+            productTotalAmount * (0.01 * coupon.getCouponPolicyDto().getDiscountValue()));
+        // 할인 금액이 쿠폰의 '최대 할인 금액'을 초과할 경우.
+        if (coupon.getCouponPolicyDto().getMaxDiscountAmount() < discountValue) {
+            discountValue = coupon.getCouponPolicyDto().getMaxDiscountAmount();
+        }
+        // 상품 별 할인 금액
+        long discountValuePerProduct = Math.round((double) discountValue / totalQuantity);
+        discountValue = discountValuePerProduct * totalQuantity;
+
+        OrderCouponDiscountInfo orderCouponDiscountInfo = OrderCouponDiscountInfo.builder()
+            .couponId(coupon.getCouponId())
+            .isApplicable(true)
+            .discountTotalAmount(discountValue)
+            .build();
+
+        for (OrderDetailDtoItem orderDetailDtoItem : orderDetailDtoItemList) {
+            orderCouponDiscountInfo.addProductPriceInfo(orderDetailDtoItem.getProductId(),
+                orderDetailDtoItem.getProductSinglePrice() - discountValuePerProduct);
+        }
+
+        return orderCouponDiscountInfo;
+    }
+
+
+
+        // TODO 민선님, 알아서 쓰세요
+
+    @Override
     public void cancelOrder(HttpHeaders headers, long orderId) {
 
-        long clientId = getClientId(headers);
+        ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
+        Order order = clientOrder.getOrder();
 
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-
-        assert order.getClientId() != null;
-        if (!order.getClientId().equals(clientId)) {
+        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
             throw new WrongClientAccessToOrder();
         }
 
@@ -211,17 +430,16 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         orderRepository.save(order);
 
         log.info("order 주문 취소 상태 변경 성공");
+
     }
 
     @Override
     public void refundOrder(HttpHeaders headers, long orderId) {
 
-        long clientId = getClientId(headers);
+        ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
+        Order order = clientOrder.getOrder();
 
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-
-        assert order.getClientId() != null;
-        if (!order.getClientId().equals(clientId)) {
+        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
             throw new WrongClientAccessToOrder();
         }
 
@@ -237,12 +455,10 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     @Override
     public void refundOrderRequest(HttpHeaders headers, long orderId) {
 
-        long clientId = getClientId(headers);
+        ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
+        Order order = clientOrder.getOrder();
 
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-
-        assert order.getClientId() != null;
-        if (!order.getClientId().equals(clientId)) {
+        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
             throw new WrongClientAccessToOrder();
         }
 
@@ -256,38 +472,19 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     }
 
-
-    @Override
-    public String getOrderStatus(HttpHeaders headers, long orderId) {
-
-        long clientId = getClientId(headers);
-
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-
-        assert order.getClientId() != null;
-        if (!order.getClientId().equals(clientId)) {
-            throw new WrongClientAccessToOrder();
-        }
-
-        return order.getOrderStatus().kor;
-
-    }
-
     @Override
     public List<ProductOrderDetailResponseDto> getProductOrderDetailResponseDtoList(
         HttpHeaders headers, Long orderId) {
 
-        long clientId = getClientId(headers);
+        ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
+        Order order = clientOrder.getOrder();
 
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-
-        assert order.getClientId() != null;
-        if (!order.getClientId().equals(clientId)) {
+        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
             throw new WrongClientAccessToOrder();
         }
 
-        List<ProductOrderDetail> productOrderDetailList = productOrderDetailRepository.findAllByOrder(
-            order);
+        List<ProductOrderDetail> productOrderDetailList = productOrderDetailRepository.findAllByOrder_OrderId(
+            order.getOrderId());
 
         List<ProductOrderDetailResponseDto> productOrderDetailResponseDtoList = new ArrayList<>();
 
@@ -309,7 +506,12 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     public ProductOrderDetailResponseDto getProductOrderDetailResponseDto(HttpHeaders headers,
         Long orderId, Long productOrderDetailId) {
 
-        Order order = getOrderEntity(headers, orderId);
+        ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
+        Order order = clientOrder.getOrder();
+
+        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
+            throw new WrongClientAccessToOrder();
+        }
 
         ProductOrderDetail productOrderDetail = getProductOrderDetailEntity(productOrderDetailId);
 
@@ -333,8 +535,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         HttpHeaders headers, long orderId, long detailId) {
 
         ProductOrderDetail productOrderDetail = getProductOrderDetailEntity(detailId);
-        ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail(
-            productOrderDetail).orElseThrow(ProductOrderDetailNotFoundException::new);
+        ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail_ProductOrderDetailId(
+            productOrderDetail.getProductOrderDetailId()).orElseThrow(ProductOrderDetailNotFoundException::new);
 
         return ProductOrderDetailOptionResponseDto.builder()
             .productId(productOrderDetailOption.getProductId())
@@ -355,21 +557,6 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     private ProductOrderDetail getProductOrderDetailEntity(Long productOrderDetailId) {
         return productOrderDetailRepository.findById(productOrderDetailId)
             .orElseThrow(ProductOrderDetailNotFoundException::new);
-    }
-
-    private Order getOrderEntity(HttpHeaders headers, Long orderId) {
-
-        long clientId = getClientId(headers);
-
-        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
-
-        assert order.getClientId() != null;
-        if (!order.getClientId().equals(clientId)) {
-            throw new WrongClientAccessToOrder();
-        }
-
-        return order;
-
     }
 
     private ClientOrderGetResponseDto.ClientProductOrderDetailListItem getClientProductOrderDetailListItem(

@@ -19,7 +19,7 @@ public interface NonClientOrderService {
 
     void saveNonClientTemporalOrder(HttpHeaders headers, NonClientOrderForm requestDto);
 
-    NonClientOrderForm getNonClientTemporalOrder(HttpHeaders headers, String tossOrderId);
+    NonClientOrderForm getNonClientTemporalOrder(HttpHeaders headers, String orderCode);
 
     /**
      * findNonClientOrderId : 비회원이 주문 번호를 잃어버렸을 때, 주문번호를 찾을 수 있는 서비스

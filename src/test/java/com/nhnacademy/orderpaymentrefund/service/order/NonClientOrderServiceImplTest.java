@@ -59,7 +59,7 @@ class NonClientOrderServiceImplTest {
 //        setFieldValue(requestDto, "designatedDeliveryDate", LocalDate.of(2024, 8, 1));
 //        setFieldValue(requestDto, "paymentMethod", 1);
 //        setFieldValue(requestDto, "orderPassword", "1234");
-//        setFieldValue(requestDto, "tossOrderId", "uuid-1234");
+//        setFieldValue(requestDto, "orderCode", "uuid-1234");
 //
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.add("X-User-Id", "test-user-id");

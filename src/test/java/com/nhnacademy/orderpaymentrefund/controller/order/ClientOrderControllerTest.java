@@ -73,16 +73,16 @@ class ClientOrderControllerTest {
     @DisplayName("회원 임시 주문 조회")
     void getClientTemporalOrderTest() throws Exception {
 
-        String tossOrderId = "uuid-1234";
+        String orderCode = "uuid-1234";
 
         ClientOrderCreateForm clientOrderCreateForm = new ClientOrderCreateForm();
 
         when(clientOrderService.getClientTemporalOrder(any(HttpHeaders.class),
-            eq(tossOrderId))).thenReturn(
+            eq(orderCode))).thenReturn(
             clientOrderCreateForm);
 
         mockMvc.perform(get("/api/client/orders/temporary")
-                .param("tossOrderId", tossOrderId)
+                .param("orderCode", orderCode)
                 .header(ID_HEADER, "1")
             )
             .andExpect(status().isOk()); // 상태 코드 확인
@@ -215,19 +215,6 @@ class ClientOrderControllerTest {
 
         mockMvc.perform(
             put("/api/client/orders/{orderId}/refund-request", orderId)
-                .header(ID_HEADER, "1")
-        ).andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("주문상태 조회")
-    void getOrderStatusTest() throws Exception {
-        Long orderId = 1L;
-
-        when(clientOrderService.getOrderStatus(any(HttpHeaders.class), anyLong())).thenReturn("변경된주문상태");
-
-        mockMvc.perform(
-            get("/api/client/orders/{orderId}/order-status", orderId)
                 .header(ID_HEADER, "1")
         ).andExpect(status().isOk());
     }

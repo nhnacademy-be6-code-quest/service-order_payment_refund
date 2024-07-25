@@ -25,14 +25,14 @@ public class OrderControllerImpl implements OrderController {
 
     private final OrderService orderService;
 
-    @GetMapping("/api/order/{tossOrderId}/payment-request")
-    public ResponseEntity<PaymentOrderShowRequestDto> getPaymentOrderShowRequestDto(@PathVariable String tossOrderId, HttpServletRequest request, @RequestHeader HttpHeaders headers){
-        return ResponseEntity.ok().body(orderService.getPaymentOrderShowRequestDto(headers, request, tossOrderId));
+    @GetMapping("/api/order/{orderCode}/payment-request")
+    public ResponseEntity<PaymentOrderShowRequestDto> getPaymentOrderShowRequestDto(@PathVariable String orderCode, HttpServletRequest request, @RequestHeader HttpHeaders headers){
+        return ResponseEntity.ok().body(orderService.getPaymentOrderShowRequestDto(headers, request, orderCode));
     }
 
-    @GetMapping("/api/order/{tossOrderId}/approve-request")
-    public ResponseEntity<PaymentOrderApproveRequestDto> getPaymentOrderApproveRequestDto(@PathVariable String tossOrderId, HttpServletRequest request, @RequestHeader HttpHeaders headers){
-        return ResponseEntity.ok().body(orderService.getPaymentOrderApproveRequestDto(headers, request, tossOrderId));
+    @GetMapping("/api/order/{orderCode}/approve-request")
+    public ResponseEntity<PaymentOrderApproveRequestDto> getPaymentOrderApproveRequestDto(@PathVariable String orderCode, HttpServletRequest request, @RequestHeader HttpHeaders headers){
+        return ResponseEntity.ok().body(orderService.getPaymentOrderApproveRequestDto(headers, request, orderCode));
     }
 
     @PutMapping("/api/order/{orderId}")

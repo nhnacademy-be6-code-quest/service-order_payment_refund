@@ -57,7 +57,7 @@ public interface NonClientOrderController {
     )
     @GetMapping("/api/non-client/orders/temporary")
     ResponseEntity<NonClientOrderForm> getNonClientTemporalOrder(
-        @RequestHeader HttpHeaders headers, String tossOrderId);
+        @RequestHeader HttpHeaders headers, String orderCode);
 
 
 
