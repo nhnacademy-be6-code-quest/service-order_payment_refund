@@ -16,8 +16,8 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.CartCheckoutRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.InventoryDecreaseRequestDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
@@ -194,7 +194,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         for(OrderDetailDtoItem orderDetailDtoItem : orderDetailDtoItemList){
             decreaseInfo.put(orderDetailDtoItem.getProductId(), orderDetailDtoItem.getQuantity());
-            if (orderDetailDtoItem.getUsePackaging()) {
+            if (Boolean.TRUE.equals(orderDetailDtoItem.getUsePackaging())) {
                 decreaseInfo.put(orderDetailDtoItem.getOptionProductId(), orderDetailDtoItem.getOptionQuantity());
             }
         }

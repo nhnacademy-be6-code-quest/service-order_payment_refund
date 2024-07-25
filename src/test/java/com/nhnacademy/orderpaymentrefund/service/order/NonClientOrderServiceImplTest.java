@@ -101,7 +101,7 @@ class NonClientOrderServiceImplTest {
 
         nonClientOrderService.saveNonClientTemporalOrder(headers, requestDto);
 
-        verify(hashOperations, times(1)).put(eq(REDIS_KEY), eq("uuid-1234"), eq(requestDto));
+        verify(hashOperations, times(1)).put(REDIS_KEY, "uuid-1234", eq(requestDto));
 
     }
 
@@ -210,7 +210,7 @@ class NonClientOrderServiceImplTest {
 
         when(
             nonClientOrderRepository.findByNonClientOrdererNameAndNonClientOrdererEmailAndOrder_PhoneNumber(
-                eq(requestDto.getOrdererName()), eq(requestDto.getEmail()), eq(requestDto.getPhoneNumber()))
+                requestDto.getOrdererName(), requestDto.getEmail(), requestDto.getPhoneNumber())
         ).thenReturn(Optional.of(nonClientOrder));
 
         String resPassword = nonClientOrderService.findNonClientOrderPassword(headers, requestDto);
