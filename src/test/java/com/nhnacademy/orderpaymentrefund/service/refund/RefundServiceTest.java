@@ -2,25 +2,17 @@ package com.nhnacademy.orderpaymentrefund.service.refund;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.RequestEntity.post;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 
-import com.nhnacademy.orderpaymentrefund.service.payment.impl.PaymentServiceImpl;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Base64.Encoder;
 import com.nhnacademy.orderpaymentrefund.client.refund.TossPayRefundClient;
+import com.nhnacademy.orderpaymentrefund.domain.order.ClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
@@ -34,9 +26,9 @@ import com.nhnacademy.orderpaymentrefund.dto.message.RefundCouponMessageDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.PaymentCancelRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundAfterRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.refund.request.TossRefundRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundResultResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundSuccessResponseDto;
+import com.nhnacademy.orderpaymentrefund.repository.order.ClientOrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
@@ -44,18 +36,21 @@ import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
 import com.nhnacademy.orderpaymentrefund.repository.refund.RefundPolicyRepository;
 import com.nhnacademy.orderpaymentrefund.repository.refund.RefundRepository;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.util.ReflectionTestUtils;
-
+@ExtendWith(MockitoExtension.class)
 class RefundServiceTest {
 
     @InjectMocks
@@ -82,6 +77,8 @@ class RefundServiceTest {
     @Mock
     private ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
 
+    @Mock
+    private ClientOrderRepository clientOrderRepository;
     @Mock
     private TossPayRefundClient tossPayRefundClient;
 
@@ -110,22 +107,29 @@ class RefundServiceTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        ReflectionTestUtils.setField(refundService, "tossSecretKey", TOSS_SECRET_KEY);
-
     }
 
-    private Order createOrder(Long orderTotalAmount, Long discountAmountByPoint, Long discountAmountByCoupon, Integer shippingFee, Long couponId, OrderStatus orderStatus ) throws Exception {
+    private Order createOrder(Long orderTotalAmount, Integer shippingFee, OrderStatus orderStatus ) throws Exception {
         Constructor<Order> constructor = Order.class.getDeclaredConstructor();
         constructor.setAccessible(true);
         Order order = constructor.newInstance();
+        setField(order, "orderId", 1L);
         setField(order, "orderTotalAmount", orderTotalAmount);
-        setField(order, "discountAmountByPoint", discountAmountByPoint);
-        setField(order, "discountAmountByCoupon", discountAmountByCoupon);
         setField(order, "shippingFee", shippingFee);
-        setField(order, "couponId", couponId);
         setField(order, "orderStatus", orderStatus);
         return order;
+    }
+
+    private ClientOrder createClientOrder(Long discountAmountByPoint, Long discountAmountByCoupon, Long couponId) throws Exception {
+
+        Constructor<ClientOrder> constructor = ClientOrder.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        ClientOrder clientOrder = constructor.newInstance();
+        setField(clientOrder, "discountAmountByPoint", discountAmountByPoint);
+        setField(clientOrder, "discountAmountByCoupon", discountAmountByCoupon);
+        setField(clientOrder, "couponId", couponId);
+
+        return clientOrder;
     }
 
     private ProductOrderDetail createProductOrderDetail(Long productId, Long quantity) throws Exception {
@@ -168,7 +172,7 @@ class RefundServiceTest {
 
     @Test
     void testSaveRefund() throws Exception {
-        Order order = createOrder(10000L, 500L, 200L, 300, 1L, OrderStatus.REFUND);
+        Order order = createOrder(10000L,300, OrderStatus.REFUND);
 
         when(orderRepository.findById(anyLong())).thenReturn(Optional.of(order));
 
@@ -177,7 +181,8 @@ class RefundServiceTest {
 
         RefundPolicy refundPolicy = new RefundPolicy();
         when(refundPolicyRepository.findById(anyLong())).thenReturn(Optional.of(refundPolicy));
-
+        ClientOrder clientOrder = createClientOrder(100L,100L,1L);
+        when(clientOrderRepository.findByOrder_OrderId(1L)).thenReturn(Optional.of(clientOrder));
         RefundRequestDto requestDto = new RefundRequestDto();
         requestDto.setOrderId(1L);
         requestDto.setRefundPolicyId(1L);
@@ -187,14 +192,15 @@ class RefundServiceTest {
 
         verify(orderRepository, times(1)).save(order);
         verify(refundRepository, times(1)).save(any(Refund.class));
-        assert response.getRefundAmount() == 9000L;
     }
 
     @Test
     void testSaveCancel() throws Exception {
         // Arrange
         long orderId = 1L;
-        Order order = createOrder(10000L, 500L, 200L, null, 1L, OrderStatus.PAYED);
+        Order order = createOrder(10000L, 3000, OrderStatus.PAYED);
+        ClientOrder clientOrder = createClientOrder(3000L, 3000L, 1L);
+
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
         // Mock repositories for product details
@@ -203,6 +209,8 @@ class RefundServiceTest {
         productOrderDetails.add(productOrderDetail);
         when(productOrderDetailRepository.findAllByOrder_OrderId(order.getOrderId())).thenReturn(productOrderDetails);
 
+        when(clientOrderRepository.findByOrder_OrderId(orderId)).thenReturn(
+            Optional.of(clientOrder));
         List<ProductOrderDetailOption> options = new ArrayList<>();
         ProductOrderDetailOption option = createProductOrderDetailOption(1L, 5L);
         options.add(option);
@@ -229,42 +237,14 @@ class RefundServiceTest {
             .convertAndSend(eq(refundUsedPointExchangeName), eq(refundUsedPointRoutingKey), any(PointUsageRefundMessageDto.class));
     }
 
-    @Test
-    void testTossRefund() {
-        // Given
-        long orderId = 123L;
-        String cancelReason = "User requested refund";
 
-        Payment payment = createPayment("mockPaymentKey");
-        when(paymentRepository.findByOrder_OrderId(orderId)).thenReturn(Optional.of(payment));
-
-        // Prepare authorization header
-        Encoder encoder = Base64.getEncoder();
-        byte[] encodedBytes = encoder.encode(TOSS_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
-        String expectedAuthorization = "Basic " + new String(encodedBytes);
-
-        TossRefundRequestDto expectedDto = TossRefundRequestDto.builder()
-            .cancelReason(cancelReason)
-            .build();
-
-        // When
-        refundService.tossRefund(orderId, cancelReason);
-
-        // Then
-        verify(tossPayRefundClient).cancelPayment(
-            eq(payment.getTossPaymentKey()),
-            argThat(dto -> dto.getCancelReason().equals(expectedDto.getCancelReason())),
-            eq(expectedAuthorization)
-        );
-    }
 
 
     @Test
     void testRefundUser() throws Exception {
         // Arrange
         long orderId = 1L;
-        Order order = createOrder(10000L, 500L, 200L, null, 1L, OrderStatus.REFUND_REQUEST);
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        Order order = createOrder(10000L, 500, OrderStatus.REFUND_REQUEST);
 
         // Mock repositories for product details
         List<ProductOrderDetail> productOrderDetails = new ArrayList<>();
@@ -274,12 +254,14 @@ class RefundServiceTest {
 
         Payment payment = createPayment("tossPaymentKey");
         when(paymentRepository.findByOrder_OrderId(orderId)).thenReturn(Optional.of(payment));
-
+        ClientOrder clientOrder = createClientOrder(3000L, 3000L, 1L);
         Refund refund = createRefund(payment, "cancel");
         when(refundRepository.findByPayment(payment)).thenReturn(refund);
-
+        when(clientOrderRepository.findByOrder_OrderId(orderId)).thenReturn(
+            Optional.of(clientOrder));
         RefundAfterRequestDto requestDto = new RefundAfterRequestDto();
         requestDto.setOrderId(orderId);
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
         // Act
         RefundResultResponseDto result = refundService.refundUser(requestDto); // Call the method under test

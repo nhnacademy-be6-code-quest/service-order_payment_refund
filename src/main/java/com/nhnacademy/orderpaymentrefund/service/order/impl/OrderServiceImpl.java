@@ -50,10 +50,12 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final ObjectMapper objectMapper;
     private final ClientOrderRepository clientOrderRepository;
     private final NonClientOrderRepository nonClientOrderRepository;
+
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private final ObjectMapper objectMapper;
 
     @Override
     public PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(HttpHeaders headers,

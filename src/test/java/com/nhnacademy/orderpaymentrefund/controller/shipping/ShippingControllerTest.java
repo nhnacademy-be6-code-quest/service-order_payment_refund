@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.orderpaymentrefund.config.SecurityConfig;
+import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
 import com.nhnacademy.orderpaymentrefund.domain.shipping.ShippingPolicyType;
 import com.nhnacademy.orderpaymentrefund.dto.shipping.admin.request.AdminShippingPolicyPutRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.shipping.admin.response.ShippingPolicyGetResponseDto;
@@ -37,6 +38,9 @@ class ShippingControllerTest {
 
     @MockBean
     ShippingPolicyService shippingPolicyService;
+
+    @MockBean
+    ClientHeaderContext clientHeaderContext;
 
     @Autowired
     private ObjectMapper objectMapper;

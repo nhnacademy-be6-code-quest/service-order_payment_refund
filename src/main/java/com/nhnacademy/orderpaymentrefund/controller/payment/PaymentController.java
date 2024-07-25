@@ -1,10 +1,9 @@
 package com.nhnacademy.orderpaymentrefund.controller.payment;
 
-import com.nhnacademy.orderpaymentrefund.dto.payment.request.TossApprovePaymentRequest;
-import com.nhnacademy.orderpaymentrefund.dto.payment.request.UserUpdateGradeRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.TossPaymentsResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -38,9 +37,9 @@ public interface PaymentController {
         }
     )
     @PostMapping("/api/order/payment/approve")
-    TossPaymentsResponseDto approvePayment(
+    PaymentsResponseDto approvePayment(
         @Parameter(description = "결재승인 요청에 필요한 정보")
-        @RequestBody TossApprovePaymentRequest tossApprovePaymentRequest)
+        @RequestBody ApprovePaymentRequestDto approvePaymentRequestDto)
         throws ParseException;
 
     @Operation(
@@ -55,7 +54,7 @@ public interface PaymentController {
     @PostMapping("/api/order/payment/save")
     void savePayment(
         @Parameter(description = "결재정보 저장 정보")
-        @RequestBody TossPaymentsResponseDto tossPaymentsResponseDto,
+        @RequestBody PaymentsResponseDto paymentsResponseDto,
         @Parameter(description = "회원 정보")
         @RequestHeader HttpHeaders headers);
 

@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.orderpaymentrefund.config.SecurityConfig;
+import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
@@ -45,6 +46,9 @@ class ClientOrderControllerTest {
 
     @MockBean
     private ClientOrderService clientOrderService;
+
+    @MockBean
+    private ClientHeaderContext clientHeaderContext;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -217,6 +221,27 @@ class ClientOrderControllerTest {
             put("/api/client/orders/{orderId}/refund-request", orderId)
                 .header(ID_HEADER, "1")
         ).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("주문에 대한 사용가능 쿠폰 및 사용 정보 가져오기")
+    void getCouponDiscountInfoListTest() throws Exception {
+
+        ClientOrderCreateForm clientOrderCreateForm = new ClientOrderCreateForm();
+
+        String body = objectMapper.writeValueAsString(clientOrderCreateForm);
+
+        doNothing().when(clientOrderService)
+            .saveClientTemporalOrder(any(HttpHeaders.class), any(ClientOrderCreateForm.class));
+
+        mockMvc.perform(
+                post("/api/client/orders/coupon-info")
+                    .content(body)
+                    .header(ID_HEADER, "1")
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andExpect(status().isOk());
+
     }
 
 }

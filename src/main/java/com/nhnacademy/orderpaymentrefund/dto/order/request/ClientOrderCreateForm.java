@@ -47,7 +47,7 @@ public class ClientOrderCreateForm {
     LocalDate designatedDeliveryDate; // 배송날짜 지정
 
     @NotNull
-    Integer paymentMethod; // 결제 방식
+    String paymentMethod; // 결제 방식
 
     @NotNull
     Long accumulatePoint; // 예상 적립금

@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -35,6 +36,10 @@ public class Payment {
     @NotNull
     private long payAmount;
 
+    @JoinColumn(name = "payment_method_type_id")
+    @ManyToOne
+    private PaymentMethodType paymentMethodType;
+
     @NotNull
     private LocalDateTime payTime;
 
@@ -45,9 +50,10 @@ public class Payment {
     private String tossPaymentKey;
 
     @Builder
-    public Payment(Order order, long payAmount, String paymentMethodName,
+    public Payment(Order order, long payAmount, String paymentMethodName,PaymentMethodType paymentMethodType,
         String tossPaymentKey) {
         this.order = order;
+        this.paymentMethodType=paymentMethodType;
         this.payAmount = payAmount;
         this.payTime = LocalDateTime.now();
         this.paymentMethodName = paymentMethodName;

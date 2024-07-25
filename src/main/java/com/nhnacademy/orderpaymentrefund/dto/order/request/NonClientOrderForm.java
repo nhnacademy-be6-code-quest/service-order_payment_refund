@@ -21,7 +21,7 @@ public class NonClientOrderForm {
     String deliveryDetailAddress; // 배송 상세주소
     Boolean useDesignatedDeliveryDate; // 배송날짜 지정 여부
     LocalDate designatedDeliveryDate; // 배송날짜 지정
-    Integer paymentMethod; // 결제 방식
+    String paymentMethod; // 결제 방식
     String orderPassword; // 주문 비밀번호
     String orderCode; // 토스 주문
 

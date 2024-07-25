@@ -18,8 +18,6 @@ import com.nhnacademy.orderpaymentrefund.exception.CannotCancelOrder;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.exception.ProductOrderDetailNotFoundException;
 import com.nhnacademy.orderpaymentrefund.exception.WrongClientAccessToOrder;
-import com.nhnacademy.orderpaymentrefund.exception.type.BadRequestExceptionType;
-import com.nhnacademy.orderpaymentrefund.exception.type.UnauthorizedExceptionType;
 import com.nhnacademy.orderpaymentrefund.repository.order.ClientOrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
@@ -28,7 +26,6 @@ import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -158,7 +155,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
         Order order = clientOrder.getOrder();
 
-        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
+        if (!clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
             throw new WrongClientAccessToOrder();
         }
 
@@ -369,6 +366,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     // totalQuantity: 쿠폰을 적용시켜 할인 받을 상품의 총 개수. 상품 쿠폰 Or 카테고리 쿠폰의 경우, 적용할 상품들의 총 수량이 됨.
     // orderDetailDtoItemList: 쿠폰 적용 대상이 되는 상품들.
     private OrderCouponDiscountInfo getOrderCouponDiscountInfoUsingPercentageDiscount(CouponOrderResponseDto coupon, Long productTotalAmount, Long totalQuantity,
+
         List<OrderDetailDtoItem> orderDetailDtoItemList, String updateNotApplicableDescription) {
 
         // 최소 금액 기준이 맞지 않음 => 쿠폰 사용 불가.
@@ -416,7 +414,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
         Order order = clientOrder.getOrder();
 
-        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
+        if (!clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
             throw new WrongClientAccessToOrder();
         }
 
@@ -439,7 +437,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
         Order order = clientOrder.getOrder();
 
-        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
+        if (!clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
             throw new WrongClientAccessToOrder();
         }
 
@@ -458,7 +456,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
         Order order = clientOrder.getOrder();
 
-        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
+        if (!clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
             throw new WrongClientAccessToOrder();
         }
 
@@ -479,12 +477,12 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
         Order order = clientOrder.getOrder();
 
-        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
+        if (!clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
             throw new WrongClientAccessToOrder();
         }
 
         List<ProductOrderDetail> productOrderDetailList = productOrderDetailRepository.findAllByOrder_OrderId(
-            order.getOrderId());
+            orderId);
 
         List<ProductOrderDetailResponseDto> productOrderDetailResponseDtoList = new ArrayList<>();
 
@@ -509,15 +507,12 @@ public class ClientOrderServiceImpl implements ClientOrderService {
         ClientOrder clientOrder = clientOrderRepository.findByOrder_OrderId(orderId).orElseThrow(OrderNotFoundException::new);
         Order order = clientOrder.getOrder();
 
-        if (clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
+        if (!clientHeaderContext.getClientId().equals(clientOrder.getClientId())) {
             throw new WrongClientAccessToOrder();
         }
 
-        ProductOrderDetail productOrderDetail = getProductOrderDetailEntity(productOrderDetailId);
-
-        if (!productOrderDetail.getOrder().equals(order)) {
-            throw new BadRequestExceptionType("orderId와 productOrderDetailId가 매칭되지 않습니다");
-        }
+        ProductOrderDetail productOrderDetail = productOrderDetailRepository.findById(productOrderDetailId)
+            .orElseThrow(ProductOrderDetailNotFoundException::new);
 
         return ProductOrderDetailResponseDto.builder()
             .productOrderDetailId(productOrderDetail.getProductOrderDetailId())
@@ -534,7 +529,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     public ProductOrderDetailOptionResponseDto getProductOrderDetailOptionResponseDto(
         HttpHeaders headers, long orderId, long detailId) {
 
-        ProductOrderDetail productOrderDetail = getProductOrderDetailEntity(detailId);
+        ProductOrderDetail productOrderDetail = productOrderDetailRepository.findById(detailId)
+            .orElseThrow(ProductOrderDetailNotFoundException::new);
         ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail_ProductOrderDetailId(
             productOrderDetail.getProductOrderDetailId()).orElseThrow(ProductOrderDetailNotFoundException::new);
 
@@ -545,18 +541,6 @@ public class ClientOrderServiceImpl implements ClientOrderService {
             .optionProductPrice(productOrderDetailOption.getOptionProductPrice())
             .optionProductQuantity(productOrderDetailOption.getQuantity())
             .build();
-    }
-
-    private long getClientId(HttpHeaders headers) {
-        if (headers.get(ID_HEADER) == null) {
-            throw new UnauthorizedExceptionType("clientId is null");
-        }
-        return Long.parseLong(Objects.requireNonNull(headers.getFirst(ID_HEADER)));
-    }
-
-    private ProductOrderDetail getProductOrderDetailEntity(Long productOrderDetailId) {
-        return productOrderDetailRepository.findById(productOrderDetailId)
-            .orElseThrow(ProductOrderDetailNotFoundException::new);
     }
 
     private ClientOrderGetResponseDto.ClientProductOrderDetailListItem getClientProductOrderDetailListItem(

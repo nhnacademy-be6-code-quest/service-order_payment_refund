@@ -11,15 +11,15 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class PaymentMethod {
+public class PaymentMethodType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long paymentMethodId;
+    private long paymentMethodTypeId;
     @NotNull
-    private String paymentMethodName; // 토스 페이먼트가 제공하는 이름 - Enum 으로 해야 하는 이유가 있을까?
+    private String paymentMethodTypeName; // 토스 페이먼트가 제공하는 이름 - Enum 으로 해야 하는 이유가 있을까?
 
     public void setMethodName(String methodName){
-        this.paymentMethodName=methodName;
+        this.paymentMethodTypeName =methodName;
     }
 }
