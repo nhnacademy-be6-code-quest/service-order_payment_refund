@@ -19,7 +19,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 
 @ExtendWith(MockitoExtension.class)
-public class OrderServiceImplTest {
+class OrderServiceImplTest {
 
     private static final String ID_HEADER = "X-User-Id";
 
@@ -54,48 +54,45 @@ public class OrderServiceImplTest {
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("비회원 임시 저장 테스트")
     void getPaymentOrderShowRequestDtoTest() {
 
     }
 
     @Test
-    @DisplayName("회원 주문 임시 저장")
+    @DisplayName("비회원 임시 저장 주문 조회 테스트")
     void getPaymentOrderApproveRequestDtoTest() {
 
     }
 
     @Test
-    @DisplayName()
+    @DisplayName("비회원 주문 아이디 목록 페이지 조회")
     void changeOrderStatusTest(){
 
     }
 
     @Test
-    @DisplayName()
+    @DisplayName("비회원 주문 비밀번호 조회")
     void getAllOrderListTest(){
 
     }
 
     @Test
-    @DisplayName()
+    @DisplayName("비회원 주문 단건 조회")
     void getProductOrderDetailListTest(){
 
     }
 
     @Test
-    @DisplayName()
+    @DisplayName("주문 취소 테스트")
     void getProductOrderDetailTest(){
 
     }
 
     @Test
-    @DisplayName()
+    @DisplayName("")
     void getProductOrderDetailOptionResponseDtoTest(){
 
     }
-
-
-
 
 }

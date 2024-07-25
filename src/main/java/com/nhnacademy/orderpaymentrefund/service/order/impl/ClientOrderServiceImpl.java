@@ -366,6 +366,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     // totalQuantity: 쿠폰을 적용시켜 할인 받을 상품의 총 개수. 상품 쿠폰 Or 카테고리 쿠폰의 경우, 적용할 상품들의 총 수량이 됨.
     // orderDetailDtoItemList: 쿠폰 적용 대상이 되는 상품들.
     private OrderCouponDiscountInfo getOrderCouponDiscountInfoUsingPercentageDiscount(CouponOrderResponseDto coupon, Long productTotalAmount, Long totalQuantity,
+
         List<OrderDetailDtoItem> orderDetailDtoItemList, String updateNotApplicableDescription) {
 
         // 최소 금액 기준이 맞지 않음 => 쿠폰 사용 불가.
