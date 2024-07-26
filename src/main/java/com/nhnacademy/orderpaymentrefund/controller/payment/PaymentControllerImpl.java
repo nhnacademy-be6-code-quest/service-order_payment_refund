@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author 김채호
  * @version 1.0
  */
+
 @RestController
 @RequiredArgsConstructor
 public class PaymentControllerImpl implements PaymentController{
@@ -31,7 +32,6 @@ public class PaymentControllerImpl implements PaymentController{
     @Override
     public PaymentsResponseDto approvePayment(@RequestBody ApprovePaymentRequestDto approvePaymentRequestDto) throws ParseException {
         return paymentStrategyService.approvePayment(approvePaymentRequestDto);
-
     }
 
     @Override
@@ -48,6 +48,5 @@ public class PaymentControllerImpl implements PaymentController{
     public PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(@RequestHeader HttpHeaders headers, @RequestParam("orderCode") String orderCode){
         return paymentService.getPostProcessRequiredPaymentResponseDto(headers, orderCode);
     }
-
 
 }
