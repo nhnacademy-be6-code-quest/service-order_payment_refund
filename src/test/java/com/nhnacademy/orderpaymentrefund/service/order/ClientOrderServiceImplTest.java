@@ -595,7 +595,6 @@ class ClientOrderServiceImplTest {
     @DisplayName("주문 상품 옵션 상세 조회 성공")
     void getProductOrderDetailOptionResponseDtoSuccessTest() {
 
-
         long clientId = parseLong(Objects.requireNonNull(headers.getFirst(ID_HEADER)));
         long orderId = 1L;
         long detailId = 2L;

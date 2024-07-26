@@ -27,24 +27,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface PaymentController {
 
     @Operation(
-        summary = "결재 승인",
+        summary = "결제 승인",
         description = "Toss - 결재 승인",
         responses = {
             @ApiResponse(
                 responseCode = "200",
-                description = "결재 정보"
+                description = "결제 정보"
             )
         }
     )
     @PostMapping("/api/order/payment/approve")
     PaymentsResponseDto approvePayment(
-        @Parameter(description = "결재승인 요청에 필요한 정보")
+        @Parameter(description = "결제승인 요청에 필요한 정보")
         @RequestBody ApprovePaymentRequestDto approvePaymentRequestDto)
         throws ParseException;
 
     @Operation(
-        summary = "결재 저장",
-        description = "Payment - 사용자 결재정보 저장",
+        summary = "결제 저장",
+        description = "Payment - 사용자 결제정보 저장",
         responses = {
             @ApiResponse(
                 responseCode = "200"
@@ -53,18 +53,18 @@ public interface PaymentController {
     )
     @PostMapping("/api/order/payment/save")
     void savePayment(
-        @Parameter(description = "결재정보 저장 정보")
+        @Parameter(description = "결제정보 저장 정보")
         @RequestBody PaymentsResponseDto paymentsResponseDto,
         @Parameter(description = "회원 정보")
         @RequestHeader HttpHeaders headers);
 
     @Operation(
-        summary = "3개월 결재금액",
-        description = "Client - 3개월 순수결재금액 총합",
+        summary = "3개월 결제금액",
+        description = "Client - 3개월 순수결제금액 총합",
         responses = {
             @ApiResponse(
                 responseCode = "200",
-                description = "3개월 순수 결재금액"
+                description = "3개월 순수 결제금액"
             )
         }
     )
@@ -74,12 +74,12 @@ public interface PaymentController {
         @PathVariable Long clientId);
 
     @Operation(
-        summary = "결재 후처리 정보",
-        description = "Payment - 결재 후 처리를 위한 정보",
+        summary = "결제 후처리 정보",
+        description = "Payment - 결제 후 처리를 위한 정보",
         responses = {
             @ApiResponse(
                 responseCode = "200",
-                description = "결재 후처리 정보"
+                description = "결제 후처리 정보"
             )
         }
     )
@@ -87,7 +87,7 @@ public interface PaymentController {
     PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(
         @Parameter(description = "회원 정보")
         @RequestHeader HttpHeaders headers,
-        @Parameter(description = "결재주문아이디")
+        @Parameter(description = "결제주문아이디")
         @RequestParam("orderCode") String orderCode);
 
 }

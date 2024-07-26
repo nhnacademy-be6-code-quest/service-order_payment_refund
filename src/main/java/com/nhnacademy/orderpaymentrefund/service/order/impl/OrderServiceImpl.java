@@ -308,7 +308,7 @@ public class OrderServiceImpl implements OrderService {
         ClientOrder clientOrder = null;
         NonClientOrder nonClientOrder = null;
 
-        if (clientOrderRepository.existsByOrder_OrderId(order.getOrderId())) {
+        if (Boolean.TRUE.equals(clientOrderRepository.existsByOrder_OrderId(order.getOrderId()))) {
             isClientOrder = true;
             clientOrder = clientOrderRepository.findByOrder_OrderId(order.getOrderId())
                 .orElseThrow(OrderNotFoundException::new);
