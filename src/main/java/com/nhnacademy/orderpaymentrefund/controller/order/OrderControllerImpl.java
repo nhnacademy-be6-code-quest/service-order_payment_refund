@@ -27,12 +27,12 @@ public class OrderControllerImpl implements OrderController {
 
     @GetMapping("/api/order/{orderCode}/payment-request")
     public ResponseEntity<PaymentOrderShowRequestDto> getPaymentOrderShowRequestDto(@PathVariable String orderCode, HttpServletRequest request, @RequestHeader HttpHeaders headers){
-        return ResponseEntity.ok().body(orderService.getPaymentOrderShowRequestDto(headers, request, orderCode));
+        return ResponseEntity.ok().body(orderService.getPaymentOrderShowRequestDto(orderCode));
     }
 
     @GetMapping("/api/order/{orderCode}/approve-request")
     public ResponseEntity<PaymentOrderApproveRequestDto> getPaymentOrderApproveRequestDto(@PathVariable String orderCode, HttpServletRequest request, @RequestHeader HttpHeaders headers){
-        return ResponseEntity.ok().body(orderService.getPaymentOrderApproveRequestDto(headers, request, orderCode));
+        return ResponseEntity.ok().body(orderService.getPaymentOrderApproveRequestDto(orderCode));
     }
 
     @PutMapping("/api/order/{orderId}")

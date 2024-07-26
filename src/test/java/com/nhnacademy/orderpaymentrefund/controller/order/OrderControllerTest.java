@@ -1,6 +1,5 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -23,7 +22,6 @@ import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailRe
 import com.nhnacademy.orderpaymentrefund.exception.InvalidOrderChangeAttempt;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +33,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 
 @Import(SecurityConfig.class)
@@ -65,8 +62,7 @@ class OrderControllerTest {
             .orderHistoryTitle("초코파이 외 10건")
             .build();
 
-        when(orderService.getPaymentOrderShowRequestDto(any(HttpHeaders.class),
-            any(HttpServletRequest.class), eq(orderCode))).thenReturn(resDto);
+        when(orderService.getPaymentOrderShowRequestDto(eq(orderCode))).thenReturn(resDto);
 
         mockMvc.perform(
             get("/api/order/{orderCode}/payment-request", orderCode)
@@ -82,8 +78,7 @@ class OrderControllerTest {
         String orderCode = "저장되지 않은 uuid-1234";
 
         doThrow(new OrderNotFoundException()).when(
-            orderService).getPaymentOrderShowRequestDto(any(HttpHeaders.class),
-            any(HttpServletRequest.class), eq(orderCode));
+            orderService).getPaymentOrderShowRequestDto(eq(orderCode));
 
         mockMvc.perform(
             get("/api/order/{orderCode}/payment-request", orderCode)
@@ -108,8 +103,7 @@ class OrderControllerTest {
             .productOrderDetailList(new ArrayList<>())
             .build();
 
-        when(orderService.getPaymentOrderApproveRequestDto(any(HttpHeaders.class),
-            any(HttpServletRequest.class), eq(orderCode))).thenReturn(resDto);
+        when(orderService.getPaymentOrderApproveRequestDto(eq(orderCode))).thenReturn(resDto);
 
         mockMvc.perform(
             get("/api/order/{orderCode}/approve-request", orderCode)
@@ -125,8 +119,7 @@ class OrderControllerTest {
         String orderCode = "uuid-1234";
 
         doThrow(new OrderNotFoundException()).when(orderService)
-            .getPaymentOrderApproveRequestDto(any(HttpHeaders.class),
-                any(HttpServletRequest.class), eq(orderCode));
+            .getPaymentOrderApproveRequestDto(eq(orderCode));
 
         mockMvc.perform(
             get("/api/order/{orderCode}/approve-request", orderCode)
