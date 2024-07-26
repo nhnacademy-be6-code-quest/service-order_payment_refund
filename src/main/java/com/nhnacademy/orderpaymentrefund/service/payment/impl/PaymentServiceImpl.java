@@ -359,7 +359,7 @@ public class PaymentServiceImpl implements PaymentService {
             order.getOrderId());
 
         PostProcessRequiredPaymentResponseDto postProcessRequiredPaymentResponseDto = PostProcessRequiredPaymentResponseDto.builder()
-            .orderCode(order.getOrderCode())
+            .orderId(order.getOrderId())
             .clientId(clientId)
             .amount(payment.getPayAmount())
             .paymentMethodName(payment.getPaymentMethodName())

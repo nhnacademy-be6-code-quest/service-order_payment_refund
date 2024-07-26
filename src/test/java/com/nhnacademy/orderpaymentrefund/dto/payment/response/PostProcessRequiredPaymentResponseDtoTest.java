@@ -11,7 +11,7 @@ class PostProcessRequiredPaymentResponseDtoTest {
         PostProcessRequiredPaymentResponseDto dto = new PostProcessRequiredPaymentResponseDto();
 
         assertThat(dto).isNotNull();
-        assertThat(dto.getOrderCode()).isNull();
+        assertThat(dto.getOrderId()).isNull();
         assertThat(dto.getClientId()).isNull();
         assertThat(dto.getAmount()).isZero();
         assertThat(dto.getPaymentMethodName()).isNull();
@@ -20,20 +20,20 @@ class PostProcessRequiredPaymentResponseDtoTest {
 
     @Test
     void testBuilder() {
-        String orderId = "100L";
+        Long orderId = 100L;
         Long clientId = 200L;
         long amount = 5000L;
         String paymentMethodName = "Credit Card";
 
         PostProcessRequiredPaymentResponseDto dto = PostProcessRequiredPaymentResponseDto.builder()
-            .orderCode(orderId)
+            .orderId(orderId)
             .clientId(clientId)
             .amount(amount)
             .paymentMethodName(paymentMethodName)
             .build();
 
         assertThat(dto).isNotNull();
-        assertThat(dto.getOrderCode()).isEqualTo(orderId);
+        assertThat(dto.getOrderId()).isEqualTo(orderId);
         assertThat(dto.getClientId()).isEqualTo(clientId);
         assertThat(dto.getAmount()).isEqualTo(amount);
         assertThat(dto.getPaymentMethodName()).isEqualTo(paymentMethodName);
@@ -67,19 +67,19 @@ class PostProcessRequiredPaymentResponseDtoTest {
 
     @Test
     void testSetAndGetFieldsWithBuilder() {
-        String orderCode = "100L";
+        Long orderId = 100L;
         Long clientId = 200L;
         long amount = 5000L;
         String paymentMethodName = "Credit Card";
 
         PostProcessRequiredPaymentResponseDto dto = PostProcessRequiredPaymentResponseDto.builder()
-            .orderCode(orderCode)
+            .orderId(orderId)
             .clientId(clientId)
             .amount(amount)
             .paymentMethodName(paymentMethodName)
             .build();
 
-        assertThat(dto.getOrderCode()).isEqualTo(orderCode);
+        assertThat(dto.getOrderId()).isEqualTo(orderId);
         assertThat(dto.getClientId()).isEqualTo(clientId);
         assertThat(dto.getAmount()).isEqualTo(amount);
         assertThat(dto.getPaymentMethodName()).isEqualTo(paymentMethodName);
