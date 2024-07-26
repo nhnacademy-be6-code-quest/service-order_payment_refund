@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Base64.Encoder;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONObject;
@@ -30,6 +31,7 @@ public class TossPayment implements PaymentStrategy {
     private final TossPayRefundClient tossPayRefundClient;
 
     @NoArgsConstructor
+    @Getter
     public static class TossApprovePaymentRequestDto {
 
         String orderId; // uuid
@@ -100,6 +102,7 @@ public class TossPayment implements PaymentStrategy {
             .bank(bank)
             .customerMobilePhone(customerMobilePhone)
             .orderCode(approvePaymentRequestDto.getOrderCode())
+            .methodType(approvePaymentRequestDto.getMethodType())
             .build();
 
     }
