@@ -144,7 +144,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     private ClientOrderGetResponseDto.ClientProductOrderDetailListItem mapToClientProductOrderDetailListItem(
         ProductOrderDetail productOrderDetail) {
         ProductOrderDetailOption option = productOrderDetailOptionRepository.findFirstByProductOrderDetail_ProductOrderDetailId(
-            productOrderDetail.getProductOrderDetailId()).orElseThrow();
+            productOrderDetail.getProductOrderDetailId()).orElse(null);
 
         return getClientProductOrderDetailListItem(productOrderDetail, option);
     }
