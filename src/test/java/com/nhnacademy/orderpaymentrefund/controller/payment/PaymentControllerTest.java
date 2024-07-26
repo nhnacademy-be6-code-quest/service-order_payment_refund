@@ -116,7 +116,7 @@ class PaymentControllerTest {
     void getPostProcessRequiredPaymentResponseDtoTest() throws Exception {
         HttpHeaders headers = new HttpHeaders();
         PostProcessRequiredPaymentResponseDto response = PostProcessRequiredPaymentResponseDto.builder()
-            .orderId(123L)
+            .orderCode("123L")
             .clientId(456L)
             .amount(1000)
             .paymentMethodName("카드")
