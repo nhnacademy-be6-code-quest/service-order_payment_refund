@@ -12,5 +12,4 @@ public class ApprovePaymentRequestDto {
     long amount;
     String paymentKey;
     String methodType;
-
 }

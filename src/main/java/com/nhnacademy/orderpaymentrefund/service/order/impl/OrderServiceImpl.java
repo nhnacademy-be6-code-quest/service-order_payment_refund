@@ -1,6 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
 import com.nhnacademy.orderpaymentrefund.domain.order.ClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.NonClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
@@ -16,7 +17,6 @@ import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.InvalidOrderChangeAttempt;
-import com.nhnacademy.orderpaymentrefund.exception.NonClientCannotAccessClientService;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.exception.ProductOrderDetailNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.ClientOrderRepository;
@@ -25,10 +25,8 @@ import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,7 +34,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -57,9 +54,10 @@ public class OrderServiceImpl implements OrderService {
 
     private final ObjectMapper objectMapper;
 
+    private final ClientHeaderContext clientHeaderContext;
+
     @Override
-    public PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(HttpHeaders headers,
-        HttpServletRequest request, String orderCode) {
+    public PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(String orderCode) {
 
         StringBuilder orderHistoryTitle = new StringBuilder();
         Long orderTotalAmount = null;
@@ -67,7 +65,7 @@ public class OrderServiceImpl implements OrderService {
         Long discountAmountByPoint = null;
         Integer sizeProductOrderDetail = null;
 
-        if (isClient(headers)) {
+        if (clientHeaderContext.isClient()) {
 
             Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, orderCode);
             ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
@@ -109,7 +107,8 @@ public class OrderServiceImpl implements OrderService {
                 orderHistoryTitle.append(String.format("외 %d개", sizeProductOrderDetail - 1));
             }
 
-            orderTotalAmount = nonClientOrderForm.getProductTotalAmount();
+            orderTotalAmount =
+                nonClientOrderForm.getProductTotalAmount() + nonClientOrderForm.getShippingFee();
 
         }
 
@@ -123,11 +122,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(HttpHeaders headers,
-        HttpServletRequest request, String orderCode) {
-        if (isClient(headers)) {
+    public PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(String orderCode) {
+        if (clientHeaderContext.isClient()) {
             return getPaymentOrderApproveRequestDtoFromClientOrderForm(orderCode,
-                getClientId(headers));
+                clientHeaderContext.getClientId());
         } else {
             return getPaymentOrderApproveRequestDtoFromNonClientOrderForm(orderCode);
         }
@@ -193,7 +191,8 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderNotFoundException();
         }
 
-        orderTotalAmount = nonClientOrderForm.getProductTotalAmount();
+        orderTotalAmount =
+            nonClientOrderForm.getProductTotalAmount() + nonClientOrderForm.getShippingFee();
 
         for (OrderDetailDtoItem orderDetailDtoItem : nonClientOrderForm.getOrderDetailDtoItemList()) {
             PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto productOrderDetailRequest = PaymentOrderApproveRequestDto.ProductOrderDetailRequestDto.builder()
@@ -243,7 +242,8 @@ public class OrderServiceImpl implements OrderService {
          * 2. 결제완료 -> 배송중
          * 3. 배송중 -> 배송완료
          * 4. 결제대기 or 결제완료 -> 주문취소
-         * 5. 배송중 or 배송완료 -> 반품
+         * 5. 배송중 or 배송완료 -> 반품 요청
+         * 6. 반품요청 -> 반품
          */
 
         boolean canChange = (nextOrderStatus.equals(OrderStatus.PAYED) && order.getOrderStatus()
@@ -255,9 +255,11 @@ public class OrderServiceImpl implements OrderService {
             (nextOrderStatus.equals(OrderStatus.CANCEL) && (
                 order.getOrderStatus().equals(OrderStatus.WAIT_PAYMENT) || order.getOrderStatus()
                     .equals(OrderStatus.PAYED))) ||
-            (nextOrderStatus.equals(OrderStatus.REFUND) && (
+            (nextOrderStatus.equals(OrderStatus.REFUND_REQUEST) && (
                 order.getOrderStatus().equals(OrderStatus.DELIVERING) || order.getOrderStatus()
-                    .equals(OrderStatus.DELIVERY_COMPLETE)));
+                    .equals(OrderStatus.DELIVERY_COMPLETE))) ||
+            (nextOrderStatus.equals(OrderStatus.REFUND) && order.getOrderStatus()
+                .equals(OrderStatus.REFUND_REQUEST));
 
         if (canChange) {
             order.updateOrderStatus(nextOrderStatus);
@@ -306,14 +308,14 @@ public class OrderServiceImpl implements OrderService {
         ClientOrder clientOrder = null;
         NonClientOrder nonClientOrder = null;
 
-        if(clientOrderRepository.existsByOrder_OrderId(order.getOrderId())) {
+        if (clientOrderRepository.existsByOrder_OrderId(order.getOrderId())) {
             isClientOrder = true;
-            clientOrder = clientOrderRepository.findByOrder_OrderId(order.getOrderId()).orElseThrow(OrderNotFoundException::new);
+            clientOrder = clientOrderRepository.findByOrder_OrderId(order.getOrderId())
+                .orElseThrow(OrderNotFoundException::new);
+        } else {
+            nonClientOrder = nonClientOrderRepository.findByOrder_OrderId(order.getOrderId())
+                .orElseThrow(OrderNotFoundException::new);
         }
-        else{
-            nonClientOrder = nonClientOrderRepository.findByOrder_OrderId(order.getOrderId()).orElseThrow(OrderNotFoundException::new);
-        }
-
 
         return OrderResponseDto.builder()
             .orderId(order.getOrderId())
@@ -336,7 +338,8 @@ public class OrderServiceImpl implements OrderService {
             .accumulatedPoint(isClientOrder ? clientOrder.getAccumulatedPoint() : 0)
             .nonClientOrdererEmail(isClientOrder ? null : nonClientOrder.getNonClientOrdererEmail())
             .nonClientOrdererName(isClientOrder ? null : nonClientOrder.getNonClientOrdererName())
-            .nonClientOrderPassword(isClientOrder ? null : nonClientOrder.getNonClientOrderPassword())
+            .nonClientOrderPassword(
+                isClientOrder ? null : nonClientOrder.getNonClientOrderPassword())
             .build();
     }
 
@@ -413,7 +416,8 @@ public class OrderServiceImpl implements OrderService {
         ProductOrderDetail productOrderDetail = productOrderDetailRepository.findById(detailId)
             .orElseThrow(ProductOrderDetailNotFoundException::new);
         ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionRepository.findFirstByProductOrderDetail_ProductOrderDetailId(
-            productOrderDetail.getProductOrderDetailId()).orElseThrow(ProductOrderDetailNotFoundException::new);
+                productOrderDetail.getProductOrderDetailId())
+            .orElseThrow(ProductOrderDetailNotFoundException::new);
 
         return ProductOrderDetailOptionResponseDto.builder()
             .productId(productOrderDetailOption.getProductId())
@@ -424,14 +428,4 @@ public class OrderServiceImpl implements OrderService {
             .build();
     }
 
-    private boolean isClient(HttpHeaders headers) {
-        return headers.getFirst(ID_HEADER) != null;
-    }
-
-    private Long getClientId(HttpHeaders headers) {
-        if (headers.get(ID_HEADER) == null) {
-            throw new NonClientCannotAccessClientService();
-        }
-        return Long.parseLong(Objects.requireNonNull(headers.getFirst(ID_HEADER)));
-    }
 }

@@ -27,6 +27,7 @@ public class OrderDetailDtoItem {
     @NotNull
     Boolean packableProduct; // 포장 가능 상품 여부
 
+    @NotNull
     Boolean usePackaging; // 포장 선택 여부
 
     Long optionProductId; // 옵션 상품 아이디
