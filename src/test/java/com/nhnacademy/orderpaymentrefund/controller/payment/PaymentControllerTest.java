@@ -116,7 +116,7 @@ class PaymentControllerTest {
     void getPostProcessRequiredPaymentResponseDtoTest() throws Exception {
         HttpHeaders headers = new HttpHeaders();
         PostProcessRequiredPaymentResponseDto response = PostProcessRequiredPaymentResponseDto.builder()
-            .orderCode("order123")
+            .orderId(100L)
             .clientId(456L)
             .amount(1000)
             .paymentMethodName("카드")
@@ -132,7 +132,7 @@ class PaymentControllerTest {
         mockMvc.perform(get("/api/order/payment/post-process")
                 .param("orderCode", "order123"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.orderCode").value("order123"))
+            .andExpect(jsonPath("$.orderId").value(100L))
             .andExpect(jsonPath("$.clientId").value(456))
             .andExpect(jsonPath("$.amount").value(1000))
             .andExpect(jsonPath("$.paymentMethodName").value("카드"))
