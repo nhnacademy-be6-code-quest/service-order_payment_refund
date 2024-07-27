@@ -59,6 +59,25 @@ import org.springframework.test.util.ReflectionTestUtils;
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
 
+    @Value("${rabbit.cart.checkout.exchange.name}")
+    private String cartCheckoutExchangeName;
+    @Value("${rabbit.cart.checkout.routing.key}")
+    private String cartCheckoutRoutingKey;
+
+    @Value("${rabbit.inventory.decrease.exchange.name}")
+    private String inventoryDecreaseExchangeName;
+    @Value("${rabbit.inventory.decrease.routing.key}")
+    private String inventoryDecreaseRoutingKey;
+
+    @Value("${rabbit.use.point.exchange.name}")
+    private String pointUseExchangeName;
+    @Value("${rabbit.use.point.routing.key}")
+    private String pointUseRoutingKey;
+
+    @Value("${rabbit.use.coupon.exchange.name}")
+    private String couponUseExchangeName;
+    @Value("${rabbit.use.coupon.roting.key}")
+    private String couponUseRoutingKey;
 
     @Mock
     ClientOrderRepository clientOrderRepository;
@@ -69,7 +88,10 @@ class PaymentServiceTest {
     private RedisTemplate<String, Object> redisTemplate;
     @Mock
     private ObjectMapper objectMapper;
-
+    @Mock
+    private TossPaymentsClient tossPaymentsClient;
+    @Mock
+    private RabbitTemplate rabbitTemplate;
     @Mock
     private OrderService orderService;
 
@@ -107,6 +129,14 @@ class PaymentServiceTest {
 
     }
 
+
+
+    private Long getClientId(HttpHeaders headers) {
+        if (headers.get(ID_HEADER) == null) {
+            return null;
+        }
+        return Long.parseLong(Objects.requireNonNull(headers.getFirst(ID_HEADER)));
+    }
     private Order createOrder(Long orderId, Long orderTotalAmount, Integer shippingFee, OrderStatus orderStatus ) throws Exception {
         Constructor<Order> constructor = Order.class.getDeclaredConstructor();
         constructor.setAccessible(true);
@@ -118,6 +148,33 @@ class PaymentServiceTest {
         return order;
     }
 
+
+
+    private OrderDetailDtoItem createOrderDetailDtoItem(Boolean usePackaging)
+        throws Exception {
+        Constructor<OrderDetailDtoItem> constructor = OrderDetailDtoItem.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        OrderDetailDtoItem orderDetailDtoItem = constructor.newInstance();
+        setField(orderDetailDtoItem, "usePackaging", usePackaging);
+        return orderDetailDtoItem;
+    }
+
+
+
+
+
+    private ClientOrder createClientOrder( Long discountAmountByPoint, Long discountAmountByCoupon, OrderStatus orderStatus)
+        throws Exception {
+        Constructor<ClientOrder> constructor = ClientOrder.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        ClientOrder clientOrder = constructor.newInstance();
+        setField(clientOrder, "discountAmountByPoint", discountAmountByPoint);
+        setField(clientOrder, "discountAmountByCoupon", discountAmountByCoupon);
+        setField(clientOrder, "orderStatus", orderStatus);
+        return clientOrder;
+
+
+    }
     private ClientOrderCreateForm createClientOrderCreateForm(List<OrderDetailDtoItem> orderDetailDtoItemList) throws Exception {
         Constructor<ClientOrderCreateForm> constructor = ClientOrderCreateForm.class.getDeclaredConstructor();
         constructor.setAccessible(true);
