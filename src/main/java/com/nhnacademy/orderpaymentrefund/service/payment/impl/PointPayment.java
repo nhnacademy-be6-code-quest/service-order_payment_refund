@@ -11,11 +11,17 @@ public class PointPayment implements PaymentStrategy {
     @Override
     public PaymentsResponseDto approvePayment(
         ApprovePaymentRequestDto approvePaymentRequestDto) {
-        return null;
+        return PaymentsResponseDto.builder()
+            .methodType(approvePaymentRequestDto.getMethodType())
+            .method("point")
+            .orderCode(approvePaymentRequestDto.getOrderCode())
+            .totalAmount(approvePaymentRequestDto.getAmount())
+            .paymentKey(approvePaymentRequestDto.getPaymentKey())
+            .build();
     }
 
     @Override
     public void refundPayment(long orderId, String cancelReason) {
-
+        //not use
     }
 }
