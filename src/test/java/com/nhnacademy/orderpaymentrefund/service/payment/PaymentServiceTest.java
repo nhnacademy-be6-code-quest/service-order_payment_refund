@@ -1,19 +1,12 @@
 package com.nhnacademy.orderpaymentrefund.service.payment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.amqp.rabbit.config.NamespaceUtils.ORDER;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.orderpaymentrefund.client.payment.TossPaymentsClient;
@@ -45,9 +38,9 @@ import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +48,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,25 +59,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
 
-    @Value("${rabbit.cart.checkout.exchange.name}")
-    private String cartCheckoutExchangeName;
-    @Value("${rabbit.cart.checkout.routing.key}")
-    private String cartCheckoutRoutingKey;
-
-    @Value("${rabbit.inventory.decrease.exchange.name}")
-    private String inventoryDecreaseExchangeName;
-    @Value("${rabbit.inventory.decrease.routing.key}")
-    private String inventoryDecreaseRoutingKey;
-
-    @Value("${rabbit.use.point.exchange.name}")
-    private String pointUseExchangeName;
-    @Value("${rabbit.use.point.routing.key}")
-    private String pointUseRoutingKey;
-
-    @Value("${rabbit.use.coupon.exchange.name}")
-    private String couponUseExchangeName;
-    @Value("${rabbit.use.coupon.roting.key}")
-    private String couponUseRoutingKey;
 
     @Mock
     ClientOrderRepository clientOrderRepository;
@@ -96,10 +69,7 @@ class PaymentServiceTest {
     private RedisTemplate<String, Object> redisTemplate;
     @Mock
     private ObjectMapper objectMapper;
-    @Mock
-    private TossPaymentsClient tossPaymentsClient;
-    @Mock
-    private RabbitTemplate rabbitTemplate;
+
     @Mock
     private OrderService orderService;
 
@@ -124,7 +94,7 @@ class PaymentServiceTest {
     private PaymentsResponseDto paymentsResponseDto;
     private ClientOrderCreateForm clientOrderCreateForm;
     private NonClientOrderForm nonClientOrderForm;
-    private HttpHeaders headers;
+    private HttpHeaders headers= new HttpHeaders();
     List<OrderDetailDtoItem> detailDtoItems = new ArrayList<>();
     @InjectMocks
     private PaymentServiceImpl paymentService;
@@ -133,25 +103,10 @@ class PaymentServiceTest {
     @BeforeEach
     void setUp() throws Exception {
         //MockitoAnnotations.openMocks(this);
-        given(redisTemplate.opsForHash()).willReturn(hashOperations);
 
-        clientId = 1L;
-        data = new Object(); // 테스트용 데이터
-        paymentsResponseDto = new PaymentsResponseDto(); // 필요한 필드 초기화
-        clientOrderCreateForm = createClientOrderCreateForm(detailDtoItems);// 필요한 필드 초기화
-        headers = new HttpHeaders(); // HttpHeaders 초기화
-        nonClientOrderForm = createNonClientOrderForm("orderCode",detailDtoItems);
 
     }
 
-
-
-    private Long getClientId(HttpHeaders headers) {
-        if (headers.get(ID_HEADER) == null) {
-            return null;
-        }
-        return Long.parseLong(Objects.requireNonNull(headers.getFirst(ID_HEADER)));
-    }
     private Order createOrder(Long orderId, Long orderTotalAmount, Integer shippingFee, OrderStatus orderStatus ) throws Exception {
         Constructor<Order> constructor = Order.class.getDeclaredConstructor();
         constructor.setAccessible(true);
@@ -163,33 +118,6 @@ class PaymentServiceTest {
         return order;
     }
 
-
-
-    private OrderDetailDtoItem createOrderDetailDtoItem(Boolean usePackaging)
-        throws Exception {
-        Constructor<OrderDetailDtoItem> constructor = OrderDetailDtoItem.class.getDeclaredConstructor();
-        constructor.setAccessible(true);
-        OrderDetailDtoItem orderDetailDtoItem = constructor.newInstance();
-        setField(orderDetailDtoItem, "usePackaging", usePackaging);
-        return orderDetailDtoItem;
-    }
-
-
-
-
-
-    private ClientOrder createClientOrder( Long discountAmountByPoint, Long discountAmountByCoupon, OrderStatus orderStatus)
-        throws Exception {
-        Constructor<ClientOrder> constructor = ClientOrder.class.getDeclaredConstructor();
-        constructor.setAccessible(true);
-        ClientOrder clientOrder = constructor.newInstance();
-        setField(clientOrder, "discountAmountByPoint", discountAmountByPoint);
-        setField(clientOrder, "discountAmountByCoupon", discountAmountByCoupon);
-        setField(clientOrder, "orderStatus", orderStatus);
-        return clientOrder;
-
-
-    }
     private ClientOrderCreateForm createClientOrderCreateForm(List<OrderDetailDtoItem> orderDetailDtoItemList) throws Exception {
         Constructor<ClientOrderCreateForm> constructor = ClientOrderCreateForm.class.getDeclaredConstructor();
         constructor.setAccessible(true);
@@ -253,7 +181,14 @@ class PaymentServiceTest {
     @Test
     void testSavePaymentWithClientId() throws Exception {
         // Arrange
-        HttpHeaders headers = new HttpHeaders();
+        given(redisTemplate.opsForHash()).willReturn(hashOperations);
+
+        clientId = 1L;
+        data = new Object(); // 테스트용 데이터
+        paymentsResponseDto = new PaymentsResponseDto(); // 필요한 필드 초기화
+        clientOrderCreateForm = createClientOrderCreateForm(detailDtoItems);// 필요한 필드 초기화
+        headers = new HttpHeaders(); // HttpHeaders 초기화
+        nonClientOrderForm = createNonClientOrderForm("orderCode",detailDtoItems);
         headers.set("X-User-Id","1");
 
         PaymentsResponseDto paymentsResponseDto = new PaymentsResponseDto();
@@ -280,7 +215,14 @@ class PaymentServiceTest {
     @Test
     void testSavePaymentWithNonClientId() throws Exception {
         // Arrange
-        HttpHeaders headers = new HttpHeaders();
+        given(redisTemplate.opsForHash()).willReturn(hashOperations);
+
+        clientId = 1L;
+        data = new Object(); // 테스트용 데이터
+        paymentsResponseDto = new PaymentsResponseDto(); // 필요한 필드 초기화
+        clientOrderCreateForm = createClientOrderCreateForm(detailDtoItems);// 필요한 필드 초기화
+        headers = new HttpHeaders(); // HttpHeaders 초기화
+        nonClientOrderForm = createNonClientOrderForm("orderCode",detailDtoItems);
 
         PaymentsResponseDto paymentsResponseDto = new PaymentsResponseDto();
         ReflectionTestUtils.setField(paymentsResponseDto, "orderCode", "order123");
@@ -310,7 +252,53 @@ class PaymentServiceTest {
         // Add more assertions to check the proper execution of private logic
     }
 
+    @Test
+    public void testGetPaymentRecordOfClient() {
+        Long clientId = 1L;
+        Long totalOptionPriceForLastThreeMonths = 200L;
+        Long sumFinalAmountForCompletedOrders = 1000L;
+
+        when(clientOrderRepository.getTotalOptionPriceForLastThreeMonths(eq(clientId), any(LocalDateTime.class)))
+            .thenReturn(totalOptionPriceForLastThreeMonths);
+        when(clientOrderRepository.sumFinalAmountForCompletedOrders(eq(clientId), any(LocalDateTime.class)))
+            .thenReturn(sumFinalAmountForCompletedOrders);
+
+        PaymentGradeResponseDto result = paymentService.getPaymentRecordOfClient(clientId);
+
+        assertEquals(800L, result.getPaymentGradeValue());
+
+        verify(clientOrderRepository).getTotalOptionPriceForLastThreeMonths(eq(clientId), any(LocalDateTime.class));
+        verify(clientOrderRepository).sumFinalAmountForCompletedOrders(eq(clientId), any(LocalDateTime.class));
+    }
+    @Test
+     void testGetPostProcessRequiredPaymentResponseDto_Success() throws Exception {
+        String orderCode = "order123";
+        Long orderId = 1L;
+        Long clientId = 2L;
+        Long payAmount = 1000L;
+        headers.set("X-User-Id","2");
+        Order order = createOrder(1L, 5000L, 1000, OrderStatus.PAYED);
+
+        Payment payment = Payment.builder()
+            .payAmount(1000).build();
+        ProductOrderDetail productOrderDetail = ProductOrderDetail.builder().build();
+        List<ProductOrderDetail> productOrderDetailList = Collections.singletonList(productOrderDetail);
+
+        when(orderRepository.getOrderByOrderCode(orderCode)).thenReturn(Optional.of(order));
+        when(paymentRepository.findByOrder_OrderId(orderId)).thenReturn(Optional.of(payment));
+        when(productOrderDetailRepository.findAllByOrder_OrderId(orderId)).thenReturn(productOrderDetailList);
+        // Assuming getClientId is a protected method and we can mock it directly in PaymentService class
 
 
+        PostProcessRequiredPaymentResponseDto result = paymentService.getPostProcessRequiredPaymentResponseDto(headers, orderCode);
 
+        assertEquals(orderId, result.getOrderId());
+        assertEquals(clientId, result.getClientId());
+        assertEquals(payAmount, result.getAmount());
+        assertEquals(1, result.getProductIdList().size());
+
+        verify(orderRepository).getOrderByOrderCode(orderCode);
+        verify(paymentRepository).findByOrder_OrderId(orderId);
+        verify(productOrderDetailRepository).findAllByOrder_OrderId(orderId);
+    }
 }
