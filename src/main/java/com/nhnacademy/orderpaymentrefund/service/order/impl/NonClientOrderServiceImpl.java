@@ -150,6 +150,8 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
         long orderId,
         UpdateNonClientOrderPasswordRequestDto requestDto) {
 
+        checkNonClient();
+
         NonClientOrder nonClientOrder = nonClientOrderRepository.findByOrder_OrderId(orderId)
             .orElseThrow(OrderNotFoundException::new);
 
