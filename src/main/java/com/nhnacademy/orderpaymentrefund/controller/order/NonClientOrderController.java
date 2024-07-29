@@ -3,18 +3,23 @@ package com.nhnacademy.orderpaymentrefund.controller.order;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPasswordRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.UpdateNonClientOrderPasswordRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.NonClientOrderGetResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -98,30 +103,32 @@ public interface NonClientOrderController {
             )
         }
     )
-    @GetMapping("/api/non-client/orders/find-orderId")
-    ResponseEntity<Page<FindNonClientOrderIdInfoResponseDto>> findNonClientOrderId(
-        @ModelAttribute FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto,
-        @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
-        @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
-        @RequestParam(value = "sortBy", defaultValue = "orderDatetime", required = false) String sortBy,
-        @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir,
+    @PostMapping("/api/non-client/orders/find-orderId")
+    ResponseEntity<List<FindNonClientOrderIdInfoResponseDto>> findNonClientOrderId(
+        @RequestBody FindNonClientOrderIdRequestDto findNonClientOrderIdRequestDto,
         @RequestHeader HttpHeaders headers);
 
 
 
 
     @Operation(
-        summary = "비회원 주문 비밀번호 찾기",
-        description = "비회원 주문 비밀번호 찾기",
+        summary = "비회원 주문 번호 수정",
+        description = "비회원 주문 번호 수정",
         responses = {
             @ApiResponse(
-                responseCode = "200"
+                responseCode = "200",
+                description = "비회원의 주문 비밀번호 수정 성공"
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "주문을 찾을 수 없음"
             )
         }
     )
-    @GetMapping("/api/non-client/orders/find-password")
-    ResponseEntity<String> findNonClientOrderPassword(@RequestHeader HttpHeaders headers,
-        FindNonClientOrderPasswordRequestDto findNonClientOrderPasswordRequestDto);
+    @PutMapping("/api/non-client/orders/{orderId}/password")
+    ResponseEntity<String> updateNonClientOrderPassword(@RequestHeader HttpHeaders headers,
+        @PathVariable long orderId,
+        @RequestBody UpdateNonClientOrderPasswordRequestDto updateNonClientOrderPasswordRequestDto);
 
 
 

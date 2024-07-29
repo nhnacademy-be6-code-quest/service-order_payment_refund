@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Getter
 @NoArgsConstructor
@@ -24,5 +25,9 @@ public class NonClientOrderForm {
     String paymentMethod; // 결제 방식
     String orderPassword; // 주문 비밀번호
     String orderCode; // 토스 주문
+
+    public void encodePassword(PasswordEncoder encoder){
+        this.orderPassword = encoder.encode(orderPassword);
+    }
 
 }

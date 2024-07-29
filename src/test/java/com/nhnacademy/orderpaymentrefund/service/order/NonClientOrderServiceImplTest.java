@@ -2,6 +2,7 @@ package com.nhnacademy.orderpaymentrefund.service.order;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -22,6 +23,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdR
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPasswordRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.UpdateNonClientOrderPasswordRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.NonClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.repository.order.NonClientOrderRepository;
@@ -40,6 +42,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -49,6 +52,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -72,6 +76,9 @@ class NonClientOrderServiceImplTest {
     private ProductOrderDetailRepository productOrderDetailRepository;
     @Mock
     private ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private NonClientOrderServiceImpl nonClientOrderService;
@@ -169,53 +176,15 @@ class NonClientOrderServiceImplTest {
         List<NonClientOrder> nonClientOrderList = new ArrayList<>(
             List.of(nonClientOrder1, nonClientOrder2));
 
-        Page<NonClientOrder> nonClientOrderPage = new PageImpl<>(nonClientOrderList,
-            PageRequest.of(pageNo, pageSize, sort), nonClientOrderList.size());
-
         when(
-            nonClientOrderRepository.findByNonClientOrdererNameAndNonClientOrdererEmailAndOrder_PhoneNumber(
-                eq(requestDto.ordererName()), eq(requestDto.email()), eq(requestDto.phoneNumber()),
-                eq(pageable))
-        ).thenReturn(nonClientOrderPage);
+            nonClientOrderRepository.findRecent10OrderNonClientOrder(
+                eq(requestDto.ordererName()), eq(requestDto.email()), eq(requestDto.phoneNumber()))
+        ).thenReturn(nonClientOrderList);
 
-        Page<FindNonClientOrderIdInfoResponseDto> res = nonClientOrderService.findNonClientOrderId(
-            headers, requestDto, pageable);
+        List<FindNonClientOrderIdInfoResponseDto> res = nonClientOrderService.findNonClientOrderId(
+            headers, requestDto);
 
         assertNotNull(res);
-
-    }
-
-    @Test
-    @DisplayName("비회원 주문 비밀번호 찾기")
-    void findNonClientOrderPasswordTest() {
-
-        Long orderId = 1L;
-        String ordererName = "홍길동";
-        String phoneNumber = "01012341234";
-        String email = "test@test.com";
-        String password = "1234";
-
-        FindNonClientOrderPasswordRequestDto requestDto = FindNonClientOrderPasswordRequestDto.builder()
-            .orderId(orderId)
-            .ordererName(ordererName)
-            .phoneNumber(phoneNumber)
-            .email(email)
-            .build();
-
-        Order order = createOrder("uuid-1234", 10000L, 2000, LocalDate.now(),
-            "01012341234", "전라남도 광주시 랄랄랄라");
-        ReflectionTestUtils.setField(order, "orderId", orderId);
-        NonClientOrder nonClientOrder = createNonClientOrder(password, ordererName, email, order);
-        ReflectionTestUtils.setField(nonClientOrder, "order", order);
-
-        when(
-            nonClientOrderRepository.findByNonClientOrdererNameAndNonClientOrdererEmailAndOrder_PhoneNumber(
-                requestDto.getOrdererName(), requestDto.getEmail(), requestDto.getPhoneNumber())
-        ).thenReturn(Optional.of(nonClientOrder));
-
-        String resPassword = nonClientOrderService.findNonClientOrderPassword(headers, requestDto);
-
-        assertEquals(password, resPassword);
 
     }
 
@@ -238,24 +207,31 @@ class NonClientOrderServiceImplTest {
         NonClientOrder nonClientOrder = createNonClientOrder(password, ordererName, email, order);
         ReflectionTestUtils.setField(nonClientOrder, "order", order);
 
-        ProductOrderDetail productOrderDetail1 = createProductOrderDetail(order, 1L, 2L, 10000L, "상품1");
+        ProductOrderDetail productOrderDetail1 = createProductOrderDetail(order, 1L, 2L, 10000L,
+            "상품1");
         ReflectionTestUtils.setField(productOrderDetail1, "productId", 1L);
-        ProductOrderDetail productOrderDetail2 = createProductOrderDetail(order, 2L, 1L, 10000L, "상품2");
+        ProductOrderDetail productOrderDetail2 = createProductOrderDetail(order, 2L, 1L, 10000L,
+            "상품2");
         ReflectionTestUtils.setField(productOrderDetail2, "productId", 2L);
 
         when(
-            nonClientOrderRepository.findByNonClientOrderPasswordEqualsAndOrder_OrderId(requestPassword, requestOrderId)
+            nonClientOrderRepository.findByOrder_OrderId(requestOrderId)
         ).thenReturn(Optional.of(nonClientOrder));
 
-        List<ProductOrderDetail> productOrderDetailList = new ArrayList<>(List.of(productOrderDetail1, productOrderDetail2));
+        when(
+            passwordEncoder.matches(requestPassword, password)
+        ).thenReturn(true);
+
+        List<ProductOrderDetail> productOrderDetailList = new ArrayList<>(
+            List.of(productOrderDetail1, productOrderDetail2));
 
         List<ProductOrderDetailOption> productOrderDetailOptionList = new ArrayList<>();
 
-        for(int i = 0; i < productOrderDetailList.size(); i++) {
+        for (int i = 0; i < productOrderDetailList.size(); i++) {
 
             ProductOrderDetail productOrderDetail = productOrderDetailList.get(i);
             ProductOrderDetailOption productOrderDetailOption = createProductOrderDetailOption(i,
-            productOrderDetail, "곰돌이 포장지", 500L, 1L);
+                productOrderDetail, "곰돌이 포장지", 500L, 1L);
 
             productOrderDetailOptionList.add(productOrderDetailOption);
 
@@ -265,16 +241,18 @@ class NonClientOrderServiceImplTest {
             productOrderDetailRepository.findAllByOrder_OrderId(requestOrderId)
         ).thenReturn(productOrderDetailList);
 
-        for(int i = 0; i < productOrderDetailList.size(); i++){
+        for (int i = 0; i < productOrderDetailList.size(); i++) {
             ProductOrderDetail productOrderDetail = productOrderDetailList.get(i);
             when(
-                productOrderDetailOptionRepository.findFirstByProductOrderDetail_ProductOrderDetailId(productOrderDetail.getProductOrderDetailId())
+                productOrderDetailOptionRepository.findFirstByProductOrderDetail_ProductOrderDetailId(
+                    productOrderDetail.getProductOrderDetailId())
             ).thenReturn(
                 Optional.ofNullable(productOrderDetailOptionList.get(i))
             );
         }
 
-        NonClientOrderGetResponseDto responseDto = nonClientOrderService.getOrder(headers, requestOrderId, requestPassword);
+        NonClientOrderGetResponseDto responseDto = nonClientOrderService.getOrder(headers,
+            requestOrderId, requestPassword);
 
         assertNotNull(responseDto);
 
@@ -299,16 +277,23 @@ class NonClientOrderServiceImplTest {
         NonClientOrder nonClientOrder = createNonClientOrder(password, ordererName, email, order);
         ReflectionTestUtils.setField(nonClientOrder, "order", order);
 
-        ProductOrderDetail productOrderDetail1 = createProductOrderDetail(order, 1L, 2L, 10000L, "상품1");
+        ProductOrderDetail productOrderDetail1 = createProductOrderDetail(order, 1L, 2L, 10000L,
+            "상품1");
         ReflectionTestUtils.setField(productOrderDetail1, "productOrderDetailId", 1L);
-        ProductOrderDetail productOrderDetail2 = createProductOrderDetail(order, 2L, 1L, 10000L, "상품2");
+        ProductOrderDetail productOrderDetail2 = createProductOrderDetail(order, 2L, 1L, 10000L,
+            "상품2");
         ReflectionTestUtils.setField(productOrderDetail2, "productOrderDetailId", 2L);
 
         when(
-            nonClientOrderRepository.findByNonClientOrderPasswordEqualsAndOrder_OrderId(requestPassword, requestOrderId)
+            nonClientOrderRepository.findByOrder_OrderId(requestOrderId)
         ).thenReturn(Optional.of(nonClientOrder));
 
-        List<ProductOrderDetail> productOrderDetailList = new ArrayList<>(List.of(productOrderDetail1, productOrderDetail2));
+        when(
+            passwordEncoder.matches(requestPassword, password)
+        ).thenReturn(true);
+
+        List<ProductOrderDetail> productOrderDetailList = new ArrayList<>(
+            List.of(productOrderDetail1, productOrderDetail2));
 
         when(
             productOrderDetailRepository.findAllByOrder_OrderId(requestOrderId)
@@ -323,12 +308,45 @@ class NonClientOrderServiceImplTest {
             );
         }
 
-        NonClientOrderGetResponseDto responseDto = nonClientOrderService.getOrder(headers, requestOrderId, requestPassword);
+        NonClientOrderGetResponseDto responseDto = nonClientOrderService.getOrder(headers,
+            requestOrderId, requestPassword);
 
         assertNotNull(responseDto);
 
     }
 
+    @Test
+    @DisplayName("비회원 주문 비밀번호 변경")
+    void updateNonClientOrderPasswordTest() {
+        long orderId = 1L;
+        String ordererName = "홍길동";
+        String phoneNumber = "01012341234";
+        String email = "test@test.com";
+        String newPassword = "newPassword";
+        String password = "1234";
+
+        UpdateNonClientOrderPasswordRequestDto requestDto = new UpdateNonClientOrderPasswordRequestDto();
+        ReflectionTestUtils.setField(requestDto, "ordererName", ordererName);
+        ReflectionTestUtils.setField(requestDto, "phoneNumber", phoneNumber);
+        ReflectionTestUtils.setField(requestDto, "email", email);
+        ReflectionTestUtils.setField(requestDto, "newPassword", newPassword);
+
+        Order order = createOrder("uuid-1234", 10000L, 2000, LocalDate.now(),
+            "01012341234", "전라남도 광주시 랄랄랄라");
+        ReflectionTestUtils.setField(order, "orderId", orderId);
+        NonClientOrder nonClientOrder = createNonClientOrder(password, ordererName, email, order);
+        ReflectionTestUtils.setField(nonClientOrder, "order", order);
+
+        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
+
+        when(nonClientOrderRepository.findByOrder_OrderId(orderId)).thenReturn(
+            Optional.of(nonClientOrder));
+
+        nonClientOrderService.updateNonClientOrderPassword(headers, orderId, requestDto);
+
+        assertEquals("encodedPassword", nonClientOrder.getNonClientOrderPassword());
+
+    }
 
     public Order createOrder(String orderCode, Long productTotalAmount, Integer shippingFee,
         LocalDate designatedDeliveryDate,

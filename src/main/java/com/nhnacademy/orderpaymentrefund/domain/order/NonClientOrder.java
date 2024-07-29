@@ -49,4 +49,8 @@ public class NonClientOrder {
         this.nonClientOrdererEmail = nonClientOrdererEmail;
         this.order = order;
     }
+
+    public void updatePassword(String newPassword){
+        this.nonClientOrderPassword = newPassword;
+    }
 }
