@@ -8,6 +8,4 @@ public interface RefundPolicyRepository extends JpaRepository<RefundPolicy, Long
     RefundPolicy findByRefundPolicyType(String refundPolicyType);
     List<RefundPolicy> findByRefundPolicyExpirationDateIsNull();
     List<RefundPolicy> findByRefundPolicyExpirationDateIsNullAndRefundPolicyTypeNotContaining(String refundPolicyType);
-    RefundPolicy findByRefundPolicyId(long refundPolicyId);
-
 }

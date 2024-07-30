@@ -155,7 +155,7 @@ class RefundServiceTest {
             .order(null) // Set appropriate Order object if needed
             .payAmount(1000L) // Set appropriate payAmount
             .paymentMethodName("Card") // Set appropriate paymentMethodName
-            .tossPaymentKey(tossPaymentKey)
+            .paymentKey(tossPaymentKey)
             .build();
     }
 

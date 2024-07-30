@@ -22,7 +22,7 @@ class PaymentTest {
             .order(order)
             .payAmount(payAmount)
             .paymentMethodName(paymentMethodName)
-            .tossPaymentKey(tossPaymentKey)
+            .paymentKey(tossPaymentKey)
             .build();
 
         // Then
@@ -31,7 +31,7 @@ class PaymentTest {
         assertEquals(payAmount, payment.getPayAmount());
         assertNotNull(payment.getPayTime());
         assertEquals(paymentMethodName, payment.getPaymentMethodName());
-        assertEquals(tossPaymentKey, payment.getTossPaymentKey());
+        assertEquals(tossPaymentKey, payment.getPaymentKey());
     }
 
 

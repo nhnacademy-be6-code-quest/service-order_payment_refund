@@ -2,7 +2,9 @@ package com.nhnacademy.orderpaymentrefund.controller.refund;
 
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.PaymentCancelRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundAfterRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundPolicyRegisterRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundPolicyListResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundPolicyResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundSuccessResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -77,4 +80,35 @@ public interface RefundController {
     void refundAccess(
         @Parameter(description = "반품요청 수락에 필요한 정보")
         @RequestBody RefundAfterRequestDto refundAfterRequestDto);
+
+    @Operation(
+        summary = "반품 정책 조회",
+        description = "RefundPolicy - 관리자 반품 정책 조회",
+        responses = {
+            @ApiResponse(
+                responseCode = "200"
+            )
+        }
+    )
+
+    @PostMapping("/api/refund/admin/policy/register")
+    void saveRefundPolicy (
+        @Parameter(description = "반품요청 수락에 필요한 정보")
+        @RequestBody RefundPolicyRegisterRequestDto requestDto);
+
+    @Operation(
+        summary = "반품 정책 저장",
+        description = "RefundPolicy - 관리자 반품 정책 저장",
+        responses = {
+            @ApiResponse(
+                responseCode = "200"
+            )
+        }
+    )
+    @GetMapping("/api/refund/admin/policies")
+    ResponseEntity<Page<RefundPolicyListResponseDto>> findAllRefundPolicy (
+        @Parameter(description = "반품요청 수락에 필요한 정보")
+        @RequestParam int page,
+        @Parameter(description = "페이지 수")
+        @RequestParam int size);
 }
