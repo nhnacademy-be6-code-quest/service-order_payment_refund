@@ -13,6 +13,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.nhnacademy.orderpaymentrefund.client.coupon.CouponClient;
 import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
 import com.nhnacademy.orderpaymentrefund.domain.order.ClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
@@ -20,7 +21,13 @@ import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.CouponOrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.CouponOrderResponseDto.CategoryCoupon;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.CouponOrderResponseDto.CouponPolicyDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.CouponOrderResponseDto.ProductCoupon;
+import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderCouponDiscountInfo;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.CannotCancelOrder;
@@ -33,7 +40,9 @@ import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepo
 import com.nhnacademy.orderpaymentrefund.service.order.impl.ClientOrderServiceImpl;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,6 +77,8 @@ class ClientOrderServiceImplTest {
     ClientOrderRepository clientOrderRepository;
     @Mock
     OrderRepository orderRepository;
+    @Mock
+    CouponClient couponClient;
 
     @Mock
     RedisTemplate<String, Object> redisTemplate;
@@ -601,8 +612,6 @@ class ClientOrderServiceImplTest {
 
         Order order = createOrder("uuid-1234", 10000L, 2000, LocalDate.now(),
             "01012341234", "전라남도 광주시 랄랄랄라");
-        ClientOrder clientOrder = createClientOrder(clientId, 1L, 2000L,
-            3000L, 500L, order);
         ProductOrderDetail productOrderDetail = createProductOrderDetail(order, 1L, 2L, 10000L,
             "탕비실");
         ProductOrderDetailOption productOrderDetailOption = createProductOrderDetailOption(2L,
@@ -618,6 +627,45 @@ class ClientOrderServiceImplTest {
             headers, orderId, detailId);
 
         assertNotNull(responseDto);
+
+    }
+
+    @Test
+    @DisplayName("쿠폰 적용 정보 조회 테스트")
+    void getCouponDiscountInfoListTest(){
+
+        List<OrderDetailDtoItem> orderDetailDtoItemList = getOrderDetailDtoItemList();
+
+        ClientOrderCreateForm clientOrderCreateForm = new ClientOrderCreateForm();
+        ReflectionTestUtils.setField(clientOrderCreateForm, "orderDetailDtoItemList", orderDetailDtoItemList);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "couponId", null);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "shippingFee", 0);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "productTotalAmount", 180000L);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "orderTotalAmount", 180000L);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "payAmount", null);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "couponDiscountAmount", 0L);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "usedPointDiscountAmount", 0L);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "orderedPersonName", "비회원이름");
+        ReflectionTestUtils.setField(clientOrderCreateForm, "phoneNumber", "01012341234");
+        ReflectionTestUtils.setField(clientOrderCreateForm, "deliveryAddress", "광주광역시 어쩌구 저쩌구");
+        ReflectionTestUtils.setField(clientOrderCreateForm, "useDesignatedDeliveryDate", false);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "designatedDeliveryDate", null);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "paymentMethod", null);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "accumulatePoint", null);
+        ReflectionTestUtils.setField(clientOrderCreateForm, "orderCode", "uuid-1234");
+
+        List<CouponOrderResponseDto> couponList = getCouponList();
+        List<OrderCouponDiscountInfo> expectedResponse = getExpectedCouponDiscountInfoList(); // 예상결과
+
+        when(couponClient.findClientCoupon(headers)).thenReturn(couponList);
+
+        List<OrderCouponDiscountInfo> realResponse = clientOrderService.getCouponDiscountInfoList(headers, clientOrderCreateForm);
+
+        for(int i = 0; i < realResponse.size(); i++){
+            assertEquals(expectedResponse.get(i).getCouponId(), realResponse.get(i).getCouponId());
+            assertEquals(expectedResponse.get(i).getIsApplicable(), realResponse.get(i).getIsApplicable());
+            assertEquals(expectedResponse.get(i).getDiscountTotalAmount(), realResponse.get(i).getDiscountTotalAmount());
+        }
 
     }
 
@@ -667,6 +715,214 @@ class ClientOrderServiceImplTest {
             .optionProductPrice(optionProductPrice)
             .quantity(quantity)
             .build();
+    }
+
+    private List<CouponOrderResponseDto> getCouponList(){
+
+        List<CouponOrderResponseDto> res = new ArrayList<>();
+
+        // 금액 할인 쿠폰 - 30000원 구입 시 3000원 할인 쿠폰
+        CouponPolicyDto couponPolicyDto1 = new CouponPolicyDto();
+        couponPolicyDto1.setCouponPolicyDescription("최소주문금액 30000원, 3000원 할인 쿠폰");
+        couponPolicyDto1.setDiscountType("AMOUNTDISCOUNT");
+        couponPolicyDto1.setDiscountValue(3000L); // 3000원 의미
+        couponPolicyDto1.setMinPurchaseAmount(30000L);
+        couponPolicyDto1.setMaxDiscountAmount(3000L);
+
+        CouponOrderResponseDto coupon1 = new CouponOrderResponseDto();
+        coupon1.setCouponId(1L);
+        coupon1.setCouponPolicyDto(couponPolicyDto1);
+
+        res.add(coupon1);
+
+        // 백분율 할인 쿠폰 - 40000원 이상 구입 시 10% 할인 (최대할인 5000원)쿠폰
+        CouponPolicyDto couponPolicyDto2 = new CouponPolicyDto();
+        couponPolicyDto2.setCouponPolicyDescription("40000원 이상 구매시 10% 할인 쿠폰 (최대할인 5000원)");
+        couponPolicyDto2.setDiscountType("PERCENTAGEDISCOUNT");
+        couponPolicyDto2.setDiscountValue(10); // 10% 의미
+        couponPolicyDto2.setMinPurchaseAmount(40000L);
+        couponPolicyDto2.setMaxDiscountAmount(5000L);
+
+        CouponOrderResponseDto coupon2 = new CouponOrderResponseDto();
+        coupon2.setCouponId(2L);
+        coupon2.setCouponPolicyDto(couponPolicyDto2);
+
+        res.add(coupon2);
+
+        // 상품 금액 할인 쿠폰
+        CouponPolicyDto couponPolicyDto3 = new CouponPolicyDto();
+        couponPolicyDto3.setCouponPolicyDescription("상품아이디 1L을 구매하면, 해당 상품 30000원 이상 구매시 3000원 할인 쿠폰");
+        couponPolicyDto3.setDiscountType("AMOUNTDISCOUNT");
+        couponPolicyDto3.setDiscountValue(3000L); // 3000원 의미
+        couponPolicyDto3.setMinPurchaseAmount(30000L);
+        couponPolicyDto3.setMaxDiscountAmount(3000L);
+
+        ProductCoupon productCoupon1  = new ProductCoupon();
+        productCoupon1.setProductId(1L);
+
+        CouponOrderResponseDto coupon3 = new CouponOrderResponseDto();
+        coupon3.setCouponId(3L);
+        coupon3.setCouponPolicyDto(couponPolicyDto3);
+        coupon3.setProductCoupon(productCoupon1);
+
+        res.add(coupon3);
+
+        // 상품 백분율 할인 쿠폰
+        CouponPolicyDto couponPolicyDto4 = new CouponPolicyDto();
+        couponPolicyDto4.setCouponPolicyDescription("상품아이디 1L을 구매하면, 해당 상품 40000원 이상 구매시 10% 할인 쿠폰 (최대 할인 5000원)");
+        couponPolicyDto4.setDiscountType("PERCENTAGEDISCOUNT");
+        couponPolicyDto4.setDiscountValue(10); // 10% 의미
+        couponPolicyDto4.setMinPurchaseAmount(40000L);
+        couponPolicyDto4.setMaxDiscountAmount(5000L);
+
+        ProductCoupon productCoupon2  = new ProductCoupon();
+        productCoupon2.setProductId(1L);
+
+        CouponOrderResponseDto coupon4 = new CouponOrderResponseDto();
+        coupon4.setCouponId(4L);
+        coupon4.setCouponPolicyDto(couponPolicyDto4);
+        coupon4.setProductCoupon(productCoupon2);
+
+        res.add(coupon4);
+
+        // 카테고리 금액 할인 쿠폰
+        CouponPolicyDto couponPolicyDto5 = new CouponPolicyDto();
+        couponPolicyDto5.setCouponPolicyDescription("카테고리 1L 상품을 구매하면, 해당 카테고리 상품의 총 주문 금액이 30000원 이상 구매시 3000원 할인 쿠폰");
+        couponPolicyDto5.setDiscountType("AMOUNTDISCOUNT");
+        couponPolicyDto5.setDiscountValue(3000L); // 3000원 의미
+        couponPolicyDto5.setMinPurchaseAmount(30000L);
+        couponPolicyDto5.setMaxDiscountAmount(3000L);
+
+        CategoryCoupon categoryCoupon1  = new CategoryCoupon();
+        categoryCoupon1.setProductCategoryId(1L);
+
+        CouponOrderResponseDto coupon5 = new CouponOrderResponseDto();
+        coupon5.setCouponId(5L);
+        coupon5.setCouponPolicyDto(couponPolicyDto5);
+        coupon5.setCategoryCoupon(categoryCoupon1);
+
+        res.add(coupon5);
+
+        // 카테고리 백분율 할인 쿠폰
+        CouponPolicyDto couponPolicyDto6 = new CouponPolicyDto();
+        couponPolicyDto6.setCouponPolicyDescription("카테고리 1L 상품을 구매하면, 해당 카테고리 상품의 총 주문 금액이 40000원 이상 구매시 10% 할인 쿠폰 (최대 할인 5000원)");
+        couponPolicyDto6.setDiscountType("PERCENTAGEDISCOUNT");
+        couponPolicyDto6.setDiscountValue(10); // 10% 의미
+        couponPolicyDto6.setMinPurchaseAmount(40000L);
+        couponPolicyDto6.setMaxDiscountAmount(5000L);
+
+        CategoryCoupon categoryCoupon2  = new CategoryCoupon();
+        categoryCoupon2.setProductCategoryId(1L);
+
+        CouponOrderResponseDto coupon6 = new CouponOrderResponseDto();
+        coupon6.setCouponId(6L);
+        coupon6.setCouponPolicyDto(couponPolicyDto6);
+        coupon6.setCategoryCoupon(categoryCoupon2);
+
+        res.add(coupon6);
+
+        return res;
+
+    }
+
+    private List<OrderCouponDiscountInfo> getExpectedCouponDiscountInfoList() {
+
+        List<OrderCouponDiscountInfo> res = new ArrayList<>();
+
+        // 1L 쿠폰 결과 예상
+        OrderCouponDiscountInfo discountInfo1 = new OrderCouponDiscountInfo();
+        ReflectionTestUtils.setField(discountInfo1, "couponId", 1L);
+        ReflectionTestUtils.setField(discountInfo1, "isApplicable", true);
+        ReflectionTestUtils.setField(discountInfo1, "discountTotalAmount", 3000L);
+        res.add(discountInfo1);
+
+
+        // 2L 쿠폰 결과 예상
+        OrderCouponDiscountInfo discountInfo2 = new OrderCouponDiscountInfo();
+        ReflectionTestUtils.setField(discountInfo2, "couponId", 2L);
+        ReflectionTestUtils.setField(discountInfo2, "isApplicable", true);
+        ReflectionTestUtils.setField(discountInfo2, "discountTotalAmount", 5000L);
+        res.add(discountInfo2);
+
+
+        // 3L 쿠폰 결과 예상
+        OrderCouponDiscountInfo discountInfo3 = new OrderCouponDiscountInfo();
+        ReflectionTestUtils.setField(discountInfo3, "couponId", 3L);
+        ReflectionTestUtils.setField(discountInfo3, "isApplicable", true);
+        ReflectionTestUtils.setField(discountInfo3, "discountTotalAmount", 3000L);
+        res.add(discountInfo3);
+
+
+        // 4L 쿠폰 결과 예상
+        OrderCouponDiscountInfo discountInfo4 = new OrderCouponDiscountInfo();
+        ReflectionTestUtils.setField(discountInfo4, "couponId", 4L);
+        ReflectionTestUtils.setField(discountInfo4, "isApplicable", false);
+        ReflectionTestUtils.setField(discountInfo4, "discountTotalAmount", null);
+        res.add(discountInfo4);
+
+
+        // 5L 쿠폰 결과 예상
+        OrderCouponDiscountInfo discountInfo5 = new OrderCouponDiscountInfo();
+        ReflectionTestUtils.setField(discountInfo5, "couponId", 5L);
+        ReflectionTestUtils.setField(discountInfo5, "isApplicable", true);
+        ReflectionTestUtils.setField(discountInfo5, "discountTotalAmount", 3000L);
+        res.add(discountInfo5);
+
+
+        // 6L 쿠폰 결과 예상
+        OrderCouponDiscountInfo discountInfo6 = new OrderCouponDiscountInfo();
+        ReflectionTestUtils.setField(discountInfo6, "couponId", 6L);
+        ReflectionTestUtils.setField(discountInfo6, "isApplicable", true);
+        ReflectionTestUtils.setField(discountInfo6, "discountTotalAmount", 5000L);
+        res.add(discountInfo6);
+
+
+        return res;
+    }
+
+    private List<OrderDetailDtoItem> getOrderDetailDtoItemList(){
+
+        // 첫번째 주문 상품
+        List<Long> categoryIdList1 = new ArrayList<>(List.of(2L, 3L));
+        OrderDetailDtoItem orderDetailDtoItem1 = new OrderDetailDtoItem();
+        ReflectionTestUtils.setField(orderDetailDtoItem1, "productId", 1L);
+        ReflectionTestUtils.setField(orderDetailDtoItem1, "productName", "주문상품1");
+        ReflectionTestUtils.setField(orderDetailDtoItem1, "quantity", 3L);
+        ReflectionTestUtils.setField(orderDetailDtoItem1, "categoryIdList", categoryIdList1);
+        ReflectionTestUtils.setField(orderDetailDtoItem1, "productSinglePrice", 10000L);
+        ReflectionTestUtils.setField(orderDetailDtoItem1, "usePackaging", false);
+
+        // 두번째 주문 상품
+        List<Long> categoryIdList2 = new ArrayList<>(List.of(1L, 3L));
+        OrderDetailDtoItem orderDetailDtoItem2 = new OrderDetailDtoItem();
+        ReflectionTestUtils.setField(orderDetailDtoItem2, "productId", 2L);
+        ReflectionTestUtils.setField(orderDetailDtoItem2, "productName", "주문상품2");
+        ReflectionTestUtils.setField(orderDetailDtoItem2, "quantity", 2L);
+        ReflectionTestUtils.setField(orderDetailDtoItem2, "categoryIdList", categoryIdList2);
+        ReflectionTestUtils.setField(orderDetailDtoItem2, "productSinglePrice", 15000L);
+        ReflectionTestUtils.setField(orderDetailDtoItem2, "usePackaging", false);
+
+        // 세번째 주문 상품
+        List<Long> categoryIdList3 = new ArrayList<>(List.of(1L, 4L));
+        OrderDetailDtoItem orderDetailDtoItem3 = new OrderDetailDtoItem();
+        ReflectionTestUtils.setField(orderDetailDtoItem3, "productId", 3L);
+        ReflectionTestUtils.setField(orderDetailDtoItem3, "productName", "주문상품3");
+        ReflectionTestUtils.setField(orderDetailDtoItem3, "quantity", 4L);
+        ReflectionTestUtils.setField(orderDetailDtoItem3, "categoryIdList", categoryIdList3);
+        ReflectionTestUtils.setField(orderDetailDtoItem3, "productSinglePrice", 15000L);
+        ReflectionTestUtils.setField(orderDetailDtoItem3, "usePackaging", false);
+
+        // 네번째 주문 상품
+        List<Long> categoryIdList4 = new ArrayList<>(List.of(2L));
+        OrderDetailDtoItem orderDetailDtoItem4 = new OrderDetailDtoItem();
+        ReflectionTestUtils.setField(orderDetailDtoItem4, "productId", 4L);
+        ReflectionTestUtils.setField(orderDetailDtoItem4, "productName", "주문상품4");
+        ReflectionTestUtils.setField(orderDetailDtoItem4, "quantity", 1L);
+        ReflectionTestUtils.setField(orderDetailDtoItem4, "categoryIdList", categoryIdList4);
+        ReflectionTestUtils.setField(orderDetailDtoItem4, "productSinglePrice", 20000L);
+        ReflectionTestUtils.setField(orderDetailDtoItem4, "usePackaging", false);
+
+        return new ArrayList<>(List.of(orderDetailDtoItem1, orderDetailDtoItem2, orderDetailDtoItem3, orderDetailDtoItem4));
     }
 
 }

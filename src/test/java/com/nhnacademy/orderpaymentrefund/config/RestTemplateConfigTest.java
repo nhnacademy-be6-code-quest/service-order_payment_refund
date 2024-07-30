@@ -13,12 +13,12 @@ class RestTemplateConfigTest {
     private AnnotationConfigApplicationContext context;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         context = new AnnotationConfigApplicationContext(TestConfig.class);
     }
 
     @Test
-    public void restTemplateBeanShouldBeConfigured() {
+     void restTemplateBeanShouldBeConfigured() {
         // Given - Context loaded
 
         // When

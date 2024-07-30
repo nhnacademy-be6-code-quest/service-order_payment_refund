@@ -92,7 +92,7 @@ class OrderServiceImplTest {
 
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
 
-        when(hashOperations.get(eq(REDIS_ORDER_KEY), anyString())).thenReturn(
+        when(hashOperations.get(REDIS_ORDER_KEY, anyString())).thenReturn(
             clientOrderCreateForm);
 
         PaymentOrderShowRequestDto requestDto = orderService.getPaymentOrderShowRequestDto(
@@ -128,7 +128,7 @@ class OrderServiceImplTest {
 
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
 
-        when(hashOperations.get(eq(REDIS_ORDER_KEY), anyString())).thenReturn(
+        when(hashOperations.get(REDIS_ORDER_KEY, anyString())).thenReturn(
             nonClientOrderForm);
 
         PaymentOrderShowRequestDto requestDto = orderService.getPaymentOrderShowRequestDto(
@@ -162,7 +162,7 @@ class OrderServiceImplTest {
         when(clientHeaderContext.isClient()).thenReturn(true);
         when(clientHeaderContext.getClientId()).thenReturn(requestClientId);
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(hashOperations.get(eq(REDIS_ORDER_KEY), anyString())).thenReturn(
+        when(hashOperations.get(REDIS_ORDER_KEY, anyString())).thenReturn(
             clientOrderCreateForm);
 
         PaymentOrderApproveRequestDto requestDto = orderService.getPaymentOrderApproveRequestDto(
@@ -185,7 +185,7 @@ class OrderServiceImplTest {
         NonClientOrderForm nonClientOrderForm = createNonClientOrderForm(requestOrderCode,
             password);
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(hashOperations.get(eq(REDIS_ORDER_KEY), anyString())).thenReturn(nonClientOrderForm);
+        when(hashOperations.get(REDIS_ORDER_KEY, anyString())).thenReturn(nonClientOrderForm);
 
         PaymentOrderApproveRequestDto requestDto = orderService.getPaymentOrderApproveRequestDto(
             requestOrderCode);
@@ -432,7 +432,7 @@ class OrderServiceImplTest {
         ReflectionTestUtils.setField(order, "productOrderDetailList", clientOrderDetailList);
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(productOrderDetailRepository.findAllByOrder_OrderId(eq(orderId))).thenReturn(
+        when(productOrderDetailRepository.findAllByOrder_OrderId(orderId)).thenReturn(
             order.getProductOrderDetailList());
 
         List<ProductOrderDetailResponseDto> expectedResponse = new ArrayList<>();
@@ -703,40 +703,5 @@ class OrderServiceImplTest {
             .build();
 
     }
-
-//    private PaymentOrderApproveRequestDto createPaymentOrderApproveRequestDto(ClientOrderCreateForm clientOrderCreateForm, Long clientId) {
-//
-//        List<ProductOrderDetailRequestDto> productOrderDetailRequestDtoList = new ArrayList<>();
-//
-//        for(OrderDetailDtoItem orderDetailDtoItem : clientOrderCreateForm.getOrderDetailDtoItemList()){
-//
-//            List<ProductOrderDetailOptionRequestDto> productOrderDetailOptionRequestDtoList = new ArrayList<>();
-//            ProductOrderDetailOptionRequestDto productOrderDetailOptionRequestDto = ProductOrderDetailOptionRequestDto.builder()
-//                .productId(orderDetailDtoItem.getOptionProductId())
-//                .optionProductQuantity(orderDetailDtoItem.getQuantity())
-//                .build();
-//            productOrderDetailOptionRequestDtoList.add(productOrderDetailOptionRequestDto);
-//
-//            ProductOrderDetailRequestDto productOrderDetailRequestDto = ProductOrderDetailRequestDto.builder()
-//                .productId(orderDetailDtoItem.getProductId())
-//                .quantity(orderDetailDtoItem.getQuantity())
-//                .productOrderDetailOptionRequestDtoList(productOrderDetailOptionRequestDtoList)
-//                .build();
-//
-//            productOrderDetailRequestDtoList.add(productOrderDetailRequestDto);
-//        }
-//
-//        return PaymentOrderApproveRequestDto.builder()
-//            .orderTotalAmount(clientOrderCreateForm.getOrderTotalAmount())
-//            .discountAmountByPoint(clientOrderCreateForm.getUsedPointDiscountAmount())
-//            .discountAmountByCoupon(clientOrderCreateForm.getCouponDiscountAmount())
-//            .orderCode(clientOrderCreateForm.getOrderCode())
-//            .clientId(clientId)
-//            .couponId(clientOrderCreateForm.getCouponId())
-//            .accumulatedPoint(clientOrderCreateForm.getAccumulatePoint())
-//            .productOrderDetailList(productOrderDetailRequestDtoList)
-//            .build();
-//    }
-
 
 }
