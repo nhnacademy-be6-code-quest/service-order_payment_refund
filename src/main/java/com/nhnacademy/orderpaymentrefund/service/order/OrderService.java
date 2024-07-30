@@ -5,11 +5,8 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShow
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpHeaders;
-
 import java.util.List;
+import org.springframework.data.domain.Page;
 
 public interface OrderService {
     PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(String orderCode);

@@ -62,7 +62,7 @@ class OrderControllerTest {
             .orderHistoryTitle("초코파이 외 10건")
             .build();
 
-        when(orderService.getPaymentOrderShowRequestDto(eq(orderCode))).thenReturn(resDto);
+        when(orderService.getPaymentOrderShowRequestDto(orderCode)).thenReturn(resDto);
 
         mockMvc.perform(
             get("/api/order/{orderCode}/payment-request", orderCode)
@@ -78,7 +78,7 @@ class OrderControllerTest {
         String orderCode = "저장되지 않은 uuid-1234";
 
         doThrow(new OrderNotFoundException()).when(
-            orderService).getPaymentOrderShowRequestDto(eq(orderCode));
+            orderService).getPaymentOrderShowRequestDto(orderCode);
 
         mockMvc.perform(
             get("/api/order/{orderCode}/payment-request", orderCode)
@@ -103,7 +103,7 @@ class OrderControllerTest {
             .productOrderDetailList(new ArrayList<>())
             .build();
 
-        when(orderService.getPaymentOrderApproveRequestDto(eq(orderCode))).thenReturn(resDto);
+        when(orderService.getPaymentOrderApproveRequestDto(orderCode)).thenReturn(resDto);
 
         mockMvc.perform(
             get("/api/order/{orderCode}/approve-request", orderCode)
@@ -119,7 +119,7 @@ class OrderControllerTest {
         String orderCode = "uuid-1234";
 
         doThrow(new OrderNotFoundException()).when(orderService)
-            .getPaymentOrderApproveRequestDto(eq(orderCode));
+            .getPaymentOrderApproveRequestDto(orderCode);
 
         mockMvc.perform(
             get("/api/order/{orderCode}/approve-request", orderCode)

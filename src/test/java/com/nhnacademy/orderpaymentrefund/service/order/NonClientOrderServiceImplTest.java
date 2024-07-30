@@ -104,7 +104,7 @@ class NonClientOrderServiceImplTest {
 
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
         doNothing().when(hashOperations)
-            .put(eq(REDIS_KEY), anyString(), any(NonClientOrderForm.class));
+            .put(REDIS_KEY, anyString(), any(NonClientOrderForm.class));
 
         nonClientOrderService.saveNonClientTemporalOrder(headers, requestDto);
 
@@ -131,7 +131,7 @@ class NonClientOrderServiceImplTest {
 
         assertEquals(expectedDto, actualDto);
 
-        verify(hashOperations, times(1)).get(eq(REDIS_KEY), eq(orderCode));
+        verify(hashOperations, times(1)).get(REDIS_KEY, orderCode);
 
     }
 
@@ -178,7 +178,7 @@ class NonClientOrderServiceImplTest {
 
         when(
             nonClientOrderRepository.findRecent10OrderNonClientOrder(
-                eq(requestDto.ordererName()), eq(requestDto.email()), eq(requestDto.phoneNumber()))
+                requestDto.ordererName(), requestDto.email(), requestDto.phoneNumber())
         ).thenReturn(nonClientOrderList);
 
         List<FindNonClientOrderIdInfoResponseDto> res = nonClientOrderService.findNonClientOrderId(
