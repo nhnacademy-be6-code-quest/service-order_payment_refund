@@ -14,13 +14,12 @@ class RefundPolicyResponseDtoTest {
         Integer refundShippingFee = 100;
 
         // When
-        RefundPolicyResponseDto dto = new RefundPolicyResponseDto(refundPolicyId, refundPolicyType, refundShippingFee);
+        RefundPolicyResponseDto dto = new RefundPolicyResponseDto(refundPolicyId, refundPolicyType);
 
         // Then
         assertNotNull(dto);
         assertEquals(refundPolicyId, dto.getRefundPolicyId());
         assertEquals(refundPolicyType, dto.getRefundPolicyType());
-        assertEquals(refundShippingFee, dto.getRefundShippingFee());
     }
 
     @Test
@@ -32,7 +31,6 @@ class RefundPolicyResponseDtoTest {
         assertNotNull(dto);
         assertNull(dto.getRefundPolicyId()); // Default value for Long
         assertNull(dto.getRefundPolicyType()); // Default value for String
-        assertNull(dto.getRefundShippingFee()); // Default value for Integer
     }
 
     @Test
@@ -43,11 +41,10 @@ class RefundPolicyResponseDtoTest {
         Integer refundShippingFee = 50;
 
         // When
-        RefundPolicyResponseDto dto = new RefundPolicyResponseDto(refundPolicyId, refundPolicyType, refundShippingFee);
+        RefundPolicyResponseDto dto = new RefundPolicyResponseDto(refundPolicyId, refundPolicyType);
 
         // Then
         assertEquals(refundPolicyId, dto.getRefundPolicyId());
         assertEquals(refundPolicyType, dto.getRefundPolicyType());
-        assertEquals(refundShippingFee, dto.getRefundShippingFee());
     }
 }

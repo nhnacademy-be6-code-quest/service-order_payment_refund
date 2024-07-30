@@ -295,7 +295,7 @@ public class PaymentServiceImpl implements PaymentService {
             .paymentMethodType(paymentMethodType)
             .payAmount(paymentsResponseDto.getTotalAmount())
             .paymentMethodName(paymentsResponseDto.getMethod())
-            .tossPaymentKey(paymentsResponseDto.getPaymentKey())
+            .paymentKey(paymentsResponseDto.getPaymentKey())
             .build();
         paymentRepository.save(payment);
     }

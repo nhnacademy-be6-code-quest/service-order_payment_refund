@@ -120,7 +120,7 @@ public class TossPayment implements PaymentStrategy {
             .cancelReason(cancelReason
             ).build();
 
-        tossPayRefundClient.cancelPayment(payment.getTossPaymentKey(), dto, authorizations);
+        tossPayRefundClient.cancelPayment(payment.getPaymentKey(), dto, authorizations);
 
     }
 

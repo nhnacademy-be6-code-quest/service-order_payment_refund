@@ -10,5 +10,4 @@ import lombok.NoArgsConstructor;
 public class RefundPolicyResponseDto {
     Long refundPolicyId;
     String refundPolicyType;
-    Integer refundShippingFee;
 }
