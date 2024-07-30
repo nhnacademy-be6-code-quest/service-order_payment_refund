@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 public class ApprovePaymentRequestDto {
-    String orderCode; // 토스 오더 아이디
+    String orderCode; // 오더 아이디
     long amount;
     String paymentKey;
     String methodType;
