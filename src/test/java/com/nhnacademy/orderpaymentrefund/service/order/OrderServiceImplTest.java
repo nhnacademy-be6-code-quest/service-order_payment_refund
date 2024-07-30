@@ -92,7 +92,7 @@ class OrderServiceImplTest {
 
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
 
-        when(hashOperations.get(REDIS_ORDER_KEY, anyString())).thenReturn(
+        when(hashOperations.get(eq(REDIS_ORDER_KEY), anyString())).thenReturn(
             clientOrderCreateForm);
 
         PaymentOrderShowRequestDto requestDto = orderService.getPaymentOrderShowRequestDto(
@@ -128,7 +128,7 @@ class OrderServiceImplTest {
 
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
 
-        when(hashOperations.get(REDIS_ORDER_KEY, anyString())).thenReturn(
+        when(hashOperations.get(eq(REDIS_ORDER_KEY), anyString())).thenReturn(
             nonClientOrderForm);
 
         PaymentOrderShowRequestDto requestDto = orderService.getPaymentOrderShowRequestDto(
@@ -162,7 +162,7 @@ class OrderServiceImplTest {
         when(clientHeaderContext.isClient()).thenReturn(true);
         when(clientHeaderContext.getClientId()).thenReturn(requestClientId);
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(hashOperations.get(REDIS_ORDER_KEY, anyString())).thenReturn(
+        when(hashOperations.get(eq(REDIS_ORDER_KEY), anyString())).thenReturn(
             clientOrderCreateForm);
 
         PaymentOrderApproveRequestDto requestDto = orderService.getPaymentOrderApproveRequestDto(
@@ -185,7 +185,7 @@ class OrderServiceImplTest {
         NonClientOrderForm nonClientOrderForm = createNonClientOrderForm(requestOrderCode,
             password);
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(hashOperations.get(REDIS_ORDER_KEY, anyString())).thenReturn(nonClientOrderForm);
+        when(hashOperations.get(eq(REDIS_ORDER_KEY), anyString())).thenReturn(nonClientOrderForm);
 
         PaymentOrderApproveRequestDto requestDto = orderService.getPaymentOrderApproveRequestDto(
             requestOrderCode);
