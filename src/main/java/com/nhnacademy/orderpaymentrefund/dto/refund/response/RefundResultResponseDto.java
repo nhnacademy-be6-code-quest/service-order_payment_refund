@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @Getter
 public class RefundResultResponseDto {
     String cancelReason;
-
+    String methodType;
 }

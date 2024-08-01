@@ -310,7 +310,7 @@ class PaymentServiceTest {
     }
 
     @Test
-    public void testGetPaymentRecordOfClient() {
+    void testGetPaymentRecordOfClient() {
         Long clientId = 1L;
         Long totalOptionPriceForLastThreeMonths = 200L;
         Long sumFinalAmountForCompletedOrders = 1000L;

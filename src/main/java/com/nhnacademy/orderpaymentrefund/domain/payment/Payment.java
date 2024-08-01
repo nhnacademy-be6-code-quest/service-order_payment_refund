@@ -47,16 +47,16 @@ public class Payment {
     private String paymentMethodName;
 
     @NotNull
-    private String tossPaymentKey;
+    private String paymentKey;
 
     @Builder
     public Payment(Order order, long payAmount, String paymentMethodName,PaymentMethodType paymentMethodType,
-        String tossPaymentKey) {
+        String paymentKey) {
         this.order = order;
         this.paymentMethodType=paymentMethodType;
         this.payAmount = payAmount;
         this.payTime = LocalDateTime.now();
         this.paymentMethodName = paymentMethodName;
-        this.tossPaymentKey = tossPaymentKey;
+        this.paymentKey = paymentKey;
     }
 }

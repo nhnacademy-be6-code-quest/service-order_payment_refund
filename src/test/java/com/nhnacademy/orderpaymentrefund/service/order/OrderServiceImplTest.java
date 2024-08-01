@@ -432,7 +432,7 @@ class OrderServiceImplTest {
         ReflectionTestUtils.setField(order, "productOrderDetailList", clientOrderDetailList);
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(productOrderDetailRepository.findAllByOrder_OrderId(eq(orderId))).thenReturn(
+        when(productOrderDetailRepository.findAllByOrder_OrderId(orderId)).thenReturn(
             order.getProductOrderDetailList());
 
         List<ProductOrderDetailResponseDto> expectedResponse = new ArrayList<>();
@@ -703,40 +703,5 @@ class OrderServiceImplTest {
             .build();
 
     }
-
-//    private PaymentOrderApproveRequestDto createPaymentOrderApproveRequestDto(ClientOrderCreateForm clientOrderCreateForm, Long clientId) {
-//
-//        List<ProductOrderDetailRequestDto> productOrderDetailRequestDtoList = new ArrayList<>();
-//
-//        for(OrderDetailDtoItem orderDetailDtoItem : clientOrderCreateForm.getOrderDetailDtoItemList()){
-//
-//            List<ProductOrderDetailOptionRequestDto> productOrderDetailOptionRequestDtoList = new ArrayList<>();
-//            ProductOrderDetailOptionRequestDto productOrderDetailOptionRequestDto = ProductOrderDetailOptionRequestDto.builder()
-//                .productId(orderDetailDtoItem.getOptionProductId())
-//                .optionProductQuantity(orderDetailDtoItem.getQuantity())
-//                .build();
-//            productOrderDetailOptionRequestDtoList.add(productOrderDetailOptionRequestDto);
-//
-//            ProductOrderDetailRequestDto productOrderDetailRequestDto = ProductOrderDetailRequestDto.builder()
-//                .productId(orderDetailDtoItem.getProductId())
-//                .quantity(orderDetailDtoItem.getQuantity())
-//                .productOrderDetailOptionRequestDtoList(productOrderDetailOptionRequestDtoList)
-//                .build();
-//
-//            productOrderDetailRequestDtoList.add(productOrderDetailRequestDto);
-//        }
-//
-//        return PaymentOrderApproveRequestDto.builder()
-//            .orderTotalAmount(clientOrderCreateForm.getOrderTotalAmount())
-//            .discountAmountByPoint(clientOrderCreateForm.getUsedPointDiscountAmount())
-//            .discountAmountByCoupon(clientOrderCreateForm.getCouponDiscountAmount())
-//            .orderCode(clientOrderCreateForm.getOrderCode())
-//            .clientId(clientId)
-//            .couponId(clientOrderCreateForm.getCouponId())
-//            .accumulatedPoint(clientOrderCreateForm.getAccumulatePoint())
-//            .productOrderDetailList(productOrderDetailRequestDtoList)
-//            .build();
-//    }
-
 
 }

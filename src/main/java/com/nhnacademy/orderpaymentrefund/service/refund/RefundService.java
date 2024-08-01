@@ -17,6 +17,7 @@ import com.nhnacademy.orderpaymentrefund.dto.refund.request.PaymentCancelRequest
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundAfterRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.RefundRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.TossRefundRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.refund.response.PaymentMethodResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundResultResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.response.RefundSuccessResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.CannotCancelPaymentCancel;
@@ -213,6 +214,11 @@ public class RefundService {
             order.updateOrderStatus(OrderStatus.REFUND);
             orderRepository.save(order);
         }
-        return new RefundResultResponseDto(refund.getRefundDetailReason());
+        return new RefundResultResponseDto(refund.getRefundDetailReason(), paymentDto.getPaymentMethodName());
+    }
+    public PaymentMethodResponseDto findPayMethod (long orderId){
+        Payment payment = paymentRepository.findByOrder_OrderId(orderId).orElseThrow(()->new PaymentNotFoundException("결재가 존재하지 않습니다."));
+        return PaymentMethodResponseDto.builder()
+            .methodTYpe(payment.getPaymentMethodName()).build();
     }
 }

@@ -2,9 +2,7 @@ package com.nhnacademy.orderpaymentrefund.service.order;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -13,16 +11,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
-import com.nhnacademy.orderpaymentrefund.domain.order.ClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.NonClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderPasswordRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.UpdateNonClientOrderPasswordRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.FindNonClientOrderIdInfoResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.NonClientOrderGetResponseDto;
@@ -30,7 +24,6 @@ import com.nhnacademy.orderpaymentrefund.repository.order.NonClientOrderReposito
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.service.order.impl.NonClientOrderServiceImpl;
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,11 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -58,7 +47,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 @ExtendWith(MockitoExtension.class)
 class NonClientOrderServiceImplTest {
 
-    private static final String ID_HEADER = "X-User-Id";
     private static final String REDIS_KEY = "order";
 
     @Mock
@@ -131,7 +119,7 @@ class NonClientOrderServiceImplTest {
 
         assertEquals(expectedDto, actualDto);
 
-        verify(hashOperations, times(1)).get(eq(REDIS_KEY), eq(orderCode));
+        verify(hashOperations, times(1)).get(REDIS_KEY, orderCode);
 
     }
 
@@ -159,8 +147,6 @@ class NonClientOrderServiceImplTest {
             .email(email)
             .build();
 
-        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
-
         Order order1 = createOrder("uuid-1234", 10000L, 2000, LocalDate.now(),
             "01012341234", "전라남도 광주시 랄랄랄라");
         ReflectionTestUtils.setField(order1, "orderId", orderId1);
@@ -178,7 +164,7 @@ class NonClientOrderServiceImplTest {
 
         when(
             nonClientOrderRepository.findRecent10OrderNonClientOrder(
-                eq(requestDto.ordererName()), eq(requestDto.email()), eq(requestDto.phoneNumber()))
+                requestDto.ordererName(), requestDto.email(), requestDto.phoneNumber())
         ).thenReturn(nonClientOrderList);
 
         List<FindNonClientOrderIdInfoResponseDto> res = nonClientOrderService.findNonClientOrderId(

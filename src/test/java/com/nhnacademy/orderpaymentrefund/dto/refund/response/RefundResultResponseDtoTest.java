@@ -10,9 +10,10 @@ class RefundResultResponseDtoTest {
     void testRefundResultResponseDtoWithAllArgsConstructor() {
         // Given
         String cancelReason = "Item damaged";
+        String methodTYpe = "toss";
 
         // When
-        RefundResultResponseDto dto = new RefundResultResponseDto(cancelReason);
+        RefundResultResponseDto dto = new RefundResultResponseDto(cancelReason, methodTYpe);
 
         // Then
         assertNotNull(dto);
