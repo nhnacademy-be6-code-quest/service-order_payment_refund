@@ -52,4 +52,4 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script_stop: true
-        script: "./codequest_order_payment_refund.sh"
+        script: "./CD/main.sh 8008 10008 codequest_order_payment_refund-0.0.1-SNAPSHOT.jar order_payment_refund_log"
