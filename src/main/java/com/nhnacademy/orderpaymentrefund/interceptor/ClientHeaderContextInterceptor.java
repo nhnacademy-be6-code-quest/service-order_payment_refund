@@ -8,7 +8,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 @RequiredArgsConstructor
-public class ClientIdInterceptor implements HandlerInterceptor {
+public class ClientHeaderContextInterceptor implements HandlerInterceptor {
 
     private final ClientHeaderContext clientHeaderContext;
 

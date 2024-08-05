@@ -1,7 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.config;
 
 import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
-import com.nhnacademy.orderpaymentrefund.interceptor.ClientIdInterceptor;
+import com.nhnacademy.orderpaymentrefund.interceptor.ClientHeaderContextInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -15,7 +15,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new ClientIdInterceptor(clientHeaderContext))
+        registry.addInterceptor(new ClientHeaderContextInterceptor(clientHeaderContext))
             .addPathPatterns("/**");
     }
 

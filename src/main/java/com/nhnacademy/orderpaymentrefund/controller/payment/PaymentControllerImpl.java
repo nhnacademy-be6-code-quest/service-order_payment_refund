@@ -2,13 +2,16 @@ package com.nhnacademy.orderpaymentrefund.controller.payment;
 
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentMethodResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
 import com.nhnacademy.orderpaymentrefund.service.payment.impl.PaymentStrategyService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -47,6 +50,11 @@ public class PaymentControllerImpl implements PaymentController{
     @Override
     public PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(@RequestHeader HttpHeaders headers, @RequestParam("orderCode") String orderCode){
         return paymentService.getPostProcessRequiredPaymentResponseDto(headers, orderCode);
+    }
+
+    @Override
+    public List<PaymentMethodResponseDto> getAllPaymentMethod() {
+        return paymentService.getPaymentMethodList();
     }
 
 }

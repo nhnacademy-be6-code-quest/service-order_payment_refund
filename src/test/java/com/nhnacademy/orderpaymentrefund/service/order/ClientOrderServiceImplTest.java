@@ -14,14 +14,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.nhnacademy.orderpaymentrefund.client.coupon.CouponClient;
+import com.nhnacademy.orderpaymentrefund.client.product.ProductClient;
 import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
 import com.nhnacademy.orderpaymentrefund.domain.order.ClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
+import com.nhnacademy.orderpaymentrefund.dto.client.ProductGetNameAndPriceResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.CouponDiscountInfoRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.CouponOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.CouponOrderResponseDto.CategoryCoupon;
@@ -40,9 +42,7 @@ import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepo
 import com.nhnacademy.orderpaymentrefund.service.order.impl.ClientOrderServiceImpl;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,6 +59,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,6 +80,8 @@ class ClientOrderServiceImplTest {
     OrderRepository orderRepository;
     @Mock
     CouponClient couponClient;
+    @Mock
+    ProductClient productClient;
 
     @Mock
     RedisTemplate<String, Object> redisTemplate;
@@ -634,32 +637,24 @@ class ClientOrderServiceImplTest {
     @DisplayName("쿠폰 적용 정보 조회 테스트")
     void getCouponDiscountInfoListTest(){
 
-        List<OrderDetailDtoItem> orderDetailDtoItemList = getOrderDetailDtoItemList();
+        List<CouponDiscountInfoRequestDto.OrderItem> orderItemList = getOrderItemList();
+        List<ProductGetNameAndPriceResponseDto> productGetNameAndPriceResponseDtoList = getProductGetNameAndPriceResponseDtoList();
 
-        ClientOrderCreateForm clientOrderCreateForm = new ClientOrderCreateForm();
-        ReflectionTestUtils.setField(clientOrderCreateForm, "orderDetailDtoItemList", orderDetailDtoItemList);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "couponId", null);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "shippingFee", 0);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "productTotalAmount", 180000L);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "orderTotalAmount", 180000L);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "payAmount", null);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "couponDiscountAmount", 0L);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "usedPointDiscountAmount", 0L);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "orderedPersonName", "비회원이름");
-        ReflectionTestUtils.setField(clientOrderCreateForm, "phoneNumber", "01012341234");
-        ReflectionTestUtils.setField(clientOrderCreateForm, "deliveryAddress", "광주광역시 어쩌구 저쩌구");
-        ReflectionTestUtils.setField(clientOrderCreateForm, "useDesignatedDeliveryDate", false);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "designatedDeliveryDate", null);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "paymentMethod", null);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "accumulatePoint", null);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "orderCode", "uuid-1234");
+        CouponDiscountInfoRequestDto requestDto = new CouponDiscountInfoRequestDto();
+        ReflectionTestUtils.setField(requestDto, "orderItemList", orderItemList);
+        ReflectionTestUtils.setField(requestDto, "productAndOptionTotalPrice", 180000L);
+
+        for(int i = 0 ; i < requestDto.getOrderItemList().size(); i++){
+            CouponDiscountInfoRequestDto.OrderItem item = requestDto.getOrderItemList().get(i);
+            when(productClient.getSingleProductNameAndPriceSales(headers, item.getProductId())).thenReturn(ResponseEntity.ok().body(productGetNameAndPriceResponseDtoList.get(i)));
+        }
 
         List<CouponOrderResponseDto> couponList = getCouponList();
         List<OrderCouponDiscountInfo> expectedResponse = getExpectedCouponDiscountInfoList(); // 예상결과
 
         when(couponClient.findClientCoupon(headers)).thenReturn(couponList);
 
-        List<OrderCouponDiscountInfo> realResponse = clientOrderService.getCouponDiscountInfoList(headers, clientOrderCreateForm);
+        List<OrderCouponDiscountInfo> realResponse = clientOrderService.getCouponDiscountInfoList(headers, requestDto);
 
         for(int i = 0; i < realResponse.size(); i++){
             assertEquals(expectedResponse.get(i).getCouponId(), realResponse.get(i).getCouponId());
@@ -880,49 +875,62 @@ class ClientOrderServiceImplTest {
         return res;
     }
 
-    private List<OrderDetailDtoItem> getOrderDetailDtoItemList(){
+    private List<CouponDiscountInfoRequestDto.OrderItem> getOrderItemList(){
+
 
         // 첫번째 주문 상품
         List<Long> categoryIdList1 = new ArrayList<>(List.of(2L, 3L));
-        OrderDetailDtoItem orderDetailDtoItem1 = new OrderDetailDtoItem();
-        ReflectionTestUtils.setField(orderDetailDtoItem1, "productId", 1L);
-        ReflectionTestUtils.setField(orderDetailDtoItem1, "productName", "주문상품1");
-        ReflectionTestUtils.setField(orderDetailDtoItem1, "quantity", 3L);
-        ReflectionTestUtils.setField(orderDetailDtoItem1, "categoryIdList", categoryIdList1);
-        ReflectionTestUtils.setField(orderDetailDtoItem1, "productSinglePrice", 10000L);
-        ReflectionTestUtils.setField(orderDetailDtoItem1, "usePackaging", false);
+        CouponDiscountInfoRequestDto.OrderItem orderItem1 = new CouponDiscountInfoRequestDto.OrderItem();
+        ReflectionTestUtils.setField(orderItem1, "productId", 1L);
+        ReflectionTestUtils.setField(orderItem1, "quantity", 3L);
+        ReflectionTestUtils.setField(orderItem1, "categoryIdList", categoryIdList1);
 
         // 두번째 주문 상품
         List<Long> categoryIdList2 = new ArrayList<>(List.of(1L, 3L));
-        OrderDetailDtoItem orderDetailDtoItem2 = new OrderDetailDtoItem();
-        ReflectionTestUtils.setField(orderDetailDtoItem2, "productId", 2L);
-        ReflectionTestUtils.setField(orderDetailDtoItem2, "productName", "주문상품2");
-        ReflectionTestUtils.setField(orderDetailDtoItem2, "quantity", 2L);
-        ReflectionTestUtils.setField(orderDetailDtoItem2, "categoryIdList", categoryIdList2);
-        ReflectionTestUtils.setField(orderDetailDtoItem2, "productSinglePrice", 15000L);
-        ReflectionTestUtils.setField(orderDetailDtoItem2, "usePackaging", false);
+        CouponDiscountInfoRequestDto.OrderItem orderItem2 = new CouponDiscountInfoRequestDto.OrderItem();
+        ReflectionTestUtils.setField(orderItem2, "productId", 2L);
+        ReflectionTestUtils.setField(orderItem2, "quantity", 2L);
+        ReflectionTestUtils.setField(orderItem2, "categoryIdList", categoryIdList2);
 
         // 세번째 주문 상품
         List<Long> categoryIdList3 = new ArrayList<>(List.of(1L, 4L));
-        OrderDetailDtoItem orderDetailDtoItem3 = new OrderDetailDtoItem();
-        ReflectionTestUtils.setField(orderDetailDtoItem3, "productId", 3L);
-        ReflectionTestUtils.setField(orderDetailDtoItem3, "productName", "주문상품3");
-        ReflectionTestUtils.setField(orderDetailDtoItem3, "quantity", 4L);
-        ReflectionTestUtils.setField(orderDetailDtoItem3, "categoryIdList", categoryIdList3);
-        ReflectionTestUtils.setField(orderDetailDtoItem3, "productSinglePrice", 15000L);
-        ReflectionTestUtils.setField(orderDetailDtoItem3, "usePackaging", false);
+        CouponDiscountInfoRequestDto.OrderItem orderItem3 = new CouponDiscountInfoRequestDto.OrderItem();
+        ReflectionTestUtils.setField(orderItem3, "productId", 3L);
+        ReflectionTestUtils.setField(orderItem3, "quantity", 4L);
+        ReflectionTestUtils.setField(orderItem3, "categoryIdList", categoryIdList3);
 
         // 네번째 주문 상품
         List<Long> categoryIdList4 = new ArrayList<>(List.of(2L));
-        OrderDetailDtoItem orderDetailDtoItem4 = new OrderDetailDtoItem();
-        ReflectionTestUtils.setField(orderDetailDtoItem4, "productId", 4L);
-        ReflectionTestUtils.setField(orderDetailDtoItem4, "productName", "주문상품4");
-        ReflectionTestUtils.setField(orderDetailDtoItem4, "quantity", 1L);
-        ReflectionTestUtils.setField(orderDetailDtoItem4, "categoryIdList", categoryIdList4);
-        ReflectionTestUtils.setField(orderDetailDtoItem4, "productSinglePrice", 20000L);
-        ReflectionTestUtils.setField(orderDetailDtoItem4, "usePackaging", false);
+        CouponDiscountInfoRequestDto.OrderItem orderItem4 = new CouponDiscountInfoRequestDto.OrderItem();
+        ReflectionTestUtils.setField(orderItem4, "productId", 4L);
+        ReflectionTestUtils.setField(orderItem4, "quantity", 1L);
+        ReflectionTestUtils.setField(orderItem4, "categoryIdList", categoryIdList4);
 
-        return new ArrayList<>(List.of(orderDetailDtoItem1, orderDetailDtoItem2, orderDetailDtoItem3, orderDetailDtoItem4));
+        return new ArrayList<>(List.of(orderItem1, orderItem2, orderItem3, orderItem4));
+    }
+
+    private List<ProductGetNameAndPriceResponseDto> getProductGetNameAndPriceResponseDtoList(){
+        ProductGetNameAndPriceResponseDto responseDto1 = ProductGetNameAndPriceResponseDto.builder()
+            .productId(1L)
+            .productName("주문상품1")
+            .productPriceSales(10000L)
+            .build();
+        ProductGetNameAndPriceResponseDto responseDto2 = ProductGetNameAndPriceResponseDto.builder()
+            .productId(2L)
+            .productName("주문상품2")
+            .productPriceSales(15000L)
+            .build();
+        ProductGetNameAndPriceResponseDto responseDto3 = ProductGetNameAndPriceResponseDto.builder()
+            .productId(3L)
+            .productName("주문상품3")
+            .productPriceSales(15000L)
+            .build();
+        ProductGetNameAndPriceResponseDto responseDto4 = ProductGetNameAndPriceResponseDto.builder()
+            .productId(4L)
+            .productName("주문상품4")
+            .productPriceSales(20000L)
+            .build();
+        return new ArrayList<>(List.of(responseDto1, responseDto2, responseDto3, responseDto4));
     }
 
 }

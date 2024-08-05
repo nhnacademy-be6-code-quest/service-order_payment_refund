@@ -180,6 +180,7 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
 
     private void checkNonClient() {
         if (clientHeaderContext.isClient()) {
+            log.info("회원은 비회원 서비스에 접근할 수 없습니다.");
             throw new ClientCannotAccessNonClientService();
         }
     }
