@@ -16,6 +16,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentMethodResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.CartCheckoutRequestDto;
@@ -31,6 +32,7 @@ import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentMethodTypeRep
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +116,8 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = saveClientOrderEntity(clientId, clientOrderCreateForm);
 
         // OrderProductDetail + OrderProductDetailOption 저장
-        saveOrderProductDetailAndOrderProductDetailOption(order, clientOrderCreateForm.getOrderDetailDtoItemList());
+        saveOrderProductDetailAndOrderProductDetailOption(order,
+            clientOrderCreateForm.getOrderDetailDtoItemList());
 
         // payment 저장
         savePaymentEntity(order, paymentsResponseDto);
@@ -129,7 +132,8 @@ public class PaymentServiceImpl implements PaymentService {
         postProcessingUsingCoupon(clientOrderCreateForm);
 
         // 후처리 - 재고감소
-        postProcessingInventoryDecrease(order.getOrderId(), clientOrderCreateForm.getOrderDetailDtoItemList());
+        postProcessingInventoryDecrease(order.getOrderId(),
+            clientOrderCreateForm.getOrderDetailDtoItemList());
 
         redisTemplate.opsForHash().delete(ORDER, clientOrderCreateForm.getOrderCode());
 
@@ -146,13 +150,15 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = saveNonClientOrderEntity(nonClientOrderForm);
 
         // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-        saveOrderProductDetailAndOrderProductDetailOption(order, nonClientOrderForm.getOrderDetailDtoItemList());
+        saveOrderProductDetailAndOrderProductDetailOption(order,
+            nonClientOrderForm.getOrderDetailDtoItemList());
 
         // payment 저장
         savePaymentEntity(order, paymentsResponseDto);
 
         // 후처리 - 재고감소
-        postProcessingInventoryDecrease(order.getOrderId(), nonClientOrderForm.getOrderDetailDtoItemList());
+        postProcessingInventoryDecrease(order.getOrderId(),
+            nonClientOrderForm.getOrderDetailDtoItemList());
 
         redisTemplate.opsForHash().delete(ORDER, nonClientOrderForm.getOrderCode());
 
@@ -188,14 +194,16 @@ public class PaymentServiceImpl implements PaymentService {
 
     }
 
-    private void postProcessingInventoryDecrease(Long orderId, List<OrderDetailDtoItem> orderDetailDtoItemList) {
+    private void postProcessingInventoryDecrease(Long orderId,
+        List<OrderDetailDtoItem> orderDetailDtoItemList) {
 
         Map<Long, Long> decreaseInfo = new HashMap<>();
 
-        for(OrderDetailDtoItem orderDetailDtoItem : orderDetailDtoItemList){
+        for (OrderDetailDtoItem orderDetailDtoItem : orderDetailDtoItemList) {
             decreaseInfo.put(orderDetailDtoItem.getProductId(), orderDetailDtoItem.getQuantity());
             if (Boolean.TRUE.equals(orderDetailDtoItem.getUsePackaging())) {
-                decreaseInfo.put(orderDetailDtoItem.getOptionProductId(), orderDetailDtoItem.getOptionQuantity());
+                decreaseInfo.put(orderDetailDtoItem.getOptionProductId(),
+                    orderDetailDtoItem.getOptionQuantity());
             }
         }
 
@@ -247,11 +255,14 @@ public class PaymentServiceImpl implements PaymentService {
             .clientId(clientId)
             .couponId(clientOrderCreateForm.getCouponId())
             .discountAmountByPoint(
-                clientOrderCreateForm.getUsedPointDiscountAmount() == null ? 0 : clientOrderCreateForm.getUsedPointDiscountAmount())
+                clientOrderCreateForm.getUsedPointDiscountAmount() == null ? 0
+                    : clientOrderCreateForm.getUsedPointDiscountAmount())
             .discountAmountByCoupon(
-                clientOrderCreateForm.getCouponDiscountAmount() == null ? 0 : clientOrderCreateForm.getCouponDiscountAmount())
+                clientOrderCreateForm.getCouponDiscountAmount() == null ? 0
+                    : clientOrderCreateForm.getCouponDiscountAmount())
             .accumulatedPoint(
-                clientOrderCreateForm.getAccumulatePoint() == null ? 0 : clientOrderCreateForm.getAccumulatePoint())
+                clientOrderCreateForm.getAccumulatePoint() == null ? 0
+                    : clientOrderCreateForm.getAccumulatePoint())
             .order(order)
             .build();
 
@@ -289,7 +300,8 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void savePaymentEntity(Order order, PaymentsResponseDto paymentsResponseDto) {
-        PaymentMethodType paymentMethodType = paymentMethodTypeRepository.findByPaymentMethodTypeNameEquals(paymentsResponseDto.getMethodType());
+        PaymentMethodType paymentMethodType = paymentMethodTypeRepository.findByPaymentMethodTypeNameEquals(
+            paymentsResponseDto.getMethodType());
         Payment payment = Payment.builder()
             .order(order)
             .paymentMethodType(paymentMethodType)
@@ -303,7 +315,7 @@ public class PaymentServiceImpl implements PaymentService {
     private void saveOrderProductDetailAndOrderProductDetailOption(Order order,
         List<OrderDetailDtoItem> orderDetailDtoItemList) {
 
-        for(OrderDetailDtoItem item : orderDetailDtoItemList){
+        for (OrderDetailDtoItem item : orderDetailDtoItemList) {
             ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(
                 item, order);
             productOrderDetailRepository.save(productOrderDetail);
@@ -371,5 +383,24 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         return postProcessRequiredPaymentResponseDto;
+    }
+
+    @Override
+    public List<PaymentMethodResponseDto> getPaymentMethodList() {
+
+        List<PaymentMethodResponseDto> responseDtoList = new ArrayList<>();
+
+        List<PaymentMethodType> paymentMethodTypeList = paymentMethodTypeRepository.findAll();
+
+        for (PaymentMethodType paymentMethodType : paymentMethodTypeList) {
+            PaymentMethodResponseDto dto = PaymentMethodResponseDto.builder()
+                .paymentMethodTypeId(paymentMethodType.getPaymentMethodTypeId())
+                .paymentMethodTypeName(paymentMethodType.getPaymentMethodTypeName())
+                .build();
+
+            responseDtoList.add(dto);
+        }
+
+        return responseDtoList;
     }
 }

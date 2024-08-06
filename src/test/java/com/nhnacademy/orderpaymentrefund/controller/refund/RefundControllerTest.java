@@ -38,7 +38,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultMatcher;
 
 @Import({SecurityConfig.class, HeaderFilter.class})
 @WebMvcTest(RefundControllerImpl.class)
@@ -69,7 +68,7 @@ class RefundControllerTest {
         requestDto.setOrderStatus("취소");
 
         PaymentMethodResponseDto paymentMethodResponseDto = PaymentMethodResponseDto.builder()
-            .methodTYpe("toss")
+            .methodType("toss")
             .build();
 
 

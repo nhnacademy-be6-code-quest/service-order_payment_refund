@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class PaymentMethodResponseDto {
-    String methodTYpe;
+    String methodType;
 
 }

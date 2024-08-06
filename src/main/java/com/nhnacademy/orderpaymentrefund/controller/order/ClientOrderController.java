@@ -1,6 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.CouponDiscountInfoRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderCouponDiscountInfo;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
@@ -199,6 +200,6 @@ public interface ClientOrderController {
     @PostMapping("/api/client/orders/coupon-info")
     ResponseEntity<List<OrderCouponDiscountInfo>> getCouponDiscountInfoList(
         @RequestHeader HttpHeaders headers,
-        @RequestBody ClientOrderCreateForm clientOrderCreateForm);
+        @RequestBody CouponDiscountInfoRequestDto requestDto);
 
 }

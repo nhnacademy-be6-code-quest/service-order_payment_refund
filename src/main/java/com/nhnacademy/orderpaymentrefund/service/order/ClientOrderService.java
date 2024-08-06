@@ -1,6 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.service.order;
 
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.CouponDiscountInfoRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderCouponDiscountInfo;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
@@ -21,5 +22,5 @@ public interface ClientOrderService {
     List<ProductOrderDetailResponseDto> getProductOrderDetailResponseDtoList(HttpHeaders headers, Long orderId);
     ProductOrderDetailResponseDto getProductOrderDetailResponseDto(HttpHeaders headers, Long orderId, Long productOrderDetailId);
     ProductOrderDetailOptionResponseDto getProductOrderDetailOptionResponseDto(HttpHeaders headers, long orderId, long detailId);
-    List<OrderCouponDiscountInfo> getCouponDiscountInfoList(HttpHeaders headers, ClientOrderCreateForm clientOrderCreateForm);
+    List<OrderCouponDiscountInfo> getCouponDiscountInfoList(HttpHeaders headers, CouponDiscountInfoRequestDto requestDto);
 }

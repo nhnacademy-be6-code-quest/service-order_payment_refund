@@ -159,10 +159,6 @@ class PaymentServiceTest {
         return orderDetailDtoItem;
     }
 
-
-
-
-
     private ClientOrder createClientOrder( Long discountAmountByPoint, Long discountAmountByCoupon, OrderStatus orderStatus)
         throws Exception {
         Constructor<ClientOrder> constructor = ClientOrder.class.getDeclaredConstructor();
@@ -173,28 +169,27 @@ class PaymentServiceTest {
         setField(clientOrder, "orderStatus", orderStatus);
         return clientOrder;
 
-
     }
+
     private ClientOrderCreateForm createClientOrderCreateForm(List<OrderDetailDtoItem> orderDetailDtoItemList) throws Exception {
         Constructor<ClientOrderCreateForm> constructor = ClientOrderCreateForm.class.getDeclaredConstructor();
         constructor.setAccessible(true);
         ClientOrderCreateForm form = constructor.newInstance();
-        setField(form, "orderCode", "orderCode"); // Set the orderCode
-        setField(form, "orderDetailDtoItemList", orderDetailDtoItemList); // Set the orderDetailDtoItemList
-        setField(form, "productTotalAmount", 1000L); // Example value, replace as needed
-        setField(form, "orderTotalAmount", 1050L); // Example value, replace as needed
-        setField(form, "payAmount", 1000L); // Example value, replace as needed
-        setField(form, "shippingFee", 50); // Example value, replace as needed
-        setField(form, "couponId", 1L); // Example value, replace as needed
-        setField(form, "couponDiscountAmount", 50L); // Example value, replace as needed
-        setField(form, "usedPointDiscountAmount", 50L); // Example value, replace as needed
-        setField(form, "orderedPersonName", "John Doe"); // Example value, replace as needed
-        setField(form, "phoneNumber", "1234567890"); // Example value, replace as needed
-        setField(form, "deliveryAddress", "123 Main St"); // Example value, replace as needed
-        setField(form, "useDesignatedDeliveryDate", true); // Example value, replace as needed
-        setField(form, "designatedDeliveryDate", LocalDate.now()); // Example value, replace as needed
-        setField(form, "paymentMethod", "1"); // Example value, replace as needed
-        setField(form, "accumulatePoint", 100L); // Example value, replace as needed
+        setField(form, "orderCode", "orderCode");
+        setField(form, "orderDetailDtoItemList", orderDetailDtoItemList);
+        setField(form, "productTotalAmount", 1000L);
+        setField(form, "orderTotalAmount", 1050L);
+        setField(form, "payAmount", 1000L);
+        setField(form, "shippingFee", 50);
+        setField(form, "couponId", 1L);
+        setField(form, "couponDiscountAmount", 50L);
+        setField(form, "usedPointDiscountAmount", 50L);
+        setField(form, "phoneNumber", "1234567890");
+        setField(form, "deliveryAddress", "123 Main St");
+        setField(form, "useDesignatedDeliveryDate", true);
+        setField(form, "designatedDeliveryDate", LocalDate.now());
+        setField(form, "paymentMethod", "1");
+        setField(form, "accumulatePoint", 100L);
 
         return form;
     }
@@ -229,12 +224,12 @@ class PaymentServiceTest {
         return form;
     }
 
-
     private void setField(Object target, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
         Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true); // Make private fields accessible
+        field.setAccessible(true);
         field.set(target, value);
     }
+
     @Test
     void testSavePaymentWithClientId() throws Exception {
         // Arrange

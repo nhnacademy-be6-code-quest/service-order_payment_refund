@@ -2,14 +2,17 @@ package com.nhnacademy.orderpaymentrefund.controller.payment;
 
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentMethodResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import org.json.simple.parser.ParseException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -89,5 +92,19 @@ public interface PaymentController {
         @RequestHeader HttpHeaders headers,
         @Parameter(description = "결제주문아이디")
         @RequestParam("orderCode") String orderCode);
+
+
+    @Operation(
+        summary = "결제 수단 조회",
+        description = "Payment - 결제 수단 조회를 위한 정보",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "결제 수단 조회 성공"
+            )
+        }
+    )
+    @GetMapping("/api/payment/method")
+    List<PaymentMethodResponseDto> getAllPaymentMethod();
 
 }

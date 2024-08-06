@@ -155,7 +155,6 @@ public class OrderServiceImpl implements OrderService {
         discountAmountByPoint = clientOrderCreateForm.getUsedPointDiscountAmount();
         orderTotalAmount = clientOrderCreateForm.getOrderTotalAmount();
         couponId = clientOrderCreateForm.getCouponId();
-        accumulatedPoint = clientOrderCreateForm.getAccumulatePoint();
 
         for (OrderDetailDtoItem orderDetailDtoItem : clientOrderCreateForm.getOrderDetailDtoItemList()) {
             productOrderDetailList.add(

@@ -214,11 +214,11 @@ public class RefundService {
             order.updateOrderStatus(OrderStatus.REFUND);
             orderRepository.save(order);
         }
-        return new RefundResultResponseDto(refund.getRefundDetailReason(), paymentDto.getPaymentMethodName());
+        return new RefundResultResponseDto(refund.getRefundDetailReason(), paymentDto.getPaymentMethodType().getPaymentMethodTypeName());
     }
     public PaymentMethodResponseDto findPayMethod (long orderId){
         Payment payment = paymentRepository.findByOrder_OrderId(orderId).orElseThrow(()->new PaymentNotFoundException("결재가 존재하지 않습니다."));
         return PaymentMethodResponseDto.builder()
-            .methodTYpe(payment.getPaymentMethodName()).build();
+            .methodType(payment.getPaymentMethodType().getPaymentMethodTypeName()).build();
     }
 }

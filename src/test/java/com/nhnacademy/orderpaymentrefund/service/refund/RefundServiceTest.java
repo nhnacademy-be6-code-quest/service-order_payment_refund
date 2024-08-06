@@ -18,6 +18,7 @@ import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
+import com.nhnacademy.orderpaymentrefund.domain.payment.PaymentMethodType;
 import com.nhnacademy.orderpaymentrefund.domain.refundandcancel.Refund;
 import com.nhnacademy.orderpaymentrefund.domain.refundandcancel.RefundPolicy;
 import com.nhnacademy.orderpaymentrefund.dto.message.PointRewardRefundMessageDto;
@@ -149,13 +150,22 @@ class RefundServiceTest {
         setField(productOrderDetailOption, "quantity", quantity);
         return productOrderDetailOption;
     }
-    private Payment createPayment(String tossPaymentKey) {
+    private PaymentMethodType createPaymentMethodType() throws Exception{
+        Constructor<PaymentMethodType> constructor = PaymentMethodType.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        PaymentMethodType paymentMethodType = constructor.newInstance();
+        setField(paymentMethodType, "paymentMethodTypeId",1L);
+        setField(paymentMethodType, "paymentMethodTypeName", "toss");
+        return paymentMethodType;
+    }
+    private Payment createPayment(String tossPaymentKey) throws Exception {
         // Use builder to create Payment instance
         return Payment.builder()
             .order(null) // Set appropriate Order object if needed
             .payAmount(1000L) // Set appropriate payAmount
             .paymentMethodName("Card") // Set appropriate paymentMethodName
             .paymentKey(tossPaymentKey)
+            .paymentMethodType(createPaymentMethodType())
             .build();
     }
 
