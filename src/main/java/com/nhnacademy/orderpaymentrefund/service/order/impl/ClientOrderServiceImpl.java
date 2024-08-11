@@ -1,13 +1,16 @@
 package com.nhnacademy.orderpaymentrefund.service.order.impl;
 
 import com.nhnacademy.orderpaymentrefund.client.coupon.CouponClient;
+import com.nhnacademy.orderpaymentrefund.client.product.ProductClient;
 import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
 import com.nhnacademy.orderpaymentrefund.domain.order.ClientOrder;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
+import com.nhnacademy.orderpaymentrefund.dto.client.ProductGetNameAndPriceResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.CouponDiscountInfoRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.CouponOrderResponseDto;
@@ -26,6 +29,7 @@ import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -53,6 +57,7 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     private final CouponClient couponClient;
+    private final ProductClient productClient;
 
     private static final String AMOUNTDISCOUNT = "AMOUNTDISCOUNT";
     private static final String PERCENTAGEDISCOUNT = "PERCENTAGEDISCOUNT";
@@ -203,49 +208,77 @@ public class ClientOrderServiceImpl implements ClientOrderService {
 
     @Override
     public List<OrderCouponDiscountInfo> getCouponDiscountInfoList(HttpHeaders headers,
-        ClientOrderCreateForm clientOrderCreateForm) {
+        CouponDiscountInfoRequestDto requestDto) {
 
         List<CouponOrderResponseDto> couponList = couponClient.findClientCoupon(headers);
+        List<ProductGetNameAndPriceResponseDto> productInfoList = new ArrayList<>();
+
+        long productTotalAmount = 0;
+
+        // 주문한 상품 가격 정보 및 총 금액
+        for (int i = 0; i < requestDto.getOrderItemList().size(); i++) {
+
+            Long productId = requestDto.getOrderItemList().get(i).getProductId();
+            Long quantity = requestDto.getOrderItemList().get(i).getQuantity();
+
+            ProductGetNameAndPriceResponseDto productGetNameAndPriceResponseDto = productClient.getSingleProductNameAndPriceSales(
+                headers, productId).getBody();
+            assert productGetNameAndPriceResponseDto != null;
+            productTotalAmount += (productGetNameAndPriceResponseDto.productPriceSales()
+                * quantity);
+            productInfoList.add(productGetNameAndPriceResponseDto);
+
+        }
 
         List<OrderCouponDiscountInfo> couponDiscountInfoList = new ArrayList<>();
 
         for (CouponOrderResponseDto coupon : couponList) {
-            OrderCouponDiscountInfo orderCouponDiscountInfo = orderCouponDiscountInfo(coupon,
-                clientOrderCreateForm);
+            OrderCouponDiscountInfo orderCouponDiscountInfo = orderCouponDiscountInfo(headers,
+                coupon, requestDto, productInfoList);
+
+            String unit =
+                coupon.getCouponPolicyDto().getDiscountType().equals("AMOUNTDISCOUNT") ? "원" : "%";
+
+            orderCouponDiscountInfo.updateCouponInfo(coupon.getCouponPolicyDto()
+                    .getCouponPolicyDescription(), unit, coupon.getCouponPolicyDto()
+                    .getMinPurchaseAmount(), coupon.getCouponPolicyDto().getMaxDiscountAmount(),
+                coupon.getCouponPolicyDto()
+                    .getDiscountValue());
+
             couponDiscountInfoList.add(orderCouponDiscountInfo);
         }
 
         return couponDiscountInfoList;
     }
 
-    private OrderCouponDiscountInfo orderCouponDiscountInfo(CouponOrderResponseDto coupon,
-        ClientOrderCreateForm clientOrderCreateForm) {
+    private OrderCouponDiscountInfo orderCouponDiscountInfo(HttpHeaders headers,
+        CouponOrderResponseDto coupon,
+        CouponDiscountInfoRequestDto requestDto,
+        List<ProductGetNameAndPriceResponseDto> productInfoList) {
 
         log.info("쿠폰 할인 정보 계산");
 
-        List<OrderDetailDtoItem> orderDetailDtoItemList = clientOrderCreateForm.getOrderDetailDtoItemList();
-
         // 일반 금액 할인 쿠폰
         if (isAmountDiscount(coupon)) {
-            return getOrderCouponDiscountInfoUsingAmountDiscount(
-                coupon, clientOrderCreateForm.getProductTotalAmount(),
+            return getOrderCouponDiscountInfoUsingAmountDiscount(coupon,
+                requestDto.getProductAndOptionTotalPrice(),
                 "전체 할인대상 상품 주문 금액이 최소 주문 금액에 못 미칩니다"
             );
         }
         // 일반 백분율 할인 쿠폰
         else if (isPercentageDiscount(coupon)) {
             return getOrderCouponDiscountInfoUsingPercentageDiscount(
-                coupon, clientOrderCreateForm.getProductTotalAmount(),
+                coupon, requestDto.getProductAndOptionTotalPrice(),
                 "전체 할인대상 상품 주문 금액이 최소 주문 금액에 못 미칩니다"
             );
         }
         // 특정 상품에 적용되는 할인 쿠폰
         else if (coupon.getProductCoupon() != null) {
-            return processProductCoupon(coupon, orderDetailDtoItemList);
+            return processProductCoupon(coupon, requestDto, productInfoList);
         }
         // 특정 카테고리 상품에 적용되는 할인 쿠폰
         else if (coupon.getCategoryCoupon() != null) {
-            return processCategoryCoupon(coupon, orderDetailDtoItemList);
+            return processCategoryCoupon(coupon, requestDto, productInfoList);
         }
 
         return createNotApplicableOrderCouponDiscountInfo(coupon, "쿠폰을 적용할 수 없습니다");
@@ -264,23 +297,26 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     private OrderCouponDiscountInfo processProductCoupon(CouponOrderResponseDto coupon,
-        List<OrderDetailDtoItem> orderDetailDtoItemList) {
+        CouponDiscountInfoRequestDto requestDto,
+        List<ProductGetNameAndPriceResponseDto> productInfoList) {
 
         // 할인을 적용할 수 있는 상품 아이디
         Long applicableProductId = coupon.getProductCoupon().getProductId();
 
-        for (OrderDetailDtoItem orderDetailDtoItem : orderDetailDtoItemList) {
-            if (orderDetailDtoItem.getProductId().equals(applicableProductId)) {
+        for (int i = 0; i < productInfoList.size(); i++) {
+            if(requestDto.getOrderItemList().get(i).getProductId().equals(applicableProductId)){
+
+                long quantity = requestDto.getOrderItemList().get(i).getQuantity();
+                long price = productInfoList.get(i).productPriceSales();
+
                 if (coupon.getCouponPolicyDto().getDiscountType().equals(AMOUNTDISCOUNT)) {
-                    return getOrderCouponDiscountInfoUsingAmountDiscount(coupon,
-                        orderDetailDtoItem.getProductSinglePrice()
-                            * orderDetailDtoItem.getQuantity(),
+                    return getOrderCouponDiscountInfoUsingAmountDiscount(coupon, price * quantity,
                         "쿠폰 적용가능한 상품의 총 주문 금액이 최소 주문 금액에 못 미칩니다");
                 }
+
                 if (coupon.getCouponPolicyDto().getDiscountType().equals(PERCENTAGEDISCOUNT)) {
                     return getOrderCouponDiscountInfoUsingPercentageDiscount(coupon,
-                        orderDetailDtoItem.getProductSinglePrice()
-                            * orderDetailDtoItem.getQuantity(),
+                        price * quantity,
                         "쿠폰 적용가능한 상품의 총 주문 금액이 최소 주문 금액에 못 미칩니다");
                 }
             }
@@ -290,15 +326,16 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     }
 
     private OrderCouponDiscountInfo processCategoryCoupon(CouponOrderResponseDto coupon,
-        List<OrderDetailDtoItem> orderDetailDtoItemList) {
+        CouponDiscountInfoRequestDto requestDto,
+        List<ProductGetNameAndPriceResponseDto> productInfoList) {
 
         Long applicableCategoryId = coupon.getCategoryCoupon().getProductCategoryId();
 
         long totalPrice = 0;
 
-        for(OrderDetailDtoItem item : orderDetailDtoItemList){
-            if(item.getCategoryIdList().contains(applicableCategoryId)){
-                totalPrice += item.getProductSinglePrice() * item.getQuantity();
+        for(int i = 0; i < productInfoList.size(); i++){
+            if(requestDto.getOrderItemList().get(i).getCategoryIdList().contains(applicableCategoryId)){
+                totalPrice += productInfoList.get(i).productPriceSales() * requestDto.getOrderItemList().get(i).getQuantity();
             }
         }
 
@@ -331,7 +368,8 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     // totalQuantity: 쿠폰을 적용시켜 할인 받을 상품의 총 개수. 상품 쿠폰 Or 카테고리 쿠폰의 경우, 적용할 상품들의 총 수량이 됨.
     // orderDetailDtoItemList: 쿠폰 적용 대상이 되는 상품들.
     private OrderCouponDiscountInfo getOrderCouponDiscountInfoUsingAmountDiscount(
-        CouponOrderResponseDto coupon, Long productTotalAmount, String updateNotApplicableDescription) {
+        CouponOrderResponseDto coupon, Long productTotalAmount,
+        String updateNotApplicableDescription) {
 
         // 최소 금액 기준이 맞지 않음 => 쿠폰 사용 불가.
         if (productTotalAmount < coupon.getCouponPolicyDto().getMinPurchaseAmount()) {

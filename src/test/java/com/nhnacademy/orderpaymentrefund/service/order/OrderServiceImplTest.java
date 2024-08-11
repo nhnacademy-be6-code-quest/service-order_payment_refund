@@ -650,7 +650,6 @@ class OrderServiceImplTest {
         ReflectionTestUtils.setField(clientOrderCreateForm, "payAmount", 10000L);
         ReflectionTestUtils.setField(clientOrderCreateForm, "couponDiscountAmount", 2000L);
         ReflectionTestUtils.setField(clientOrderCreateForm, "usedPointDiscountAmount", 500L);
-        ReflectionTestUtils.setField(clientOrderCreateForm, "orderedPersonName", "홍길동");
         ReflectionTestUtils.setField(clientOrderCreateForm, "phoneNumber", "01012341234");
         ReflectionTestUtils.setField(clientOrderCreateForm, "deliveryAddress", "광주 광역시 어쩌구 저쩌구");
         ReflectionTestUtils.setField(clientOrderCreateForm, "paymentMethod", "toss");

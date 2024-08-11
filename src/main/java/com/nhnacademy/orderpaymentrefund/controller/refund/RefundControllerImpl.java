@@ -38,7 +38,7 @@ public class RefundControllerImpl implements RefundController{
     @Override
     public void paymentCancel(@RequestBody PaymentCancelRequestDto paymentCancelRequestDto){
         PaymentMethodResponseDto dto = refundService.findPayMethod(paymentCancelRequestDto.getOrderId());
-        paymentStrategyService.refundPayment(dto.getMethodTYpe(), paymentCancelRequestDto.getOrderId(),
+        paymentStrategyService.refundPayment(dto.getMethodType(), paymentCancelRequestDto.getOrderId(),
             paymentCancelRequestDto.getCancelReason());
         refundService.saveCancel(paymentCancelRequestDto);
 
