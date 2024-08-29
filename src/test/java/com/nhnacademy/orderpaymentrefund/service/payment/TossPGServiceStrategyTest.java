@@ -1,7 +1,9 @@
 package com.nhnacademy.orderpaymentrefund.service.payment;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.orderpaymentrefund.client.payment.TossPaymentsClient;
 import com.nhnacademy.orderpaymentrefund.client.refund.TossPayRefundClient;
+import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
@@ -11,7 +13,7 @@ import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDt
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.TossRefundRequestDto;
 import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
-import com.nhnacademy.orderpaymentrefund.service.payment.impl.TossPayment;
+import com.nhnacademy.orderpaymentrefund.service.payment.impl.TossPGServiceStrategy;
 import java.lang.reflect.Constructor;
 import org.json.simple.parser.ParseException;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.Optional;
 
@@ -27,7 +31,19 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
-class TossPaymentTest {
+class TossPGServiceStrategyTest {
+
+    @Mock
+    private ClientHeaderContext clientHeaderContext;
+
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    private HashOperations<String, Object, Object> hashOperations;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @Mock
     private TossPaymentsClient tossPaymentsClient;
@@ -39,7 +55,7 @@ class TossPaymentTest {
     private TossPayRefundClient tossPayRefundClient;
 
     @InjectMocks
-    private TossPayment tossPayment;
+    private TossPGServiceStrategy tossPaymentStrategy;
 
     private String tossSecretKey = "testSecretKey";
     private Order createOrder(Long orderId, Long orderTotalAmount, Integer shippingFee, OrderStatus orderStatus ) throws Exception {
@@ -63,7 +79,7 @@ class TossPaymentTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        tossPayment = new TossPayment(tossSecretKey, tossPaymentsClient, paymentRepository, tossPayRefundClient);
+        tossPaymentStrategy = new TossPGServiceStrategy(new PGServiceUtil(), clientHeaderContext, redisTemplate, objectMapper, tossSecretKey, tossPaymentsClient, paymentRepository, tossPayRefundClient);
     }
 
     @Test
@@ -74,7 +90,7 @@ class TossPaymentTest {
         when(tossPaymentsClient.approvePayment(any(), any())).thenReturn(responseJson);
 
         // Act
-        PaymentsResponseDto responseDto = tossPayment.approvePayment(requestDto);
+        PaymentsResponseDto responseDto = tossPaymentStrategy.approvePayment(requestDto);
 
         // Assert
         assertNotNull(responseDto);
@@ -98,7 +114,7 @@ class TossPaymentTest {
         when(paymentRepository.findByOrder_OrderId(anyLong())).thenReturn(Optional.of(payment));
 
         // Act
-        tossPayment.refundPayment(12345L, "Refund reason");
+        tossPaymentStrategy.refundPayment(12345L, "Refund reason");
 
         // Assert
         verify(tossPayRefundClient).cancelPayment(eq("paymentKey123"), any(TossRefundRequestDto.class), anyString());
@@ -110,6 +126,6 @@ class TossPaymentTest {
         when(paymentRepository.findByOrder_OrderId(anyLong())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(PaymentNotFoundException.class, () -> tossPayment.refundPayment(12345L, "Refund reason"));
+        assertThrows(PaymentNotFoundException.class, () -> tossPaymentStrategy.refundPayment(12345L, "Refund reason"));
     }
 }

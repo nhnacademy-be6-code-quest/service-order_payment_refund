@@ -3,6 +3,7 @@ package com.nhnacademy.orderpaymentrefund.controller.order;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.paymentView.PaymentViewRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
@@ -24,6 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderControllerImpl implements OrderController {
 
     private final OrderService orderService;
+
+    @GetMapping("/api/order/{orderCode}/payment-view-request")
+    public ResponseEntity<PaymentViewRequestDto> getPaymentViewRequestDto(@PathVariable String orderCode, @RequestParam String pgName){
+        System.out.println(orderService.getPaymentViewRequestDto(pgName, orderCode));
+        return ResponseEntity.ok().body(orderService.getPaymentViewRequestDto(pgName, orderCode));
+    }
 
     @GetMapping("/api/order/{orderCode}/payment-request")
     public ResponseEntity<PaymentOrderShowRequestDto> getPaymentOrderShowRequestDto(@PathVariable String orderCode, HttpServletRequest request, @RequestHeader HttpHeaders headers){

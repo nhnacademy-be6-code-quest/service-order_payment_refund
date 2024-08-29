@@ -3,20 +3,16 @@ package com.nhnacademy.orderpaymentrefund.controller.payment;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentMethodResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
 import com.nhnacademy.orderpaymentrefund.service.payment.impl.PaymentStrategyService;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.parser.ParseException;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 결제 정보를 저장하고, 조회하는 컨트롤러입니다. 결제 정보는 수정되거나 삭제되지 않습니다.

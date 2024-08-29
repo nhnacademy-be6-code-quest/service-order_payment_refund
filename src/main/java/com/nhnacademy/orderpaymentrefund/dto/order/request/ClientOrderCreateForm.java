@@ -13,7 +13,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @Getter
 @ToString
-public class ClientOrderCreateForm {
+public class ClientOrderCreateForm implements OrderForm{
 
     // 주문 상품 및 배송지 정보
     List<OrderDetailDtoItem> orderDetailDtoItemList; // 상품-옵션 리스트
@@ -42,11 +42,18 @@ public class ClientOrderCreateForm {
     // 주문 코드
     String orderCode;
 
-    public void addOrderDetailDtoItem(OrderDetailDtoItem orderDetailDtoItem){
-        if(this.orderDetailDtoItemList == null){
-            this.orderDetailDtoItemList = new ArrayList<>();
-        }
-        this.orderDetailDtoItemList.add(orderDetailDtoItem);
+    @Override
+    public int getOrderDetailSize() {
+        return 0;
     }
 
+    @Override
+    public List<OrderDetailDtoItem> getOrderItemList() {
+        return this.orderDetailDtoItemList;
+    }
+
+    @Override
+    public Long getTotalPayAmount() {
+        return orderTotalAmount - couponDiscountAmount - usedPointDiscountAmount;
+    }
 }

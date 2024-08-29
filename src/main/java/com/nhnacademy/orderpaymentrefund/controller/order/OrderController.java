@@ -3,6 +3,7 @@ package com.nhnacademy.orderpaymentrefund.controller.order;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.paymentView.PaymentViewRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +34,23 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Tag(name = "OrderController", description = "관리자 및 시스템 주문 관련 API")
 public interface OrderController {
 
+    @Operation(
+            summary = "결제 승인 요청 정보 조회",
+            description = "Toss - 결제 승인 요청 정보를 조회합니다.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "결제 승인 요청 정보"
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "찾으려는 주문이 없음"
+                    )
+            }
+    )
+    @GetMapping("/api/order/{orderCode}/payment-view-request")
+    ResponseEntity<PaymentViewRequestDto> getPaymentViewRequestDto(
+            @Parameter(description = "주문 코드") @PathVariable String orderCode, String pgName);
 
     @Operation(
         summary = "결제 승인 요청 정보 조회",

@@ -1,17 +1,26 @@
 package com.nhnacademy.orderpaymentrefund.service.payment.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.orderpaymentrefund.client.payment.TossPaymentsClient;
 import com.nhnacademy.orderpaymentrefund.client.refund.TossPayRefundClient;
+import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
 import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderForm;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.paymentView.PaymentViewRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.paymentView.impl.TossPaymentViewRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.refund.request.TossRefundRequestDto;
 import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
-import com.nhnacademy.orderpaymentrefund.service.payment.PaymentStrategy;
+import com.nhnacademy.orderpaymentrefund.service.payment.PGServiceStrategy;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Base64.Encoder;
+
+import com.nhnacademy.orderpaymentrefund.service.payment.PGServiceUtil;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,16 +28,32 @@ import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Component(value = "toss")
 @RequiredArgsConstructor
-public class TossPayment implements PaymentStrategy {
+public class TossPGServiceStrategy implements PGServiceStrategy {
 
+    private final PGServiceUtil pgServiceUtil;
     private final String tossSecretKey;
     private final TossPaymentsClient tossPaymentsClient;
     private final PaymentRepository paymentRepository;
     private final TossPayRefundClient tossPayRefundClient;
+
+    @Override
+    public PaymentViewRequestDto getPaymentViewRequestDto(String orderCode) {
+        OrderForm orderForm = pgServiceUtil.getOrderForm(orderCode);
+        String orderHistoryTitle = pgServiceUtil.getOrderHistoryTitle(orderForm);
+        long payTotalAmount = orderForm.getTotalPayAmount();
+
+        return TossPaymentViewRequestDto.builder()
+                .amount(payTotalAmount)
+                .orderCode(orderCode)
+                .orderName(orderHistoryTitle)
+                .build();
+
+    }
 
     @NoArgsConstructor
     @Getter
