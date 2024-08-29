@@ -1,8 +1,9 @@
 package com.nhnacademy.orderpaymentrefund.service.payment.impl;
 
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.paymentView.PaymentViewRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
-import com.nhnacademy.orderpaymentrefund.service.payment.PaymentStrategy;
+import com.nhnacademy.orderpaymentrefund.service.payment.PGServiceStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.parser.ParseException;
@@ -13,24 +14,29 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class PaymentStrategyService {
 
-    private final PaymentStrategyGetter paymentStrategyGetter;
+    private final PGServiceStrategyProvider PGServiceStrategyProvider;
+
+    public PaymentViewRequestDto getPaymentViewRequestDto(String pgName, String orderCode) {
+        PGServiceStrategy pgServiceStrategy = PGServiceStrategyProvider.getPaymentStrategy(pgName);
+        return pgServiceStrategy.getPaymentViewRequestDto(orderCode);
+    }
 
     public PaymentsResponseDto approvePayment(ApprovePaymentRequestDto approvePaymentRequestDto)
         throws ParseException {
 
-        PaymentStrategy paymentStrategy = paymentStrategyGetter.getPaymentStrategy(
+        PGServiceStrategy PGServiceStrategy = PGServiceStrategyProvider.getPaymentStrategy(
             approvePaymentRequestDto.getMethodType().toLowerCase());
 
-        return paymentStrategy.approvePayment(approvePaymentRequestDto);
+        return PGServiceStrategy.approvePayment(approvePaymentRequestDto);
 
 
     }
 
     public void refundPayment(String paymentType, long orderId, String cancelReason){
 
-        PaymentStrategy paymentStrategy = paymentStrategyGetter.getPaymentStrategy(paymentType.toLowerCase());
+        PGServiceStrategy PGServiceStrategy = PGServiceStrategyProvider.getPaymentStrategy(paymentType.toLowerCase());
 
-        paymentStrategy.refundPayment(orderId, cancelReason);
+        PGServiceStrategy.refundPayment(orderId, cancelReason);
 
     }
 

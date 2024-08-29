@@ -122,7 +122,6 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-dbcp2</artifactId>
       <version>2.12.0</version>
-
     </dependency>
 
     <dependency>
@@ -130,6 +129,7 @@
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
       <version>2.3.0</version>
     </dependency>
+
   </dependencies>
   <dependencyManagement>
     <dependencies>

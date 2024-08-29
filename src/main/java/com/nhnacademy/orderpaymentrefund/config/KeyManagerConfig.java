@@ -67,15 +67,10 @@ public class KeyManagerConfig {
     @Value("${secret.key.naver.secret.key}")
     private String naverSecretKey;
 
+    @Value("${secret.key.kakao.secret.key}")
+    private String kakaoSecretKey;
+
     private static final String BASE_URL = "https://api-keymanager.nhncloudservice.com/keymanager/v1.2/appkey/";
-
-
-    @Bean
-    public String naverSecretKey() {
-        String naverSecret = getKey(getSecret(naverSecretKey));
-        log.info("Rabbitmq Host Key: {}", naverSecretKey);
-        return naverSecret;
-    }
 
     @Bean
     public String rabbitHost() {
@@ -156,9 +151,17 @@ public class KeyManagerConfig {
 
     @Bean
     public String tossSecretKey() {
-        String tossKey = getKey(getSecret(tossKeyId));
-        log.info("Toss Key Key: {}", tossKey);
-        return tossKey;
+        return getKey(getSecret(tossKeyId));
+    }
+
+    @Bean
+    public String naverSecretKey() {
+        return getKey(getSecret(naverSecretKey));
+    }
+
+    @Bean
+    public String kakaoSecretKey() {
+        return getKey(getSecret(kakaoSecretKey));
     }
 
 

@@ -14,6 +14,7 @@ import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.paymentView.PaymentViewRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
 import com.nhnacademy.orderpaymentrefund.exception.InvalidOrderChangeAttempt;
@@ -27,6 +28,8 @@ import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepo
 import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.nhnacademy.orderpaymentrefund.service.payment.impl.PaymentStrategyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -34,7 +37,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -56,6 +58,13 @@ public class OrderServiceImpl implements OrderService {
     private final ObjectMapper objectMapper;
 
     private final ClientHeaderContext clientHeaderContext;
+
+    private final PaymentStrategyService paymentStrategyService;
+
+    @Override
+    public PaymentViewRequestDto getPaymentViewRequestDto(String pgName, String orderCode) {
+        return paymentStrategyService.getPaymentViewRequestDto(pgName, orderCode);
+    }
 
     @Override
     public PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(String orderCode) {

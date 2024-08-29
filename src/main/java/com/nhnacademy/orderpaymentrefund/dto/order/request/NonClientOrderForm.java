@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Getter
 @NoArgsConstructor
-public class NonClientOrderForm {
+public class NonClientOrderForm implements OrderForm {
 
     List<OrderDetailDtoItem> orderDetailDtoItemList; // 상품-옵션 리스트
     Integer shippingFee; // 배송비
@@ -30,4 +30,18 @@ public class NonClientOrderForm {
         this.orderPassword = encoder.encode(orderPassword);
     }
 
+    @Override
+    public int getOrderDetailSize() {
+        return orderDetailDtoItemList.size();
+    }
+
+    @Override
+    public List<OrderDetailDtoItem> getOrderItemList() {
+        return this.orderDetailDtoItemList;
+    }
+
+    @Override
+    public Long getTotalPayAmount() {
+        return this.payAmount;
+    }
 }
