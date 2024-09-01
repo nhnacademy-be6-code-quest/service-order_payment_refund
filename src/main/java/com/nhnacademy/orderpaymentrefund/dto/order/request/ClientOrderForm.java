@@ -1,19 +1,16 @@
 package com.nhnacademy.orderpaymentrefund.dto.order.request;
 
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import lombok.Builder;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 
 @NoArgsConstructor
 @Getter
 @ToString
-public class ClientOrderCreateForm implements OrderForm{
+public class ClientOrderForm implements OrderForm{
 
     // 주문 상품 및 배송지 정보
     List<OrderDetailDtoItem> orderDetailDtoItemList; // 상품-옵션 리스트
@@ -56,4 +53,5 @@ public class ClientOrderCreateForm implements OrderForm{
     public Long getTotalPayAmount() {
         return orderTotalAmount - couponDiscountAmount - usedPointDiscountAmount;
     }
+
 }

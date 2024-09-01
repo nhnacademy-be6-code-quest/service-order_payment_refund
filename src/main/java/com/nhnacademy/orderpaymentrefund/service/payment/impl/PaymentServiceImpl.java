@@ -1,42 +1,40 @@
 package com.nhnacademy.orderpaymentrefund.service.payment.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailConverter;
-import com.nhnacademy.orderpaymentrefund.converter.impl.ProductOrderDetailOptionConverter;
-import com.nhnacademy.orderpaymentrefund.domain.order.ClientOrder;
-import com.nhnacademy.orderpaymentrefund.domain.order.NonClientOrder;
+import com.nhnacademy.orderpaymentrefund.context.ClientHeaderContext;
+import com.nhnacademy.orderpaymentrefund.context.PaymentContext;
 import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
-import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.domain.payment.Payment;
 import com.nhnacademy.orderpaymentrefund.domain.payment.PaymentMethodType;
 import com.nhnacademy.orderpaymentrefund.dto.coupon.PaymentCompletedCouponResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.message.PointUsagePaymentMessageDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderForm;
+import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.request.PaymentSaveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentMethodResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.approve.PaymentApproveResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.approve.SuccessPaymentOrderInfo;
 import com.nhnacademy.orderpaymentrefund.dto.product.CartCheckoutRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.product.InventoryDecreaseRequestDto;
 import com.nhnacademy.orderpaymentrefund.exception.OrderNotFoundException;
 import com.nhnacademy.orderpaymentrefund.exception.PaymentNotFoundException;
 import com.nhnacademy.orderpaymentrefund.repository.order.ClientOrderRepository;
-import com.nhnacademy.orderpaymentrefund.repository.order.NonClientOrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.OrderRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailOptionRepository;
 import com.nhnacademy.orderpaymentrefund.repository.order.ProductOrderDetailRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentMethodTypeRepository;
 import com.nhnacademy.orderpaymentrefund.repository.payment.PaymentRepository;
+import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
+import com.nhnacademy.orderpaymentrefund.service.order.NonClientOrderService;
+import com.nhnacademy.orderpaymentrefund.service.order.OrderService;
 import com.nhnacademy.orderpaymentrefund.service.payment.PaymentService;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import com.nhnacademy.orderpaymentrefund.util.OrderUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -45,17 +43,23 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
-    private static final String ID_HEADER = "X-User-Id";
+    private final ClientHeaderContext clientHeaderContext;
+    private final OrderUtil orderUtil;
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final ClientOrderRepository clientOrderRepository;
-    private final NonClientOrderRepository nonClientOrderRepository;
     private final ProductOrderDetailRepository productOrderDetailRepository;
     private final ProductOrderDetailOptionRepository productOrderDetailOptionRepository;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -64,8 +68,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final RabbitTemplate rabbitTemplate;
 
-    private final ProductOrderDetailConverter productOrderDetailConverter;
-    private final ProductOrderDetailOptionConverter productOrderDetailOptionConverter;
+    private final OrderService orderService;
+    private final ClientOrderService clientOrderService;
+    private final NonClientOrderService nonClientOrderService;
+    private final PaymentStrategyService paymentStrategyService;
+
+    private final PaymentContext paymentContext;
 
     @Value("${rabbit.cart.checkout.exchange.name}")
     private String cartCheckoutExchangeName;
@@ -90,241 +98,21 @@ public class PaymentServiceImpl implements PaymentService {
     private static final String ORDER = "order";
 
     @Override
-    public void savePayment(HttpHeaders headers, PaymentsResponseDto paymentsResponseDto) {
+    public Payment savePayment(Order order, PaymentSaveRequestDto paymentSaveRequestDto) {
 
-        Long clientId = getClientId(headers);
-
-        Object data = redisTemplate.opsForHash()
-            .get(ORDER, paymentsResponseDto.getOrderCode());
-
-        if (clientId != null) {
-            processClientOrderAndPayment(clientId, data, paymentsResponseDto);
-        } else {
-            processNonClientOrderAndPayment(data, paymentsResponseDto);
-        }
-
-    }
-
-    // 회원 주문 및 결제 생성 및 후처리 프로세스
-    private void processClientOrderAndPayment(Long clientId, Object data,
-        PaymentsResponseDto paymentsResponseDto) {
-
-        ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
-            ClientOrderCreateForm.class);
-
-        // order 저장
-        Order order = saveClientOrderEntity(clientId, clientOrderCreateForm);
-
-        // OrderProductDetail + OrderProductDetailOption 저장
-        saveOrderProductDetailAndOrderProductDetailOption(order,
-            clientOrderCreateForm.getOrderDetailDtoItemList());
-
-        // payment 저장
-        savePaymentEntity(order, paymentsResponseDto);
-
-        // 후처리 - 회원 장바구니 비우기
-        postProcessingClientCartCheckout(clientId, clientOrderCreateForm);
-
-        // 후처리 - 포인트 사용
-        postProcessingUsingPoint(clientId, clientOrderCreateForm);
-
-        // 후처리 - 쿠폰 사용
-        postProcessingUsingCoupon(clientOrderCreateForm);
-
-        // 후처리 - 재고감소
-        postProcessingInventoryDecrease(order.getOrderId(),
-            clientOrderCreateForm.getOrderDetailDtoItemList());
-
-        redisTemplate.opsForHash().delete(ORDER, clientOrderCreateForm.getOrderCode());
-
-    }
-
-    // 비회원 주문 및 결제 생성 및 후처리 프로세스
-    private void processNonClientOrderAndPayment(Object data,
-        PaymentsResponseDto paymentsResponseDto) {
-
-        NonClientOrderForm nonClientOrderForm = objectMapper.convertValue(data,
-            NonClientOrderForm.class);
-
-        // order 저장
-        Order order = saveNonClientOrderEntity(nonClientOrderForm);
-
-        // OrderProductDetail + OrderProductDetailOption 생성 및 저장
-        saveOrderProductDetailAndOrderProductDetailOption(order,
-            nonClientOrderForm.getOrderDetailDtoItemList());
-
-        // payment 저장
-        savePaymentEntity(order, paymentsResponseDto);
-
-        // 후처리 - 재고감소
-        postProcessingInventoryDecrease(order.getOrderId(),
-            nonClientOrderForm.getOrderDetailDtoItemList());
-
-        redisTemplate.opsForHash().delete(ORDER, nonClientOrderForm.getOrderCode());
-
-    }
-
-    // 후처리 - 쿠폰 사용
-    private void postProcessingUsingCoupon(ClientOrderCreateForm clientOrderCreateForm) {
-        // 쿠폰 사용
-        Long usedCouponDiscountAmount = clientOrderCreateForm.getCouponDiscountAmount();
-        PaymentCompletedCouponResponseDto paymentCompletedCouponResponseDto = PaymentCompletedCouponResponseDto.builder()
-            .couponId(clientOrderCreateForm.getCouponId())
-            .build();
-
-        if (usedCouponDiscountAmount != null && usedCouponDiscountAmount > 0) {
-            rabbitTemplate.convertAndSend(couponUseExchangeName, couponUseRoutingKey,
-                paymentCompletedCouponResponseDto);
-        }
-    }
-
-    // 후처리 - 포인트 사용
-    private void postProcessingUsingPoint(Long clientId,
-        ClientOrderCreateForm clientOrderCreateForm) {
-        Long usedPointDiscountAmount = clientOrderCreateForm.getUsedPointDiscountAmount();
-        PointUsagePaymentMessageDto pointUsagePaymentRequestDto = PointUsagePaymentMessageDto.builder()
-            .pointUsagePayment(usedPointDiscountAmount)
-            .clientId(clientId)
-            .build();
-
-        if (usedPointDiscountAmount != null && usedPointDiscountAmount > 0) {
-            rabbitTemplate.convertAndSend(pointUseExchangeName, pointUseRoutingKey,
-                pointUsagePaymentRequestDto);
-        }
-
-    }
-
-    private void postProcessingInventoryDecrease(Long orderId,
-        List<OrderDetailDtoItem> orderDetailDtoItemList) {
-
-        Map<Long, Long> decreaseInfo = new HashMap<>();
-
-        for (OrderDetailDtoItem orderDetailDtoItem : orderDetailDtoItemList) {
-            decreaseInfo.put(orderDetailDtoItem.getProductId(), orderDetailDtoItem.getQuantity());
-            if (Boolean.TRUE.equals(orderDetailDtoItem.getUsePackaging())) {
-                decreaseInfo.put(orderDetailDtoItem.getOptionProductId(),
-                    orderDetailDtoItem.getOptionQuantity());
-            }
-        }
-
-        InventoryDecreaseRequestDto inventoryDecreaseRequestDto = InventoryDecreaseRequestDto.builder()
-            .orderId(orderId).decreaseInfo(decreaseInfo).build();
-
-        rabbitTemplate.convertAndSend(inventoryDecreaseExchangeName,
-            inventoryDecreaseRoutingKey, inventoryDecreaseRequestDto);
-
-    }
-
-
-    // 후처리 - 회원 장바구니 데이터베이스에서 비우기
-    private void postProcessingClientCartCheckout(Long clientId,
-        ClientOrderCreateForm clientOrderCreateForm) {
-
-        CartCheckoutRequestDto cartCheckoutRequestDto = CartCheckoutRequestDto.builder()
-            .clientId(clientId).build();
-
-        clientOrderCreateForm.getOrderDetailDtoItemList()
-            .forEach(
-                orderDetail ->
-                    cartCheckoutRequestDto.addProductId(orderDetail.getProductId())
-            );
-
-        // 구입 상품 장바구니 삭제 - 큐로 보내기
-        rabbitTemplate.convertAndSend(cartCheckoutExchangeName, cartCheckoutRoutingKey,
-            cartCheckoutRequestDto);
-
-    }
-
-    private Order saveClientOrderEntity(Long clientId,
-        ClientOrderCreateForm clientOrderCreateForm) {
-
-        // order 생성 및 저장
-        Order order = Order.builder()
-            .orderCode(clientOrderCreateForm.getOrderCode())
-            .productTotalAmount(clientOrderCreateForm.getProductTotalAmount())
-            .shippingFee(clientOrderCreateForm.getShippingFee())
-            .designatedDeliveryDate(clientOrderCreateForm.getDesignatedDeliveryDate())
-            .phoneNumber(clientOrderCreateForm.getPhoneNumber())
-            .deliveryAddress(clientOrderCreateForm.getDeliveryAddress())
-            .build();
-
-        orderRepository.save(order);
-
-        // client order 생성 및 저장
-        ClientOrder clientOrder = ClientOrder.builder()
-            .clientId(clientId)
-            .couponId(clientOrderCreateForm.getCouponId())
-            .discountAmountByPoint(
-                clientOrderCreateForm.getUsedPointDiscountAmount() == null ? 0
-                    : clientOrderCreateForm.getUsedPointDiscountAmount())
-            .discountAmountByCoupon(
-                clientOrderCreateForm.getCouponDiscountAmount() == null ? 0
-                    : clientOrderCreateForm.getCouponDiscountAmount())
-            .accumulatedPoint(
-                clientOrderCreateForm.getAccumulatePoint() == null ? 0
-                    : clientOrderCreateForm.getAccumulatePoint())
-            .order(order)
-            .build();
-
-        clientOrderRepository.save(clientOrder);
-
-        return order;
-
-    }
-
-    private Order saveNonClientOrderEntity(
-        NonClientOrderForm nonClientOrderForm) {
-
-        Order order = Order.builder()
-            .orderCode(nonClientOrderForm.getOrderCode())
-            .productTotalAmount(nonClientOrderForm.getProductTotalAmount())
-            .designatedDeliveryDate(nonClientOrderForm.getDesignatedDeliveryDate())
-            .phoneNumber(nonClientOrderForm.getPhoneNumber())
-            .deliveryAddress(nonClientOrderForm.getDeliveryAddress())
-            .shippingFee(nonClientOrderForm.getShippingFee())
-            .build();
-
-        orderRepository.save(order);
-
-        // nonclient order 생성 및 저장
-        NonClientOrder nonClientOrder = NonClientOrder.builder()
-            .nonClientOrderPassword(nonClientOrderForm.getOrderPassword())
-            .nonClientOrdererEmail(nonClientOrderForm.getEmail())
-            .nonClientOrdererName(nonClientOrderForm.getOrderedPersonName())
-            .order(order)
-            .build();
-
-        nonClientOrderRepository.save(nonClientOrder);
-
-        return order;
-    }
-
-    private void savePaymentEntity(Order order, PaymentsResponseDto paymentsResponseDto) {
         PaymentMethodType paymentMethodType = paymentMethodTypeRepository.findByPaymentMethodTypeNameEquals(
-            paymentsResponseDto.getMethodType());
+                paymentSaveRequestDto.getPaymentMethodTypeName());
+
         Payment payment = Payment.builder()
-            .order(order)
-            .paymentMethodType(paymentMethodType)
-            .payAmount(paymentsResponseDto.getTotalAmount())
-            .paymentMethodName(paymentsResponseDto.getMethod())
-            .paymentKey(paymentsResponseDto.getPaymentKey())
-            .build();
-        paymentRepository.save(payment);
-    }
+                .order(order)
+                .paymentMethodType(paymentMethodType)
+                .payAmount(paymentSaveRequestDto.getTotalPayAmount())
+                .paymentMethodName(paymentSaveRequestDto.getPaymentMethodName())
+                .paymentKey(paymentSaveRequestDto.getPaymentKey())
+                .build();
 
-    private void saveOrderProductDetailAndOrderProductDetailOption(Order order,
-        List<OrderDetailDtoItem> orderDetailDtoItemList) {
+        return paymentRepository.save(payment);
 
-        for (OrderDetailDtoItem item : orderDetailDtoItemList) {
-            ProductOrderDetail productOrderDetail = productOrderDetailConverter.dtoToEntity(
-                item, order);
-            productOrderDetailRepository.save(productOrderDetail);
-            if (Boolean.TRUE.equals(item.getUsePackaging())) {
-                ProductOrderDetailOption productOrderDetailOption = productOrderDetailOptionConverter.dtoToEntity(
-                    item, productOrderDetail);
-                productOrderDetailOptionRepository.save(productOrderDetailOption);
-            }
-        }
     }
 
     @Override
@@ -348,13 +136,6 @@ public class PaymentServiceImpl implements PaymentService {
             .build();
     }
 
-    private Long getClientId(HttpHeaders headers) {
-        if (headers.get(ID_HEADER) == null) {
-            return null;
-        }
-        return Long.parseLong(Objects.requireNonNull(headers.getFirst(ID_HEADER)));
-    }
-
     @Override
     public PostProcessRequiredPaymentResponseDto getPostProcessRequiredPaymentResponseDto(
         HttpHeaders headers, String orderCode) {
@@ -362,7 +143,7 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = orderRepository.getOrderByOrderCode(orderCode).orElseThrow(
             OrderNotFoundException::new);
 
-        Long clientId = getClientId(headers);
+        Long clientId = clientHeaderContext.getClientId();
 
         Payment payment = paymentRepository.findByOrder_OrderId(order.getOrderId())
             .orElseThrow(() -> new PaymentNotFoundException(orderCode));
@@ -403,4 +184,127 @@ public class PaymentServiceImpl implements PaymentService {
 
         return responseDtoList;
     }
+
+    @Override
+    public PaymentApproveResponseDto approvePayment(ApprovePaymentRequestDto approvePaymentRequestDto) {
+
+        // 승인 및 응답
+        PaymentApproveResponseDto paymentApproveResponseDto = paymentStrategyService.approvePayment(approvePaymentRequestDto);
+
+        // 주문 저장
+        Order order = saveOrder(approvePaymentRequestDto.getOrderCode());
+
+        // 결제 저장
+        PaymentSaveRequestDto paymentSaveRequestDto = getPaymentSaveRequestDto(approvePaymentRequestDto);
+        Payment payment = savePayment(order, paymentSaveRequestDto);
+
+        SuccessPaymentOrderInfo successPaymentOrderInfo = paymentStrategyService.getSuccessPaymentOrderInfo(approvePaymentRequestDto.getPgName(), paymentApproveResponseDto, order, payment);
+        paymentApproveResponseDto.setSuccessPaymentOrderInfo(successPaymentOrderInfo);
+
+        // 결제승인 후처리
+        OrderForm orderForm = orderUtil.getOrderForm(approvePaymentRequestDto.getOrderCode());
+        if(clientHeaderContext.isClient() && orderForm instanceof ClientOrderForm clientOrderForm){
+            postProcessingClientCartCheckout(clientHeaderContext.getClientId(), clientOrderForm);
+            postProcessingUsingPoint(clientHeaderContext.getClientId(), clientOrderForm);
+            postProcessingUsingCoupon(clientOrderForm);
+        }
+
+        postProcessingInventoryDecrease(order.getOrderId(), orderForm.getOrderItemList());
+        redisTemplate.opsForHash().delete(ORDER, orderForm.getOrderCode());
+
+        return paymentApproveResponseDto;
+    }
+
+    private Order saveOrder(String orderCode){
+        OrderForm orderForm = orderUtil.getOrderForm(orderCode);
+        Order order = orderService.saveOrder(orderForm);
+        if(clientHeaderContext.isClient() && orderForm instanceof ClientOrderForm clientOrderForm){
+            clientOrderService.saveClientOrder(order, clientOrderForm);
+        }
+        else if(!clientHeaderContext.isClient() && orderForm instanceof NonClientOrderForm nonClientOrderForm){
+            nonClientOrderService.saveNonClientOrder(order, nonClientOrderForm);
+        }
+        return order;
+    }
+
+    // 후처리 - 쿠폰 사용
+    private void postProcessingUsingCoupon(ClientOrderForm clientOrderForm) {
+        // 쿠폰 사용
+        Long usedCouponDiscountAmount = clientOrderForm.getCouponDiscountAmount();
+        PaymentCompletedCouponResponseDto paymentCompletedCouponResponseDto = PaymentCompletedCouponResponseDto.builder()
+                .couponId(clientOrderForm.getCouponId())
+                .build();
+
+        if (usedCouponDiscountAmount != null && usedCouponDiscountAmount > 0) {
+            rabbitTemplate.convertAndSend(couponUseExchangeName, couponUseRoutingKey,
+                    paymentCompletedCouponResponseDto);
+        }
+    }
+
+    // 후처리 - 포인트 사용
+    private void postProcessingUsingPoint(Long clientId,
+                                          ClientOrderForm clientOrderForm) {
+        Long usedPointDiscountAmount = clientOrderForm.getUsedPointDiscountAmount();
+        PointUsagePaymentMessageDto pointUsagePaymentRequestDto = PointUsagePaymentMessageDto.builder()
+                .pointUsagePayment(usedPointDiscountAmount)
+                .clientId(clientId)
+                .build();
+
+        if (usedPointDiscountAmount != null && usedPointDiscountAmount > 0) {
+            rabbitTemplate.convertAndSend(pointUseExchangeName, pointUseRoutingKey,
+                    pointUsagePaymentRequestDto);
+        }
+
+    }
+
+    private void postProcessingInventoryDecrease(Long orderId,
+                                                 List<OrderDetailDtoItem> orderDetailDtoItemList) {
+
+        Map<Long, Long> decreaseInfo = new HashMap<>();
+
+        for (OrderDetailDtoItem orderDetailDtoItem : orderDetailDtoItemList) {
+            decreaseInfo.put(orderDetailDtoItem.getProductId(), orderDetailDtoItem.getQuantity());
+            if (Boolean.TRUE.equals(orderDetailDtoItem.getUsePackaging())) {
+                decreaseInfo.put(orderDetailDtoItem.getOptionProductId(),
+                        orderDetailDtoItem.getOptionQuantity());
+            }
+        }
+
+        InventoryDecreaseRequestDto inventoryDecreaseRequestDto = InventoryDecreaseRequestDto.builder()
+                .orderId(orderId).decreaseInfo(decreaseInfo).build();
+
+        rabbitTemplate.convertAndSend(inventoryDecreaseExchangeName,
+                inventoryDecreaseRoutingKey, inventoryDecreaseRequestDto);
+
+    }
+
+
+    // 후처리 - 회원 장바구니 데이터베이스에서 비우기
+    private void postProcessingClientCartCheckout(Long clientId,
+                                                  ClientOrderForm clientOrderForm) {
+
+        CartCheckoutRequestDto cartCheckoutRequestDto = CartCheckoutRequestDto.builder()
+                .clientId(clientId).build();
+
+        clientOrderForm.getOrderItemList()
+                .forEach(
+                        orderDetail ->
+                                cartCheckoutRequestDto.addProductId(orderDetail.getProductId())
+                );
+
+        // 구입 상품 장바구니 삭제 - 큐로 보내기
+        rabbitTemplate.convertAndSend(cartCheckoutExchangeName, cartCheckoutRoutingKey,
+                cartCheckoutRequestDto);
+
+    }
+
+    private PaymentSaveRequestDto getPaymentSaveRequestDto(ApprovePaymentRequestDto approvePaymentRequestDto){
+        Long totalPayAmount = orderUtil.getOrderForm(approvePaymentRequestDto.getOrderCode()).getTotalPayAmount();
+        return PaymentSaveRequestDto.builder()
+                .totalPayAmount(totalPayAmount)
+                .paymentMethodTypeName(approvePaymentRequestDto.getPgName())
+                .paymentMethodName(paymentContext.getPaymentMethodName())
+                .paymentKey(paymentContext.getPaymentKey()).build();
+    }
+
 }

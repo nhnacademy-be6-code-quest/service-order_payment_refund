@@ -4,21 +4,16 @@ import com.nhnacademy.orderpaymentrefund.dto.payment.request.ApprovePaymentReque
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentGradeResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentMethodResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.payment.response.PostProcessRequiredPaymentResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.PaymentsResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.approve.PaymentApproveResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 import org.json.simple.parser.ParseException;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 결제 정보를 저장하는 컨트롤러 인터페이스입니다. 결제 정보는 수정되거나 삭제되지 않습니다.
@@ -31,7 +26,7 @@ public interface PaymentController {
 
     @Operation(
         summary = "결제 승인",
-        description = "Toss - 결재 승인",
+        description = "결제 승인",
         responses = {
             @ApiResponse(
                 responseCode = "200",
@@ -40,26 +35,10 @@ public interface PaymentController {
         }
     )
     @PostMapping("/api/order/payment/approve")
-    PaymentsResponseDto approvePayment(
+    PaymentApproveResponseDto approvePayment(
         @Parameter(description = "결제승인 요청에 필요한 정보")
         @RequestBody ApprovePaymentRequestDto approvePaymentRequestDto)
         throws ParseException;
-
-    @Operation(
-        summary = "결제 저장",
-        description = "Payment - 사용자 결제정보 저장",
-        responses = {
-            @ApiResponse(
-                responseCode = "200"
-            )
-        }
-    )
-    @PostMapping("/api/order/payment/save")
-    void savePayment(
-        @Parameter(description = "결제정보 저장 정보")
-        @RequestBody PaymentsResponseDto paymentsResponseDto,
-        @Parameter(description = "회원 정보")
-        @RequestHeader HttpHeaders headers);
 
     @Operation(
         summary = "3개월 결제금액",

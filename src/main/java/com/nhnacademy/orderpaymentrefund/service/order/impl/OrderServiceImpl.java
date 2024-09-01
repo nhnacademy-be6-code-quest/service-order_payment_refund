@@ -8,9 +8,10 @@ import com.nhnacademy.orderpaymentrefund.domain.order.Order;
 import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
@@ -62,6 +63,46 @@ public class OrderServiceImpl implements OrderService {
     private final PaymentStrategyService paymentStrategyService;
 
     @Override
+    public Order saveOrder(OrderForm orderForm) {
+
+        Order order = Order.builder()
+                .orderCode(orderForm.getOrderCode())
+                .productTotalAmount(orderForm.getProductTotalAmount())
+                .shippingFee(orderForm.getShippingFee())
+                .designatedDeliveryDate(orderForm.getDesignatedDeliveryDate())
+                .phoneNumber(orderForm.getPhoneNumber())
+                .deliveryAddress(orderForm.getDeliveryAddress())
+                .build();
+
+        orderRepository.save(order);
+
+        for (OrderDetailDtoItem item : orderForm.getOrderItemList()) {
+            ProductOrderDetail productOrderDetail = ProductOrderDetail.builder()
+                    .order(order)
+                    .productId(item.getProductId())
+                    .quantity(item.getQuantity())
+                    .pricePerProduct(item.getProductSinglePrice())
+                    .productName(item.getProductName())
+                    .build();
+            productOrderDetailRepository.save(productOrderDetail);
+
+            if (Boolean.TRUE.equals(item.getUsePackaging())) {
+                ProductOrderDetailOption productOrderDetailOption = ProductOrderDetailOption.builder()
+                        .productId(item.getOptionProductId())
+                        .productOrderDetail(productOrderDetail)
+                        .optionProductName(item.getOptionProductName())
+                        .optionProductPrice(item.getOptionProductSinglePrice())
+                        .quantity(item.getQuantity())
+                        .build();
+                productOrderDetailOptionRepository.save(productOrderDetailOption);
+            }
+
+        }
+
+        return order;
+    }
+
+    @Override
     public PaymentViewRequestDto getPaymentViewRequestDto(String pgName, String orderCode) {
         return paymentStrategyService.getPaymentViewRequestDto(pgName, orderCode);
     }
@@ -78,25 +119,25 @@ public class OrderServiceImpl implements OrderService {
         if (clientHeaderContext.isClient()) {
 
             Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, orderCode);
-            ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
-                ClientOrderCreateForm.class);
+            ClientOrderForm clientOrderForm = objectMapper.convertValue(data,
+                ClientOrderForm.class);
 
-            if (clientOrderCreateForm == null) {
+            if (clientOrderForm == null) {
                 throw new OrderNotFoundException();
             }
 
             orderHistoryTitle.append(
-                clientOrderCreateForm.getOrderDetailDtoItemList().getFirst().getProductName());
+                clientOrderForm.getOrderDetailDtoItemList().getFirst().getProductName());
 
-            sizeProductOrderDetail = clientOrderCreateForm.getOrderDetailDtoItemList().size();
+            sizeProductOrderDetail = clientOrderForm.getOrderDetailDtoItemList().size();
 
-            if (clientOrderCreateForm.getOrderDetailDtoItemList().size() > 1) {
+            if (clientOrderForm.getOrderDetailDtoItemList().size() > 1) {
                 orderHistoryTitle.append(String.format("외 %d개", sizeProductOrderDetail - 1));
             }
 
-            discountAmountByCoupon = clientOrderCreateForm.getCouponDiscountAmount();
-            discountAmountByPoint = clientOrderCreateForm.getUsedPointDiscountAmount();
-            orderTotalAmount = clientOrderCreateForm.getOrderTotalAmount();
+            discountAmountByCoupon = clientOrderForm.getCouponDiscountAmount();
+            discountAmountByPoint = clientOrderForm.getUsedPointDiscountAmount();
+            orderTotalAmount = clientOrderForm.getOrderTotalAmount();
 
         } else {
 
@@ -153,19 +194,19 @@ public class OrderServiceImpl implements OrderService {
         Long accumulatedPoint = null;
 
         Object data = redisTemplate.opsForHash().get(REDIS_ORDER_KEY, orderCode);
-        ClientOrderCreateForm clientOrderCreateForm = objectMapper.convertValue(data,
-            ClientOrderCreateForm.class);
+        ClientOrderForm clientOrderForm = objectMapper.convertValue(data,
+            ClientOrderForm.class);
 
-        if (clientOrderCreateForm == null) {
+        if (clientOrderForm == null) {
             throw new OrderNotFoundException();
         }
 
-        discountAmountByCoupon = clientOrderCreateForm.getCouponDiscountAmount();
-        discountAmountByPoint = clientOrderCreateForm.getUsedPointDiscountAmount();
-        orderTotalAmount = clientOrderCreateForm.getOrderTotalAmount();
-        couponId = clientOrderCreateForm.getCouponId();
+        discountAmountByCoupon = clientOrderForm.getCouponDiscountAmount();
+        discountAmountByPoint = clientOrderForm.getUsedPointDiscountAmount();
+        orderTotalAmount = clientOrderForm.getOrderTotalAmount();
+        couponId = clientOrderForm.getCouponId();
 
-        for (OrderDetailDtoItem orderDetailDtoItem : clientOrderCreateForm.getOrderDetailDtoItemList()) {
+        for (OrderDetailDtoItem orderDetailDtoItem : clientOrderForm.getOrderDetailDtoItemList()) {
             productOrderDetailList.add(
                 getProductOrderDetailRequestDto(orderDetailDtoItem.getProductId(),
                     orderDetailDtoItem.getQuantity(), orderDetailDtoItem.getUsePackaging(),

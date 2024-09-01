@@ -1,6 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CouponDiscountInfoRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderCouponDiscountInfo;
@@ -24,14 +24,14 @@ public class ClientOrderControllerImpl implements ClientOrderController {
 
     // 회원 임시 주문 저장
     @PostMapping("/api/client/orders/temporary")
-    public ResponseEntity<String> saveClientTemporalOrder(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderCreateForm clientOrderForm){
+    public ResponseEntity<String> saveClientTemporalOrder(@RequestHeader HttpHeaders headers, @RequestBody ClientOrderForm clientOrderForm){
         clientOrderService.saveClientTemporalOrder(headers, clientOrderForm);
         return ResponseEntity.ok().body("주문이 임시저장 되었습니다");
     }
 
     // 회원 임시 주문 가져오기
     @GetMapping("/api/client/orders/temporary")
-    public ResponseEntity<ClientOrderCreateForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers, String orderCode){
+    public ResponseEntity<ClientOrderForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers, String orderCode){
         return ResponseEntity.ok().body(clientOrderService.getClientTemporalOrder(headers, orderCode));
     }
 

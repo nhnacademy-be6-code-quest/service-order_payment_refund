@@ -9,9 +9,8 @@ import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.client.ProductGetNameAndPriceResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CouponDiscountInfoRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderDetailDtoItem;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.CouponOrderResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderCouponDiscountInfo;
@@ -29,7 +28,7 @@ import com.nhnacademy.orderpaymentrefund.service.order.ClientOrderService;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -63,20 +62,40 @@ public class ClientOrderServiceImpl implements ClientOrderService {
     private static final String PERCENTAGEDISCOUNT = "PERCENTAGEDISCOUNT";
 
     @Override
-    public void saveClientTemporalOrder(HttpHeaders headers, ClientOrderCreateForm requestDto) {
+    public void saveClientTemporalOrder(HttpHeaders headers, ClientOrderForm requestDto) {
         String orderCode = requestDto.getOrderCode();
         redisTemplate.opsForHash().put("order", orderCode, requestDto);
     }
 
     @Override
-    public ClientOrderCreateForm getClientTemporalOrder(HttpHeaders headers, String orderCode) {
+    public void saveClientOrder(Order order, ClientOrderForm clientOrderForm) {
+        ClientOrder clientOrder = ClientOrder.builder()
+                .clientId(clientHeaderContext.getClientId())
+                .couponId(clientOrderForm.getCouponId())
+                .discountAmountByPoint(
+                        clientOrderForm.getUsedPointDiscountAmount() == null ? 0
+                                : clientOrderForm.getUsedPointDiscountAmount())
+                .discountAmountByCoupon(
+                        clientOrderForm.getCouponDiscountAmount() == null ? 0
+                                : clientOrderForm.getCouponDiscountAmount())
+                .accumulatedPoint(
+                        clientOrderForm.getAccumulatePoint() == null ? 0
+                                : clientOrderForm.getAccumulatePoint())
+                .order(order)
+                .build();
 
-        ClientOrderCreateForm clientOrderCreateForm = (ClientOrderCreateForm) redisTemplate.opsForHash()
+        clientOrderRepository.save(clientOrder);
+    }
+
+    @Override
+    public ClientOrderForm getClientTemporalOrder(HttpHeaders headers, String orderCode) {
+
+        ClientOrderForm clientOrderForm = (ClientOrderForm) redisTemplate.opsForHash()
             .get("order", orderCode);
 
-        assert clientOrderCreateForm != null;
+        assert clientOrderForm != null;
 
-        return clientOrderCreateForm;
+        return clientOrderForm;
     }
 
     @Override

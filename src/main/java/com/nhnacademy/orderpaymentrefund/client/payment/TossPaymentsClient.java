@@ -1,6 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.client.payment;
 
-import com.nhnacademy.orderpaymentrefund.service.payment.impl.TossPGServiceStrategy.TossApprovePaymentRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.ApproveTossPayRequestDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.approve.impl.TossPaymentApproveResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,12 +20,12 @@ public interface TossPaymentsClient {
     /**
      * 토스 페이먼츠에 결제 승인 요청을 보냅니다.
      *
-     * @param tossApprovePaymentRequestDto 토스 페이먼츠 결제 승인 요청에 필요한 정보를 담고 있는 DTO 입니다.
+     * @param approveTossPayRequestDto 토스 페이먼츠 결제 승인 요청에 필요한 정보를 담고 있는 DTO 입니다.
      * @param authorization          토스 페이먼츠 API 인증을 위한 헤더 값입니다. 토스 페이먼츠에서 키를 인코딩 한 값입니다.
      * @return 결제 승인 요청 결과를 나타내는 문자열이 반환됩니다. 이후 서비스에서 파싱합니다.
      */
     @PostMapping
-    String approvePayment(@RequestBody TossApprovePaymentRequestDto tossApprovePaymentRequestDto,
-        @RequestHeader(name = "Authorization") String authorization);
+    TossPaymentApproveResponseDto approvePayment(@RequestBody ApproveTossPayRequestDto approveTossPayRequestDto,
+                                                 @RequestHeader(name = "Authorization") String authorization);
 }
 

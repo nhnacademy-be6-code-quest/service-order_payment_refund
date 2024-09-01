@@ -1,25 +1,21 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.payment.response.paymentView.PaymentViewRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailOptionResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ProductOrderDetailResponseDto;
+import com.nhnacademy.orderpaymentrefund.dto.payment.response.paymentView.PaymentViewRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.List;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 
 
@@ -51,50 +47,6 @@ public interface OrderController {
     @GetMapping("/api/order/{orderCode}/payment-view-request")
     ResponseEntity<PaymentViewRequestDto> getPaymentViewRequestDto(
             @Parameter(description = "주문 코드") @PathVariable String orderCode, String pgName);
-
-    @Operation(
-        summary = "결제 승인 요청 정보 조회",
-        description = "Toss - 결제 승인 요청 정보를 조회합니다.",
-        responses = {
-            @ApiResponse(
-                responseCode = "200",
-                description = "결제 승인 요청 정보"
-            ),
-            @ApiResponse(
-                responseCode = "404",
-                description = "찾으려는 주문이 없음"
-            )
-        }
-    )
-    @GetMapping("/api/order/{orderCode}/payment-request")
-    ResponseEntity<PaymentOrderShowRequestDto> getPaymentOrderShowRequestDto(
-        @Parameter(description = "Toss 결제 주문 ID") @PathVariable String orderCode,
-        HttpServletRequest request,
-        @RequestHeader HttpHeaders headers);
-
-
-
-
-
-    @Operation(
-        summary = "결제 승인 요청 정보 조회",
-        description = "Toss - 결제 승인을 위한 요청 정보를 조회합니다.",
-        responses = {
-            @ApiResponse(
-                responseCode = "200",
-                description = "결제 승인 요청 정보"
-            ),
-            @ApiResponse(
-                responseCode = "404",
-                description = "찾으려는 주문이 없음"
-            )
-        }
-    )
-    @GetMapping("/api/order/{orderCode}/approve-request")
-    ResponseEntity<PaymentOrderApproveRequestDto> getPaymentOrderApproveRequestDto(
-        @Parameter(description = "Toss 결제 주문 ID") @PathVariable String orderCode,
-        HttpServletRequest request,
-        @RequestHeader HttpHeaders headers);
 
 
 

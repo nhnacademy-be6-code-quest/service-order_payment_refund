@@ -22,7 +22,7 @@ import com.nhnacademy.orderpaymentrefund.domain.order.OrderStatus;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetail;
 import com.nhnacademy.orderpaymentrefund.domain.order.ProductOrderDetailOption;
 import com.nhnacademy.orderpaymentrefund.dto.client.ProductGetNameAndPriceResponseDto;
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CouponDiscountInfoRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.CouponOrderResponseDto;
@@ -106,11 +106,11 @@ class ClientOrderServiceImplTest {
         String orderCode = "uuid-1234";
         String redisOrder = "order";
 
-        ClientOrderCreateForm requestDto = new ClientOrderCreateForm();
+        ClientOrderForm requestDto = new ClientOrderForm();
         ReflectionTestUtils.setField(requestDto, "orderCode", orderCode);
 
         when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        doNothing().when(hashOperations).put(eq(redisOrder), anyString(), any(ClientOrderCreateForm.class));
+        doNothing().when(hashOperations).put(eq(redisOrder), anyString(), any(ClientOrderForm.class));
 
         clientOrderService.saveClientTemporalOrder(headers, requestDto);
 
@@ -127,13 +127,13 @@ class ClientOrderServiceImplTest {
         String orderCode = "uuid-1234";
         String redisOrder = "order";
 
-        ClientOrderCreateForm expectedOrder = new ClientOrderCreateForm();
+        ClientOrderForm expectedOrder = new ClientOrderForm();
 
         ReflectionTestUtils.setField(expectedOrder, "orderCode", orderCode);
 
         when(hashOperations.get(redisOrder, orderCode)).thenReturn(expectedOrder);
 
-        ClientOrderCreateForm actualOrder = clientOrderService.getClientTemporalOrder(headers,
+        ClientOrderForm actualOrder = clientOrderService.getClientTemporalOrder(headers,
             orderCode);
 
         assertEquals(expectedOrder, actualOrder);

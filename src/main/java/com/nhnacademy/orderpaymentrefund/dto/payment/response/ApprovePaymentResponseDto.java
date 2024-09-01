@@ -19,7 +19,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Builder
-public class PaymentsResponseDto {
+public class ApprovePaymentResponseDto {
 
     @NotBlank
     String orderName;
