@@ -51,6 +51,17 @@ public class NonClientOrderServiceImpl implements NonClientOrderService {
     }
 
     @Override
+    public void saveNonClientOrder(Order order, NonClientOrderForm nonClientOrderForm) {
+        NonClientOrder nonClientOrder = NonClientOrder.builder()
+                .nonClientOrderPassword(nonClientOrderForm.getOrderPassword())
+                .nonClientOrdererEmail(nonClientOrderForm.getEmail())
+                .nonClientOrdererName(nonClientOrderForm.getOrderedPersonName())
+                .order(order)
+                .build();
+        nonClientOrderRepository.save(nonClientOrder);
+    }
+
+    @Override
     public NonClientOrderForm getNonClientTemporalOrder(HttpHeaders headers, String orderCode) {
         checkNonClient();
         return (NonClientOrderForm) redisTemplate.opsForHash().get(ID_KEY, orderCode);

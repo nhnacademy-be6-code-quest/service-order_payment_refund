@@ -1,5 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.service.order;
 
+import com.nhnacademy.orderpaymentrefund.domain.order.Order;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.OrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderApproveRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.toss.PaymentOrderShowRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderResponseDto;
@@ -10,6 +12,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 
 public interface OrderService {
+    Order saveOrder(OrderForm orderForm);
     PaymentViewRequestDto getPaymentViewRequestDto(String pgName, String orderCode);
     PaymentOrderShowRequestDto getPaymentOrderShowRequestDto(String orderCode);
     PaymentOrderApproveRequestDto getPaymentOrderApproveRequestDto(String orderCode);

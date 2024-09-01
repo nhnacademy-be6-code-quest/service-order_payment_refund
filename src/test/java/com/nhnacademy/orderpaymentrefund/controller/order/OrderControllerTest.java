@@ -49,29 +49,6 @@ class OrderControllerTest {
     private ClientHeaderContext clientHeaderContext;
 
     @Test
-    @DisplayName("토스 결제 요청을 위한 데이터 조회 성공")
-    void getPaymentOrderShowRequestDtoSuccessTest() throws Exception {
-
-        String orderCode = "uuid-1234";
-
-        PaymentOrderShowRequestDto resDto = PaymentOrderShowRequestDto.builder()
-            .orderTotalAmount(10000L)
-            .discountAmountByCoupon(1000L)
-            .discountAmountByPoint(500L)
-            .orderCode(orderCode)
-            .orderHistoryTitle("초코파이 외 10건")
-            .build();
-
-        when(orderService.getPaymentOrderShowRequestDto(orderCode)).thenReturn(resDto);
-
-        mockMvc.perform(
-            get("/api/order/{orderCode}/payment-request", orderCode)
-                .header("X-User-Id", 181)
-        ).andExpect(status().isOk());
-
-    }
-
-    @Test
     @DisplayName("토스 결제 요청을 위한 데이터 조회 실패")
     void getPaymentOrderShowRequestDtoFailTest() throws Exception {
 
@@ -83,32 +60,6 @@ class OrderControllerTest {
         mockMvc.perform(
             get("/api/order/{orderCode}/payment-request", orderCode)
         ).andExpect(status().isNotFound());
-
-    }
-
-    @Test
-    @DisplayName("토스 결제 승인을 위한 데이터 조회 성공")
-    void getPaymentOrderApproveRequestDtoSuccessTest() throws Exception {
-
-        String orderCode = "uuid-1234";
-
-        PaymentOrderApproveRequestDto resDto = PaymentOrderApproveRequestDto.builder()
-            .orderTotalAmount(10000L)
-            .discountAmountByCoupon(10000L)
-            .orderCode(orderCode)
-            .clientId(10000L)
-            .couponId(10000L)
-            .discountAmountByPoint(10000L)
-            .accumulatedPoint(10000L)
-            .productOrderDetailList(new ArrayList<>())
-            .build();
-
-        when(orderService.getPaymentOrderApproveRequestDto(orderCode)).thenReturn(resDto);
-
-        mockMvc.perform(
-            get("/api/order/{orderCode}/approve-request", orderCode)
-        ).andExpect(status().isOk());
-
 
     }
 

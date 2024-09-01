@@ -1,6 +1,6 @@
 package com.nhnacademy.orderpaymentrefund.controller.order;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CouponDiscountInfoRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderCouponDiscountInfo;
@@ -42,7 +42,7 @@ public interface ClientOrderController {
     )
     @PostMapping("/api/client/orders/temporary")
     ResponseEntity<String> saveClientTemporalOrder(@RequestHeader HttpHeaders headers,
-        @RequestBody ClientOrderCreateForm clientOrderForm);
+        @RequestBody ClientOrderForm clientOrderForm);
 
 
     @Operation(
@@ -56,8 +56,8 @@ public interface ClientOrderController {
         }
     )
     @GetMapping("/api/client/orders/temporary")
-    ResponseEntity<ClientOrderCreateForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers,
-        String orderCode);
+    ResponseEntity<ClientOrderForm> getClientTemporalOrder(@RequestHeader HttpHeaders headers,
+                                                           String orderCode);
 
 
     @Operation(

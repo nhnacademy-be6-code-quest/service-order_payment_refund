@@ -13,11 +13,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ExceptionRestControllerAdvice {
 
-    @ExceptionHandler(ParseException.class)
-    public String handleException(ParseException exception, HttpServletResponse response){
-        return handleException(exception, response, HttpStatus.BAD_REQUEST);
-    }
-
     @ExceptionHandler(BadRequestExceptionType.class)
     public String handleBadRequestException(BadRequestExceptionType exception, HttpServletResponse response) {
         return handleException(exception, response, HttpStatus.BAD_REQUEST);
@@ -38,12 +33,12 @@ public class ExceptionRestControllerAdvice {
         return handleException(exception, response, HttpStatus.FORBIDDEN);
     }
 
-    private String handleException(RuntimeException e, HttpServletResponse response, HttpStatus httpStatus){
-        response.setStatus(httpStatus.value());
-        return e.getMessage();
+    @ExceptionHandler(RuntimeException.class)
+    public String handleRuntimeException(RuntimeException exception, HttpServletResponse response) {
+        return handleException(exception, response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    private String handleException(Exception e, HttpServletResponse response, HttpStatus httpStatus){
+    private String handleException(RuntimeException e, HttpServletResponse response, HttpStatus httpStatus){
         response.setStatus(httpStatus.value());
         return e.getMessage();
     }

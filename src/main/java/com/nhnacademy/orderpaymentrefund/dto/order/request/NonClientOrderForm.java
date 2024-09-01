@@ -24,7 +24,7 @@ public class NonClientOrderForm implements OrderForm {
     LocalDate designatedDeliveryDate; // 배송날짜 지정
     String paymentMethod; // 결제 방식
     String orderPassword; // 주문 비밀번호
-    String orderCode; // 토스 주문
+    String orderCode; // 주문코드
 
     public void encodePassword(PasswordEncoder encoder){
         this.orderPassword = encoder.encode(orderPassword);
@@ -44,4 +44,5 @@ public class NonClientOrderForm implements OrderForm {
     public Long getTotalPayAmount() {
         return this.payAmount;
     }
+
 }
