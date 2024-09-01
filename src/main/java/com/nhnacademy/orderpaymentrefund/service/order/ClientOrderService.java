@@ -1,6 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.service.order;
 
-import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderCreateForm;
+import com.nhnacademy.orderpaymentrefund.domain.order.Order;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.CouponDiscountInfoRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.ClientOrderGetResponseDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.response.OrderCouponDiscountInfo;
@@ -12,8 +13,9 @@ import org.springframework.http.HttpHeaders;
 
 
 public interface ClientOrderService {
-    void saveClientTemporalOrder(HttpHeaders headers, ClientOrderCreateForm clientOrderForm);
-    ClientOrderCreateForm getClientTemporalOrder(HttpHeaders headers, String orderCode);
+    void saveClientTemporalOrder(HttpHeaders headers, ClientOrderForm clientOrderForm);
+    void saveClientOrder(Order order, ClientOrderForm clientOrderForm);
+    ClientOrderForm getClientTemporalOrder(HttpHeaders headers, String orderCode);
     Page<ClientOrderGetResponseDto> getOrders(HttpHeaders headers, int pageSize, int pageNo, String sortBy, String sortDir);
     ClientOrderGetResponseDto getOrder(HttpHeaders headers, long orderId);
     void cancelOrder(HttpHeaders headers, long orderId);

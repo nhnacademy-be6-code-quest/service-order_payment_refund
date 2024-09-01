@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-class OrderPaymentResponseDtoTest {
+class OrderPaymentApproveResponseDtoTest {
 
     @Test
     void testBuilder() {

@@ -1,5 +1,7 @@
 package com.nhnacademy.orderpaymentrefund.service.order;
 
+import com.nhnacademy.orderpaymentrefund.domain.order.Order;
+import com.nhnacademy.orderpaymentrefund.dto.order.request.ClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.FindNonClientOrderIdRequestDto;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.NonClientOrderForm;
 import com.nhnacademy.orderpaymentrefund.dto.order.request.UpdateNonClientOrderPasswordRequestDto;
@@ -18,6 +20,8 @@ import org.springframework.http.HttpHeaders;
 public interface NonClientOrderService {
 
     void saveNonClientTemporalOrder(HttpHeaders headers, NonClientOrderForm requestDto);
+
+    void saveNonClientOrder(Order order, NonClientOrderForm nonClientOrderForm);
 
     NonClientOrderForm getNonClientTemporalOrder(HttpHeaders headers, String orderCode);
 
